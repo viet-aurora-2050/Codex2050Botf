@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.env
+.env.local
+.env.*.backup
+.venv/
+venv/
+.Python
+pip-wheel-metadata/
+.pytest_cache/
+.cache/
+.idea/
+.vscode/
