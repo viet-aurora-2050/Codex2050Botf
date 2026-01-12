@@ -1,15 +1,23 @@
-services:
-  - type: worker
-    name: codex2050bot
-    env: python
-    plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: python main.py
-    autoDeploy: true
-    envVars:
-      - key: TELEGRAM_TOKEN
+# Exported from Render on 2026-01-12T06:56:55Z
+version: "1"
+projects:
+- name: Codexbot2050
+  environments:
+  - name: Production
+    services:
+    - type: web
+      name: Codex2050Botf
+      runtime: python
+      repo: https://github.com/viet-aurora-2050/Codex2050Botf
+      plan: free
+      envVars:
+      - key: TEST_MODE
         sync: false
       - key: ALLOWED_USER_IDS
-        value: "7416243786"
-      - key: TEST_MODE
-        value: "true"
+        sync: false
+      - key: TELEGRAM_TOKEN
+        sync: false
+      region: frankfurt
+      buildCommand: pip install -r requirements.txt
+      startCommand: python ./main.py
+      autoDeployTrigger: commit
