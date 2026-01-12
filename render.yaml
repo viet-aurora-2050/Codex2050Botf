@@ -1,18 +1,15 @@
 services:
-  - type: web
-    name: codex2050-dashboard
+  - type: worker
+    name: codex2050bot
     env: python
     plan: free
-    buildCommand: |
-      pip install --upgrade pip
-      pip install -r requirements.txt
-    startCommand: uvicorn web.dashboard:app --host 0.0.0.0 --port $PORT
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
     autoDeploy: true
     envVars:
       - key: TELEGRAM_TOKEN
         sync: false
-        required: true
-      - key: ENABLE_WEB
+      - key: ALLOWED_USER_IDS
+        value: "7416243786"
+      - key: TEST_MODE
         value: "true"
-      - key: ENABLE_RPC
-        value: "false"
