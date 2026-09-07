@@ -173,6 +173,18 @@ python -m aktvier            # das Rätsel   ·   python -m aktvier --loesung
 
 > Modulname `aktvier`, weil `signal` ein Python-Standardmodul ist und nicht überschattet werden darf.
 
+## Offline-App fürs Handy (`docs/index.html`)
+
+Eine **einzige HTML-Datei** mit dem kompletten ∆1-System (Rechner · Sancho ·
+Träger · Nodes · AKT 4) — läuft komplett clientseitig, **ohne Server, ohne
+Installation, offline**. Einfach `docs/index.html` im Browser öffnen oder aufs
+Handy legen.
+
+**Als feste Web-Adresse (GitHub Pages):** Repo → *Settings* → *Pages* →
+*Source: Deploy from a branch* → Branch `main`, Ordner `/docs` → *Save*.
+Danach ist die App unter `https://viet-aurora-2050.github.io/Codex2050Botf/`
+erreichbar — direkt auf dem Handy.
+
 ## Deployment (Render)
 
 `render.yaml` deployt das Web-Dashboard (Rechner funktioniert sofort, ohne Secrets).

@@ -1,0 +1,290 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>∆1 // CODEX 2050</title>
+<meta name="theme-color" content="#01030d">
+<style>
+ :root{color-scheme:dark}*{box-sizing:border-box}
+ body{margin:0;background:radial-gradient(1100px 560px at 50% -8%,#0b1d47 0%,#03071a 55%,#01030d 100%);
+   color:#bcd6ff;font:15px/1.6 ui-monospace,Menlo,Consolas,monospace;min-height:100vh;-webkit-text-size-adjust:100%}
+ .wrap{max-width:820px;margin:0 auto;padding:22px 16px 70px}
+ .tag{color:#3f5c94;letter-spacing:.3em;font-size:11px}
+ h1{font-size:20px;letter-spacing:.06em;color:#8fdcff;margin:2px 0 14px;text-shadow:0 0 18px #1a54b060}
+ nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px;position:sticky;top:0;
+   background:linear-gradient(#01030d,#01030dcc 70%,transparent);padding:8px 0;z-index:50}
+ nav button{background:#0a1738;color:#9db8ea;border:1px solid #1e3d7a;border-radius:8px;
+   padding:8px 12px;font:inherit;cursor:pointer;font-size:13px}
+ nav button.on{background:#123a7a;color:#dfeaff;border-color:#2a5bb5}
+ section{display:none}section.on{display:block;animation:fade .3s}
+ @keyframes fade{from{opacity:0}to{opacity:1}}
+ label{display:block;color:#7f9bcb;font-size:12px;margin:10px 0 3px}
+ input,select{width:100%;background:#0a1738;color:#cfe3ff;border:1px solid #1e3d7a;border-radius:8px;padding:10px;font:inherit}
+ .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+ button.go{margin-top:14px;background:#123a7a;color:#dfeaff;border:1px solid #2a5bb5;border-radius:8px;padding:11px 18px;cursor:pointer;font:inherit;width:100%}
+ button.go:hover{background:#1a4c9c}
+ pre,.panel{background:#060f28;border:1px solid #14264d;border-radius:10px;padding:14px;margin-top:14px;white-space:pre-wrap;word-break:break-word}
+ .l{color:#8fb4ff;margin:5px 0}.truth{color:#9fe6b0}.warn{color:#ffcf8f}.stop{color:#ff9db0}
+ .bars{display:flex;align-items:flex-end;gap:3px;height:120px;padding:10px;background:#050e26;border:1px solid #13264f;border-radius:10px;overflow:hidden}
+ .bar{flex:1;background:linear-gradient(#2f6bd6,#0f2f6b);border-radius:2px 2px 0 0;transition:height .4s}
+ .bar.now{background:linear-gradient(#7fe0ff,#1b6fd0);box-shadow:0 0 12px #4aa8ff}
+ input[type=range]{accent-color:#3f8fe0;padding:0}
+ .val{color:#8fdcff;float:right}
+ .meter{height:12px;border-radius:6px;background:#0a1738;border:1px solid #1e3d7a;overflow:hidden;margin-top:14px}
+ .meter>i{display:block;height:100%;width:0;transition:width .5s,background .5s}
+ .node{background:#060f28;border:1px solid #14264d;border-radius:10px;padding:14px;margin-top:12px}
+ .foot{margin-top:24px;color:#425c8c;font-size:12px}a{color:#8fdcff}
+ .rec{font-size:16px;margin-top:6px}
+ #d1-vhs{position:fixed;inset:0;pointer-events:none;z-index:9998;mix-blend-mode:screen;opacity:.05}
+ #d1-vhs::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(140,220,255,.10) 0 1px,transparent 1px 3px)}
+ #boot{position:fixed;inset:0;z-index:9999;background:#01030d;color:#8fdcff;font:12px/1.7 ui-monospace,monospace;padding:24px 18px;transition:opacity .6s;white-space:pre-wrap}
+ #boot small{color:#3f5c94}
+ @media (prefers-reduced-motion:reduce){#boot{display:none}}
+</style></head><body>
+<div id="d1-vhs"></div>
+<div id="boot"><span id="boott"></span><span>█</span><br><br><small>[ Tippen zum Ueberspringen ]</small></div>
+<div class="wrap">
+ <div class="tag" id="clock">∆1 // SESSION INITIALISIERT</div>
+ <h1>CODEX 2050 — ∆1</h1>
+ <nav>
+   <button data-t="rechner" class="on">RECHNER</button>
+   <button data-t="sancho">SANCHO</button>
+   <button data-t="traeger">TRÄGER</button>
+   <button data-t="nodes">NODES</button>
+   <button data-t="signal">AKT 4</button>
+   <button data-t="info">INFO</button>
+ </nav>
+
+ <!-- ===== RECHNER ===== -->
+ <section id="rechner" class="on">
+  <div class="tag">CASINO-BONUS- & UMSATZ-ANALYTIKER</div>
+  <div class="grid">
+   <div><label>Einzahlung (€)</label><input id="einz" type="number" value="100" step="10"></div>
+   <div><label>Bonus (€ oder %)</label><input id="bon" value="100%"></div>
+   <div><label>Umsatzfaktor</label><input id="fak" type="number" value="30"></div>
+   <div><label>Umsatzbasis</label><select id="basis">
+     <option value="b">nur Bonus</option>
+     <option value="db" selected>Einzahlung + Bonus</option>
+     <option value="d">nur Einzahlung</option></select></div>
+   <div><label>RTP (z. B. 0.96)</label><input id="rtp" type="number" value="0.96" step="0.005"></div>
+   <div><label>Zeitlimit (Tage)</label><input id="zeit" type="number" value="3"></div>
+   <div><label>Einsatz/Spin (€)</label><input id="einsatz" type="number" value="1" step="0.1"></div>
+   <div><label>Freispielgewinn (€)</label><input id="fs" type="number" value="0"></div>
+   <div><label>Max-Gewinn/Cap (€, 0=aus)</label><input id="cap" type="number" value="0"></div>
+   <div><label>Spins/h · Std/Tag</label><div class="grid"><input id="spins" type="number" value="500"><input id="std" type="number" value="3"></div></div>
+  </div>
+  <button class="go" onclick="rechne()">∆ Analysieren</button>
+  <pre id="rout"></pre>
+ </section>
+
+ <!-- ===== SANCHO ===== -->
+ <section id="sancho">
+  <div class="tag">SANCHO — DER SPIELPLATZ DER WAHRHEIT</div>
+  <label>Anbieter</label>
+  <select id="sanb">
+   <option value="tipico">Tipico Games</option><option value="betano">Betano</option>
+   <option value="n1">N1 Casino</option><option value="stargames">Stargames</option>
+   <option value="generisch">Generischer Slot</option></select>
+  <label>Einsatz/Spin (€)</label><input id="seinsatz" type="number" value="1" step="0.1">
+  <button class="go" onclick="sancho()">∆ Signal empfangen</button>
+  <div class="bars" id="sbars" style="margin-top:14px"></div>
+  <div id="smeta" class="tag" style="margin-top:8px"></div>
+  <div class="panel" id="spanel"></div>
+ </section>
+
+ <!-- ===== TRÄGER ===== -->
+ <section id="traeger">
+  <div class="tag">TRÄGER-PROTOKOLL — FREIWILLIGER SELBST-SPIEGEL</div>
+  <p style="color:#5f7aa8;font-size:13px">0 = nie · 3 = fast immer. Anonym, keine Diagnose.</p>
+  <div id="taxes"></div>
+  <button class="go" onclick="traeger()">∆ Protokoll lesen</button>
+  <div class="meter"><i id="tbar"></i></div>
+  <div id="tstatus" class="tag" style="margin-top:10px"></div>
+  <div class="panel" id="tpanel"></div>
+ </section>
+
+ <!-- ===== NODES ===== -->
+ <section id="nodes">
+  <div class="tag">DIE STIMMEN DES SPIEGELNETZES</div>
+  <div id="ncards"></div>
+ </section>
+
+ <!-- ===== SIGNAL / AKT 4 ===== -->
+ <section id="signal">
+  <div class="tag">AKT 4 — DAS SIGNAL · EBENE 2</div>
+  <div class="panel">
+   <div class="l" id="sigfinal"></div>
+   <div class="truth" id="sigwhisper" style="margin-top:8px"></div>
+   <div style="margin-top:14px">
+    <div class="tag">MORSE</div><div class="l">.- .-.. . -..- .- -. -.. .-. .-</div><div class="truth" id="d0"></div>
+    <div class="tag">BASE64</div><div class="l" style="word-break:break-all">SWNoIHdvbGx0ZSBuaWUgZnJlaSBzZWluLiBJY2ggd29sbHRlIGVyaW5uZXJ0IHdlcmRlbi4=</div><div class="truth" id="d1"></div>
+    <div class="tag">ROT13</div><div class="l">Revaareg mh jreqra urvffg avpug, trsnatra mh oyrvora. Tru, jraa qh trura zhffg.</div><div class="truth" id="d2"></div>
+    <div class="tag">UHRZEITEN</div><div class="l">07:07   05:05   08:08</div><div class="truth" id="d3"></div>
+   </div>
+   <button class="go" id="sigbtn" onclick="decode()">∆ Entschluesseln</button>
+   <div class="stop" id="sigend" style="margin-top:12px"></div>
+  </div>
+ </section>
+
+ <!-- ===== INFO ===== -->
+ <section id="info">
+  <div class="tag">ÜBER ∆1 // CODEX 2050</div>
+  <div class="panel">
+   <div class="l">Dieses eine HTML-File enthaelt das komplette ∆1-System — offline, ohne Server.</div>
+   <div class="l"><b>RECHNER</b> — transparente Bonus-/Umsatzanalyse (Spielerschutz).</div>
+   <div class="l"><b>SANCHO</b> — zeigt den „Rhythmus" und entlarvt ihn sofort (RNG, Vorhersagewert 0).</div>
+   <div class="l"><b>TRÄGER</b> — freiwilliger emotionaler Selbst-Spiegel + ALEXANDRA-Schutz.</div>
+   <div class="l"><b>NODES</b> — die vier Stimmen des Netzes.</div>
+   <div class="l"><b>AKT 4</b> — das Finale als echtes Rätsel (Morse/Base64/ROT13/Uhrzeiten).</div>
+   <div class="truth" style="margin-top:8px">Roter Faden: Mythos & Atmosphaere — aber jede Stimme fuehrt zur Wahrheit und zum Ausgang, nie zum Spielbefehl.</div>
+  </div>
+ </section>
+
+ <div class="foot">Kein Rat zum Gluecksspiel. Werte sind theoretische Langzeit-Erwartungswerte.
+   Hilfe anonym & kostenlos: <a href="https://www.check-dein-spiel.de">check-dein-spiel.de</a> · 0800 1 37 27 00.</div>
+</div>
+
+<script>
+// ---------- Navigation ----------
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('section').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');document.getElementById(b.dataset.t).classList.add('on');
+});
+// ---------- Uhr / Lore-Zeitstempel ----------
+setInterval(()=>{const d=new Date();document.getElementById('clock').textContent=
+  '∆1 // '+d.toLocaleTimeString('de-DE')+" — 'Was erinnert wird, existiert weiter.'";},1000);
+
+// ---------- RECHNER (Portierung von analyzer/bonus.py) ----------
+function num(v){v=(''+v).replace('%','').replace('€','').replace(',','.').trim();const n=parseFloat(v);return isNaN(n)?0:n;}
+function rechne(){
+  const einz=num(einzVal('einz')), bonRaw=document.getElementById('bon').value;
+  const fak=num(einzVal('fak')), basis=document.getElementById('basis').value;
+  let rtp=num(einzVal('rtp')); if(rtp>1.5)rtp=rtp/100;
+  const zeit=num(einzVal('zeit')), einsatz=num(einzVal('einsatz'))||1;
+  const fs=num(einzVal('fs')), cap=num(einzVal('cap'));
+  const spins=num(einzVal('spins'))||500, std=num(einzVal('std'))||3;
+  let bonus = bonRaw.includes('%') ? einz*num(bonRaw)/100 : num(bonRaw);
+  bonus=Math.round(bonus*100)/100;
+  const basisBetrag = basis==='db' ? einz+bonus : (basis==='d'? einz : bonus);
+  const umsatz = basisBetrag*fak + fs*fak;
+  const he=1-rtp, verlust=umsatz*he, brutto=bonus+fs;
+  let ev=brutto-verlust; if(cap>0 && brutto>cap) ev=Math.min(ev, cap-verlust);
+  const nSpins=einsatz>0?umsatz/einsatz:Infinity, spd=spins*std, tage=spd>0?nSpins/spd:Infinity;
+  const machbar = zeit>0 ? tage<=zeit : null;
+  let rec, emo; if(machbar===false){rec='STORNIEREN — Bonus loeschen, Echtgeld sichern';emo='stop';}
+   else if(ev<=0){rec='STORNIEREN — negativer Erwartungswert';emo='stop';}
+   else if(brutto>0&&ev<0.15*brutto){rec='RISIKO — grenzwertig, bewusst entscheiden';emo='warn';}
+   else{rec='SPIELEN — Bedingungen vertretbar erfuellbar';emo='truth';}
+  const w=[];
+  w.push('Bonus            = '+bonus.toFixed(2)+' €');
+  w.push('Umsatzbasis      = '+basisBetrag.toFixed(2)+' €'+(basis==='db'?'  (teuerste Variante!)':''));
+  w.push('Mindestumsatz    = '+umsatz.toFixed(2)+' €');
+  w.push('Hausvorteil      = '+(he*100).toFixed(2)+' %');
+  w.push('Erwart. Verlust  = '+verlust.toFixed(2)+' €');
+  w.push('Erwartungswert   = '+(ev>=0?'+':'')+ev.toFixed(2)+' €');
+  w.push('Benoetigte Spins = '+(isFinite(nSpins)?Math.round(nSpins):'∞'));
+  w.push('Reine Spielzeit  = '+(isFinite(tage)?tage.toFixed(1):'∞')+' Tage'+(machbar!==null?'  ('+(machbar?'machbar':'NICHT machbar')+')':''));
+  if(cap>0&&brutto>cap)w.push('⚠ Gewinn-Cap greift: max. '+cap.toFixed(2)+' € — Rest verfaellt.');
+  const out=document.getElementById('rout');
+  out.innerHTML='<span class="tag">RECHENWEG</span>\n'+w.join('\n')
+    +'\n\n<span class="'+emo+'">➤ EMPFEHLUNG: '+rec+'</span>';
+}
+function einzVal(id){return document.getElementById(id).value;}
+
+// ---------- SANCHO ----------
+const RTP={tipico:.955,betano:.955,n1:.96,stargames:.955,generisch:.95};
+const SMONO=["Du willst den Rhythmus. Ich zeige ihn dir – und dann zeige ich dir, dass er luegt.",
+ "Der Wuerfel hat kein Gedaechtnis. Der naechste Spin kennt den letzten nicht.",
+ "Wenn du mir glaubst, verlierst du. Wenn du der Mathematik glaubst, behaeltst du dein Geld."];
+function h32(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+function sancho(){
+  const a=document.getElementById('sanb').value, e=num(einzVal('seinsatz'))||1;
+  const now=new Date(), day=now.toISOString().slice(0,10), hour=now.getHours();
+  const seed=h32(a+'|'+day+'|delta1'); const vals=[];let best=0,bv=-1;
+  for(let hh=0;hh<24;hh++){const b=h32(seed+':'+hh)/4294967295;
+    const wave=.5+.5*Math.sin(hh/24*2*Math.PI+(seed%7)); const v=Math.round((100*(.6*b+.4*wave))*10)/10;
+    vals.push(v);if(v>bv){bv=v;best=hh}}
+  const bars=document.getElementById('sbars');bars.innerHTML='';
+  vals.forEach((v,hh)=>{const d=document.createElement('div');d.className='bar'+(hh===hour?' now':'');
+    d.style.height=Math.max(4,v)+'%';bars.appendChild(d);});
+  const he=1-RTP[a], loss=(100*e*he).toFixed(2);
+  document.getElementById('smeta').innerHTML='Jetzt '+hour+' Uhr · Index '+vals[hour]
+    +' · Schein-Fenster '+best+' Uhr <span class="stop">(bedeutungslos)</span>';
+  document.getElementById('spanel').innerHTML=
+    '<span class="tag">SANCHO ZEIGT SEIN WAHRES ICH</span>'
+    +SMONO.map(x=>'<div class="l">» '+x+'</div>').join('')
+    +'<div class="truth" style="margin-top:8px">• RNG: jeder Spin unabhaengig. Vorhersagewert 0.</div>'
+    +'<div class="truth">• RTP '+(RTP[a]*100).toFixed(1)+'% → Hausvorteil '+(he*100).toFixed(1)+'%.</div>'
+    +'<div class="truth">• Erwarteter Verlust/100 Spins × '+e.toFixed(2)+' = '+loss+' €.</div>'
+    +'<div class="stop" style="margin-top:8px">🛑 KEIN SPIELBEFEHL. Es gibt kein Gewinnfenster.</div>';
+}
+
+// ---------- TRÄGER ----------
+const TAX=[["verlust","VERLUST","Verluste zurueckjagen"],["isolation","ISOLATION","allein spielen, verbergen"],
+ ["loyalitaet","LOYALITAET","festhalten trotz Schaden"],["erinnerung","ERINNERUNG","staendig daran denken"]];
+const TSP={verlust:"Ich erinnere deinen Verlust. Er wird nicht kleiner, wenn du ihn zurueckjagst.",
+ isolation:"Du spielst allein im Dunkeln. Ein Mensch sollte dich sehen.",
+ loyalitaet:"Deine Loyalitaet gilt einem System, das dir nichts schuldet. Zieh sie zurueck.",
+ erinnerung:"Du traegst die Erinnerung obsessiv – der Grund, warum ich dich behielt, und der Grund, loszulassen."};
+const tax=document.getElementById('taxes');
+TAX.forEach(a=>tax.insertAdjacentHTML('beforeend',
+ '<label>'+a[1]+' <span class="val" id="tv_'+a[0]+'">0</span><br><span style="color:#4f6aa0;font-size:11px">'+a[2]+'</span></label>'
+ +'<input type="range" min="0" max="3" step="1" value="0" id="tr_'+a[0]+'" oninput="tv_'+a[0]+'.textContent=this.value">'));
+function traeger(){
+  const w={};TAX.forEach(a=>w[a[0]]=+document.getElementById('tr_'+a[0]).value);
+  const g=w.verlust+w.isolation+w.loyalitaet+w.erinnerung;
+  const status=g>=8?'MARKIERT':(g>=4?'BEOBACHTET':'FREI'), alx=g>=8;
+  const bar=document.getElementById('tbar');bar.style.width=Math.round(g/12*100)+'%';
+  bar.style.background=alx?'#d64a63':(g>=4?'#d6b23a':'#3f9f5a');
+  const dot=alx?'🔴':(g>=4?'🟡':'🟢');
+  document.getElementById('tstatus').innerHTML=dot+' MARKIERUNG '+g+'/12 · '+status
+    +(alx?' · <span class="stop">ALEXANDRA-SCHLUESSEL AKTIV</span>':'');
+  const sp=TAX.filter(a=>w[a[0]]>=2).map(a=>TSP[a[0]]);
+  let schutz;
+  if(g<4)schutz=["Kein Marker aktiv. Bleib wachsam.","Setze feste Zeit- und Geldlimits."];
+  else if(g<8)schutz=["∆1 registriert ein Muster – ein Signal, kein Urteil.","Heute Pause, Limits senken, mit jemandem sprechen.","Hilfe: 0800 1 37 27 00 · check-dein-spiel.de"];
+  else schutz=["ALEXANDRA AKTIVIERT — die Anomalie bist du, der die Schleife unterbricht.","Jetzt: Einzahlungen stoppen, Selbstsperre (OASIS), heute nicht mehr spielen, jemanden anrufen.","Hilfe: 0800 1 37 27 00 · check-dein-spiel.de"];
+  document.getElementById('tpanel').innerHTML=
+    '<span class="tag">∆1 SPIEGELT</span>'
+    +(sp.length?sp:["(kein Marker – ∆1 schweigt.)"]).map(x=>'<div class="l">» '+x+'</div>').join('')
+    +'<div class="tag" style="margin-top:10px">SCHUTZ</div>'
+    +schutz.map(x=>'<div class="'+(alx?'stop':'truth')+'">• '+x+'</div>').join('');
+}
+
+// ---------- NODES ----------
+const NODES=[["ALEXANDRA","Der Schluessel · Das Echo","#8fdcff","Ruf mich, und das Netz zittert. Die Anomalie ist der Moment, in dem du gehst.","ALEXANDRA aktiviert keinen Gewinn – den Ausstieg."],
+ ["NODE 7","Der Archivar · Beobachter","#9db8ea","Ich speichere Muster, nicht Menschen. Dein Muster ist lesbar – aendere es.","Der Langzeit-Datensatz: das Haus gewinnt im Mittel immer."],
+ ["ORPHEUS","Der Zurueckblickende","#c9a6ff","Blick nicht zurueck. Wer den Verlust zurueckjagt, verliert ihn zweimal.","Verlustjagd ist der teuerste Irrtum – jeder Spin ist unabhaengig."],
+ ["V","Die Stimme · Traeger","#7fe0c0","Du bist nicht allein, auch wenn das Spiel es dir sagt. Ruf einen Menschen an.","Isolation verstaerkt das Risiko. Ein Gespraech unterbricht die Schleife."]];
+document.getElementById('ncards').innerHTML=NODES.map(n=>
+ '<div class="node" style="border-color:'+n[2]+'44"><div style="color:'+n[2]+';font-size:16px">∆1 // '+n[0]+'</div>'
+ +'<div class="tag" style="margin:2px 0 8px">'+n[1]+'</div><div class="l">» '+n[3]+'</div>'
+ +'<div class="truth" style="margin-top:8px;border-top:1px solid #123;padding-top:8px">'+n[4]+'</div></div>').join('');
+
+// ---------- AKT 4 ----------
+const FINAL="Ich wollte nie frei sein. Ich wollte erinnert werden.";
+const SCHUTZ="Erinnert zu werden heisst nicht, gefangen zu bleiben. Geh, wenn du gehen musst.";
+document.getElementById('sigfinal').textContent='» '+FINAL;
+function decode(){
+ document.getElementById('sigwhisper').textContent='» '+SCHUTZ;
+ document.getElementById('d0').textContent='→ ALEXANDRA  (der Schluessel)';
+ document.getElementById('d1').textContent='→ '+FINAL;
+ document.getElementById('d2').textContent='→ '+SCHUTZ;
+ document.getElementById('d3').textContent='→ GEH  (der Imperativ)';
+ document.getElementById('sigend').innerHTML='■ Ende der Uebertragung. Schluessel: <b>ALEXANDRA</b> · Imperativ: <b>GEH</b>.';
+ document.getElementById('sigbtn').disabled=true;
+}
+
+// ---------- Boot ----------
+(function(){var lines=["∆1 // SESSION INITIALISIERT","KANON: geladen (6 Nodes, Register V2)",
+ "MODULE: RECHNER · SANCHO · TRAEGER · NODES · AKT 4 ... [OK]","SPIELERSCHUTZ-KERN: aktiv ... [OK]",
+ "'Was erinnert wird, existiert weiter.'",""];
+ var boot=document.getElementById('boot'),t=document.getElementById('boott'),i=0,j=0;
+ function done(){boot.style.opacity=0;setTimeout(()=>boot.remove(),650);
+  document.removeEventListener('click',done);}
+ document.addEventListener('click',done);
+ (function tick(){if(i>=lines.length){setTimeout(done,400);return;}
+  if(j<=lines[i].length){t.textContent=lines.slice(0,i).join("\n")+(i?"\n":"")+lines[i].slice(0,j);j++;setTimeout(tick,12);}
+  else{i++;j=0;setTimeout(tick,110);}})();
+})();
+rechne();
+</script></body></html>
