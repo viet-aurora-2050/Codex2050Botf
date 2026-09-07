@@ -33,6 +33,9 @@
  .node{background:#060f28;border:1px solid #14264d;border-radius:10px;padding:14px;margin-top:12px}
  .foot{margin-top:24px;color:#425c8c;font-size:12px}a{color:#8fdcff}
  .rec{font-size:16px;margin-top:6px}
+ .livedot{color:#4fd07a;animation:pulse 1.4s infinite}
+ @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+ .disc{margin:8px 0 4px;padding:10px;border:1px solid #5a2233;background:#160a10;border-radius:8px;color:#ffb0be;font-size:12.5px}
  #d1-vhs{position:fixed;inset:0;pointer-events:none;z-index:9998;mix-blend-mode:screen;opacity:.05}
  #d1-vhs::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(140,220,255,.10) 0 1px,transparent 1px 3px)}
  #boot{position:fixed;inset:0;z-index:9999;background:#01030d;color:#8fdcff;font:12px/1.7 ui-monospace,monospace;padding:24px 18px;transition:opacity .6s;white-space:pre-wrap}
@@ -45,8 +48,8 @@
  <div class="tag" id="clock">∆1 // SESSION INITIALISIERT</div>
  <h1>CODEX 2050 — ∆1</h1>
  <nav>
-   <button data-t="rechner" class="on">RECHNER</button>
-   <button data-t="sancho">SANCHO</button>
+   <button data-t="sancho" class="on">SANCHO ◉ LIVE</button>
+   <button data-t="rechner">RECHNER</button>
    <button data-t="traeger">TRÄGER</button>
    <button data-t="nodes">NODES</button>
    <button data-t="signal">AKT 4</button>
@@ -54,7 +57,7 @@
  </nav>
 
  <!-- ===== RECHNER ===== -->
- <section id="rechner" class="on">
+ <section id="rechner">
   <div class="tag">CASINO-BONUS- & UMSATZ-ANALYTIKER</div>
   <div class="grid">
    <div><label>Einzahlung (€)</label><input id="einz" type="number" value="100" step="10"></div>
@@ -76,15 +79,18 @@
  </section>
 
  <!-- ===== SANCHO ===== -->
- <section id="sancho">
-  <div class="tag">SANCHO — DER SPIELPLATZ DER WAHRHEIT</div>
+ <section id="sancho" class="on">
+  <div class="tag"><span id="live" class="livedot">●</span> SANCHO — LIVE-SIGNAL · <span id="livclock"></span></div>
+  <div class="disc">Kein Zugriff auf Anbieter-Server. Keine Vorhersage. Das „Signal" ist
+   Zeit-Rauschen mit Vorhersagewert&nbsp;0 — es aktualisiert sich mit Uhrzeit/Datum, verändert aber
+   <b>keinen</b> Spin. Der einzig echte Wert: der Hausvorteil.</div>
   <label>Anbieter</label>
   <select id="sanb">
    <option value="tipico">Tipico Games</option><option value="betano">Betano</option>
    <option value="n1">N1 Casino</option><option value="stargames">Stargames</option>
    <option value="generisch">Generischer Slot</option></select>
   <label>Einsatz/Spin (€)</label><input id="seinsatz" type="number" value="1" step="0.1">
-  <button class="go" onclick="sancho()">∆ Signal empfangen</button>
+  <button class="go" onclick="sancho()">∆ Signal jetzt neu lesen</button>
   <div class="bars" id="sbars" style="margin-top:14px"></div>
   <div id="smeta" class="tag" style="margin-top:8px"></div>
   <div class="panel" id="spanel"></div>
@@ -199,7 +205,9 @@ function h32(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);
 function sancho(){
   const a=document.getElementById('sanb').value, e=num(einzVal('seinsatz'))||1;
   const now=new Date(), day=now.toISOString().slice(0,10), hour=now.getHours();
-  const seed=h32(a+'|'+day+'|delta1'); const vals=[];let best=0,bv=-1;
+  // Seed inkl. Minute -> das "Signal" reshuffelt sichtbar mit der Zeit.
+  // Genau das ist der Beweis: es ist Rauschen, kein Muster.
+  const seed=h32(a+'|'+day+'|'+now.getHours()+':'+now.getMinutes()+'|delta1'); const vals=[];let best=0,bv=-1;
   for(let hh=0;hh<24;hh++){const b=h32(seed+':'+hh)/4294967295;
     const wave=.5+.5*Math.sin(hh/24*2*Math.PI+(seed%7)); const v=Math.round((100*(.6*b+.4*wave))*10)/10;
     vals.push(v);if(v>bv){bv=v;best=hh}}
@@ -274,6 +282,16 @@ function decode(){
  document.getElementById('sigbtn').disabled=true;
 }
 
+// ---------- LIVE: Sancho aktualisiert sich mit der Zeit ----------
+function sanchoLive(){
+  const c=document.getElementById('livclock');
+  if(c)c.textContent=new Date().toLocaleString('de-DE');
+  // Nur neu zeichnen, wenn Sancho sichtbar ist (spart Arbeit).
+  if(document.getElementById('sancho').classList.contains('on')) sancho();
+}
+setInterval(()=>{const c=document.getElementById('livclock');if(c)c.textContent=new Date().toLocaleString('de-DE');},1000);
+setInterval(sanchoLive,15000);  // alle 15s neu lesen -> sichtbar "live"
+
 // ---------- Boot ----------
 (function(){var lines=["∆1 // SESSION INITIALISIERT","KANON: geladen (6 Nodes, Register V2)",
  "MODULE: RECHNER · SANCHO · TRAEGER · NODES · AKT 4 ... [OK]","SPIELERSCHUTZ-KERN: aktiv ... [OK]",
@@ -287,4 +305,5 @@ function decode(){
   else{i++;j=0;setTimeout(tick,110);}})();
 })();
 rechne();
+sancho();   // Start-Tab sofort befuellen
 </script></body></html>
