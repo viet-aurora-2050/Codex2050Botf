@@ -1,37 +1,62 @@
 import aiohttp
-import json
-import asyncio
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Optional
+
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+
 class DeepSeekClient:
+    """Duenner Client fuer die DeepSeek Chat-Completions-API."""
+
     def __init__(self, config):
         self.config = config
-        self.session = None
-        
+        self.session: Optional[aiohttp.ClientSession] = None
+
     async def connect(self):
         if not self.session:
             self.session = aiohttp.ClientSession(
                 headers={"Authorization": f"Bearer {self.config.DEEPSEEK_API_KEY}"}
             )
-            
-    async def close(self):
-        if self.session: await self.session.close()
 
-    async def chat_completion(self, messages: List[Dict]):
-        if not self.session: await self.connect()
+    async def close(self):
+        if self.session:
+            await self.session.close()
+            self.session = None
+
+    async def chat_completion(self, messages: List[Dict]) -> Dict:
+        if not self.session:
+            await self.connect()
         payload = {
             "model": self.config.AI_MODEL,
             "messages": messages,
-            "temperature": self.config.AI_TEMPERATURE
+            "temperature": self.config.AI_TEMPERATURE,
+            "max_tokens": self.config.AI_MAX_TOKENS,
         }
-        async with self.session.post(f"{self.config.DEEPSEEK_BASE_URL}/chat/completions", json=payload) as resp:
-            if resp.status != 200: return {"error": await resp.text()}
-            return await resp.json()
+        try:
+            async with self.session.post(
+                f"{self.config.DEEPSEEK_BASE_URL}/chat/completions", json=payload
+            ) as resp:
+                if resp.status != 200:
+                    text = await resp.text()
+                    logger.error("DeepSeek API %s: %s", resp.status, text)
+                    return {"error": text}
+                return await resp.json()
+        except aiohttp.ClientError as exc:
+            logger.error("DeepSeek Verbindungsfehler: %s", exc)
+            return {"error": str(exc)}
 
-    async def analyze_code(self, code: str):
-        prompt = f"Analyze this code:\n\n{code}\n\nProvide JSON output with complexity, issues, and suggestions."
-        messages = [{"role": "user", "content": prompt}]
-        return await self.chat_completion(messages)
+    async def ask(self, frage: str, system_prompt: Optional[str] = None) -> str:
+        """Stellt eine Frage (optional mit System-Prompt) und liefert reinen Text."""
+        messages: List[Dict] = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": frage})
+        resp = await self.chat_completion(messages)
+        if "error" in resp:
+            return f"KI-Fehler: {resp['error']}"
+        return (
+            resp.get("choices", [{}])[0]
+            .get("message", {})
+            .get("content", "Keine Antwort erhalten.")
+        )

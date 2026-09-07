@@ -1,51 +1,38 @@
 #!/usr/bin/env python3
-import os
-import logging
-from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+"""Einstiegspunkt: startet den Casino-Bonus- & Umsatz-Analytiker als Telegram-Bot.
 
-# Logging einrichten
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
-logger = logging.getLogger(__name__)
+Ohne TELEGRAM_TOKEN laeuft die Rechen-Engine weiterhin per CLI:
+    python -m analyzer "einzahlung=100 bonus=100% faktor=30 zeit=3 einsatz=1"
+"""
 
-# Token aus Umgebung holen
-TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+import sys
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle /start command"""
-    user = update.effective_user
-    await update.message.reply_text(
-        f"🤖 Hallo {user.first_name}!\n"
-        f"Codex2050 Bot ist online.\n"
-        f"Deine ID: {user.id}"
-    )
+from config import Config
+from utils.logger import setup_logging
 
-async def test(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle /test command"""
-    await update.message.reply_text("✅ Alles funktioniert!")
+logger = setup_logging()
 
-def main():
-    """Starte den Bot"""
-    if not TELEGRAM_TOKEN:
-        logger.error("❌ TELEGRAM_TOKEN nicht gesetzt!")
-        print("Bitte TELEGRAM_TOKEN in Render Environment setzen")
-        return
-    
-    print(f"🚀 Starte Bot mit Token: {TELEGRAM_TOKEN[:20]}...")
-    
-    # Application erstellen
-    application = Application.builder().token(TELEGRAM_TOKEN).build()
-    
-    # Commands hinzufügen
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("test", test))
-    
-    # Bot starten
-    logger.info("Bot wird gestartet...")
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
 
-if __name__ == '__main__':
-    main()
+def main() -> int:
+    config = Config()
+
+    if not config.TELEGRAM_TOKEN:
+        logger.error("❌ TELEGRAM_TOKEN nicht gesetzt.")
+        print(
+            "Bitte TELEGRAM_TOKEN als Umgebungsvariable setzen (z. B. in Render "
+            "oder in einer .env-Datei).\n\n"
+            "Tipp: Die Bonus-Berechnung laeuft auch ohne Bot direkt in der Konsole:\n"
+            '  python -m analyzer "einzahlung=100 bonus=100% faktor=30 zeit=3 einsatz=1"'
+        )
+        return 1
+
+    from bot.core import CasinoBonusBot
+
+    logger.info("🚀 Starte Casino-Bonus-Analytiker (Token %s...)", config.TELEGRAM_TOKEN[:8])
+    bot = CasinoBonusBot(config)
+    bot.run()
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

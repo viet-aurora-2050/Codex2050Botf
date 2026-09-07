@@ -1,23 +1,20 @@
-# Exported from Render on 2026-01-12T06:56:55Z
+# Render Blueprint – Casino-Bonus- & Umsatz-Analytiker
+# Web-Service = Rechner-Dashboard (funktioniert ohne Secrets) + optionaler Telegram-Webhook.
+# Fuer reinen Polling-Betrieb stattdessen einen Worker mit startCommand "python main.py" nutzen.
 version: "1"
-projects:
-- name: Codexbot2050
-  environments:
-  - name: Production
-    services:
-    - type: web
-      name: Codex2050Botf
-      runtime: python
-      repo: https://github.com/viet-aurora-2050/Codex2050Botf
-      plan: free
-      envVars:
-      - key: TEST_MODE
-        sync: false
-      - key: ALLOWED_USER_IDS
-        sync: false
+services:
+  - type: web
+    name: casino-bonus-analytiker
+    runtime: python
+    plan: free
+    region: frankfurt
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn web.dashboard:app --host 0.0.0.0 --port $PORT
+    autoDeployTrigger: commit
+    envVars:
+      # Optional – nur setzen, wenn der Telegram-Webhook aktiv sein soll.
       - key: TELEGRAM_TOKEN
         sync: false
-      region: frankfurt
-      buildCommand: pip install -r requirements.txt
-      startCommand: python ./main.py
-      autoDeployTrigger: commit
+      # Optional – aktiviert die KI-gestuetzte AGB-Analyse.
+      - key: DEEPSEEK_API_KEY
+        sync: false
