@@ -11,6 +11,8 @@ from telegram.ext import (
 
 from ai.providers import AIManager
 from analyzer import SYSTEM_PROMPT, analysiere, formatiere, parse
+from sancho import erzeuge as sancho_erzeuge
+from sancho import formatiere as sancho_formatiere
 from utils.logger import get_logger
 
 logger = get_logger("Bot")
@@ -24,6 +26,7 @@ HELP_TEXT = (
     "*Befehle*\n"
     "`/bonus <parameter>` – Bonus berechnen\n"
     "`/analyse <AGB-Text>` – Bonus-AGB per KI auf Haken pruefen\n"
+    "`/sancho <anbieter>` – ∆1-Spielplatz: Rhythmus-Mythos & Wahrheit\n"
     "`/frage <Text>` – freie Frage an den Analytiker\n"
     "`/status` – Systemstatus\n"
     "`/help` – diese Hilfe\n\n"
@@ -90,6 +93,11 @@ class CasinoBonusBot:
         )
         await msg.edit_text(antwort[:4000])
 
+    async def sancho_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        anbieter = " ".join(context.args) or "generisch"
+        ergebnis = sancho_erzeuge(anbieter=anbieter)
+        await update.message.reply_text(sancho_formatiere(ergebnis))
+
     async def frage_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         frage = " ".join(context.args)
         if not frage:
@@ -145,6 +153,7 @@ class CasinoBonusBot:
         app.add_handler(CommandHandler("bonus", self.bonus_command))
         app.add_handler(CommandHandler("analyse", self.analyse_command))
         app.add_handler(CommandHandler("analyze", self.analyse_command))
+        app.add_handler(CommandHandler("sancho", self.sancho_command))
         app.add_handler(CommandHandler("frage", self.frage_command))
         app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.text_message))
         return app

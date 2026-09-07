@@ -89,6 +89,26 @@ curl -X POST localhost:8080/api/analyse \
   -d '{"input":"einzahlung=100 bonus=100% faktor=30 basis=db rtp=0.96 zeit=3 einsatz=1"}'
 ```
 
+## ∆1 // Sanchos Spielplatz (Lore-Modul, Dunkelblau 2050)
+
+Ein ARG-Modul im Dunkelblau-2050-Modus. „Sancho" ist der Agent, der hier
+**sein wahres Ich zeigen muss** – und sein wahres Ich ist die Wahrheit:
+Aus Anbieter (Tipico/Betano/N1/Stargames) + aktuellem Datum/Uhrzeit erzeugt er
+ein atmosphärisches „∆1-Signal" (einen Rhythmus) und **entlarvt es sofort selbst**.
+
+> **Warum es keinen echten Predictor gibt:** Regulierte Online-Slots laufen auf
+> zertifizierten RNGs. Jeder Spin ist statistisch **unabhängig** – es gibt kein
+> zeit-, datums- oder lastabhängiges „Gewinnfenster". Das Signal hat
+> **Vorhersagewert 0** und dient nur der Atmosphäre. Der einzig verlässliche Wert
+> ist der erwartete Verlust über den Hausvorteil. Das Modul gibt **nie** einen
+> Spielbefehl.
+
+```bash
+python -m sancho "tipico games" 2      # CLI
+# Web:  /sancho   (Dunkelblau-Interface)   ·  JSON: /api/sancho?anbieter=betano
+# Bot:  /sancho betano
+```
+
 ## Deployment (Render)
 
 `render.yaml` deployt das Web-Dashboard (Rechner funktioniert sofort, ohne Secrets).
@@ -106,8 +126,9 @@ python -m unittest discover -s tests -v
 
 ```
 analyzer/     Rechen-Engine (bonus.py), Parser, System-Prompt, CLI
+sancho/       ∆1-Lore-Modul „Sanchos Spielplatz" (Rhythmus-Mythos + Wahrheit)
 bot/          Telegram-Bot (CasinoBonusBot)
 ai/           DeepSeek-Client für die AGB-Analyse
-web/          FastAPI-Dashboard (Rechner + Webhook)
-tests/        Unit-Tests der Engine
+web/          FastAPI-Dashboard (Rechner + /sancho + Webhook)
+tests/        Unit-Tests (Engine, Parser, Sancho)
 ```
