@@ -20,6 +20,9 @@ from nodes import formatiere as node_formatiere
 from nodes import sende as node_sende
 from aktvier import erzeuge_signal
 from aktvier import formatiere as signal_formatiere
+from risiko import RisikoSzenario, Volatilitaet
+from risiko import analysiere as risiko_analysiere
+from risiko import formatiere as risiko_formatiere
 from utils.logger import get_logger
 
 logger = get_logger("Bot")
@@ -37,6 +40,7 @@ HELP_TEXT = (
     "`/traeger <werte>` – ∆1-Träger-Protokoll: emotionaler Selbst-Spiegel\n"
     "`/node <name>` – ∆1-Stimme empfangen (ALEXANDRA, NODE 7, ORPHEUS, V)\n"
     "`/signal` – AKT 4: Das Signal (Ebene-2-Rätsel) · `/signal loesung`\n"
+    "`/risiko <werte>` – persönliche Risiko-Analyse (EV, Risk of Ruin)\n"
     "`/frage <Text>` – freie Frage an den Analytiker\n"
     "`/status` – Systemstatus\n"
     "`/help` – diese Hilfe\n\n"
@@ -144,6 +148,40 @@ class CasinoBonusBot:
             signal_formatiere(erzeuge_signal(), mit_loesung=mit_loesung)
         )
 
+    async def risiko_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        import re
+
+        vola = {"niedrig": Volatilitaet.NIEDRIG, "low": Volatilitaet.NIEDRIG,
+                "mittel": Volatilitaet.MITTEL, "mid": Volatilitaet.MITTEL,
+                "hoch": Volatilitaet.HOCH, "high": Volatilitaet.HOCH}
+        s = RisikoSzenario()
+        gefunden = False
+        for k, v in re.findall(r"([a-zA-Z]+)\s*[=:]\s*([\w.,]+)", " ".join(context.args)):
+            k = k.lower(); gefunden = True
+            try:
+                if k in ("budget", "guthaben"):
+                    s.budget = float(v.replace(",", "."))
+                elif k in ("einsatz", "bet"):
+                    s.einsatz = float(v.replace(",", "."))
+                elif k in ("spins", "runden"):
+                    s.spins = int(float(v))
+                elif k == "rtp":
+                    r = float(v.replace(",", ".")); s.rtp = r / 100 if r > 1.5 else r
+                elif k in ("vola", "volatilitaet"):
+                    s.volatilitaet = vola.get(v.lower(), s.volatilitaet)
+            except ValueError:
+                pass
+        if not gefunden:
+            return await update.message.reply_text(
+                "Persönliche Risiko-Analyse (aus öffentlichen Fakten):\n"
+                "`/risiko budget=100 einsatz=1 spins=500 rtp=0.96 vola=mittel`\n\n"
+                "Berechnet erwarteten Verlust, Chance im Plus, Risk of Ruin. "
+                "Keine Spin-Vorhersage.",
+                parse_mode="Markdown",
+            )
+        msg = await update.message.reply_text("📈 Simuliere ...")
+        await msg.edit_text(risiko_formatiere(risiko_analysiere(s, runs=8000), s))
+
     async def frage_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         frage = " ".join(context.args)
         if not frage:
@@ -203,6 +241,7 @@ class CasinoBonusBot:
         app.add_handler(CommandHandler("traeger", self.traeger_command))
         app.add_handler(CommandHandler("node", self.node_command))
         app.add_handler(CommandHandler("signal", self.signal_command))
+        app.add_handler(CommandHandler("risiko", self.risiko_command))
         app.add_handler(CommandHandler("frage", self.frage_command))
         app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.text_message))
         return app
