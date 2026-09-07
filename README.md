@@ -173,6 +173,26 @@ python -m aktvier            # das Rätsel   ·   python -m aktvier --loesung
 
 > Modulname `aktvier`, weil `signal` ein Python-Standardmodul ist und nicht überschattet werden darf.
 
+## Melde-Assistent (`melde/`) – Mathematik + Beschwerde/Anzeige an die GGL
+
+Verbindet das mathematische Prinzip (Hausvorteil, struktureller Verlust,
+Risk of Ruin) mit einer **sachlichen Beschwerde/Anzeige** an die zuständige
+Aufsicht (in Deutschland: **GGL**) – nutzbar für **jeden** Online-Anbieter.
+
+Fest eingebaute Schutzregeln: **nur wahrheitsgemäße Angaben** (eine wissentlich
+falsche Anzeige ist selbst strafbar, § 164 StGB), zuerst Lizenzstatus in der
+GGL-Whitelist prüfen, und alles wird als **Verdacht / Bitte um Prüfung**
+formuliert – nie als feststehende Behauptung. Keine Rechtsberatung.
+
+```bash
+python -m melde anbieter="Name" lizenz=keine einzahlung=300 verlust=300 rtp=0.96
+# Web-App: Tab „ANZEIGE" (Formular → fertiger Text zum Kopieren)  ·  Bot: /melde …
+```
+
+> Das Melden eines Verdachts an die Aufsicht ist legal und genau ihr Zweck.
+> Bei fehlender Lizenz können Verträge nichtig sein (§ 134 BGB) und Einzahlungen
+> zurückforderbar (§ 812 BGB) – für den Einzelfall Verbraucherzentrale / Fachanwalt.
+
 ## Personal-Risiko-Analyse (`risiko/`) – aus öffentlichen Fakten
 
 Beantwortet die legitime Frage: *Kann man aus öffentlich verfügbaren Infos
@@ -225,6 +245,7 @@ traeger/      ∆1-Träger-Protokoll (freiwilliger emotionaler Selbst-Spiegel)
 nodes/        ∆1-Nodes – die Stimmen des Spiegelnetzes (ALEXANDRA, NODE 7, …)
 aktvier/      ∆1-AKT 4 „Das Signal" – Finale + Ebene-2-Rätsel (Morse/Base64/ROT13/Uhr)
 risiko/       Personal-Risiko-Analyse (Monte-Carlo: EV, Risk of Ruin) aus öffentlichen Fakten
+melde/        Melde-Assistent (Mathematik + Beschwerde/Anzeige an die GGL, für jeden Anbieter)
 bot/          Telegram-Bot (CasinoBonusBot)
 ai/           DeepSeek-Client für die AGB-Analyse
 web/          FastAPI-Dashboard (Rechner + /sancho + /traeger + /nodes + /signal + VHS/Boot)

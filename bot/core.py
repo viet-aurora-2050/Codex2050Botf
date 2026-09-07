@@ -23,6 +23,9 @@ from aktvier import formatiere as signal_formatiere
 from risiko import RisikoSzenario, Volatilitaet
 from risiko import analysiere as risiko_analysiere
 from risiko import formatiere as risiko_formatiere
+from melde import Lizenz, MeldeSzenario
+from melde import erstelle as melde_erstelle
+from melde import formatiere as melde_formatiere
 from utils.logger import get_logger
 
 logger = get_logger("Bot")
@@ -41,6 +44,7 @@ HELP_TEXT = (
     "`/node <name>` – ∆1-Stimme empfangen (ALEXANDRA, NODE 7, ORPHEUS, V)\n"
     "`/signal` – AKT 4: Das Signal (Ebene-2-Rätsel) · `/signal loesung`\n"
     "`/risiko <werte>` – persönliche Risiko-Analyse (EV, Risk of Ruin)\n"
+    "`/melde <werte>` – Beschwerde/Anzeige an die GGL (Mathematik + Recht)\n"
     "`/frage <Text>` – freie Frage an den Analytiker\n"
     "`/status` – Systemstatus\n"
     "`/help` – diese Hilfe\n\n"
@@ -182,6 +186,50 @@ class CasinoBonusBot:
         msg = await update.message.reply_text("📈 Simuliere ...")
         await msg.edit_text(risiko_formatiere(risiko_analysiere(s, runs=8000), s))
 
+    async def melde_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        import re
+
+        arg = " ".join(context.args)
+        if not arg.strip():
+            return await update.message.reply_text(
+                "Beschwerde/Anzeige an die GGL (Mathematik + Recht):\n"
+                '`/melde anbieter="Name" lizenz=keine einzahlung=300 verlust=300 rtp=0.96`\n\n'
+                "lizenz = unbekannt | keine | gueltig. Nur WAHRHEITSGEMÄSSE Angaben — "
+                "eine falsche Anzeige ist strafbar (§164 StGB). Keine Rechtsberatung.",
+                parse_mode="Markdown",
+            )
+        liz = {"unbekannt": Lizenz.UNBEKANNT, "keine": Lizenz.KEINE,
+               "gueltig": Lizenz.GUELTIG, "gültig": Lizenz.GUELTIG}
+        s = MeldeSzenario()
+        m = re.search(r'anbieter\s*[=:]\s*"([^"]+)"', arg)
+        if m:
+            s.anbieter = m.group(1)
+        for k, v in re.findall(r'([a-zA-Zä]+)\s*[=:]\s*([^\s"]+)', arg):
+            k = k.lower()
+            try:
+                if k == "anbieter" and not s.anbieter:
+                    s.anbieter = v
+                elif k == "lizenz":
+                    s.lizenz = liz.get(v.lower(), Lizenz.UNBEKANNT)
+                elif k in ("einzahlung", "einzahlung_gesamt"):
+                    s.einzahlung_gesamt = float(v.replace(",", "."))
+                elif k == "verlust":
+                    s.verlust = float(v.replace(",", "."))
+                elif k == "rtp":
+                    r = float(v.replace(",", ".")); s.rtp = r / 100 if r > 1.5 else r
+                elif k in ("von", "zeitraum_von"):
+                    s.zeitraum_von = v
+                elif k in ("bis", "zeitraum_bis"):
+                    s.zeitraum_bis = v
+                elif k == "name":
+                    s.name = v
+                elif k == "ort":
+                    s.ort = v
+            except ValueError:
+                pass
+        text = melde_formatiere(melde_erstelle(s))
+        await update.message.reply_text(text[:4000])
+
     async def frage_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         frage = " ".join(context.args)
         if not frage:
@@ -242,6 +290,7 @@ class CasinoBonusBot:
         app.add_handler(CommandHandler("node", self.node_command))
         app.add_handler(CommandHandler("signal", self.signal_command))
         app.add_handler(CommandHandler("risiko", self.risiko_command))
+        app.add_handler(CommandHandler("melde", self.melde_command))
         app.add_handler(CommandHandler("frage", self.frage_command))
         app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.text_message))
         return app

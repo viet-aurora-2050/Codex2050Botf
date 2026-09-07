@@ -51,6 +51,7 @@
    <button data-t="sancho" class="on">SANCHO ◉ LIVE</button>
    <button data-t="rechner">RECHNER</button>
    <button data-t="analyse">ANALYSE</button>
+   <button data-t="anzeige">ANZEIGE</button>
    <button data-t="traeger">TRÄGER</button>
    <button data-t="nodes">NODES</button>
    <button data-t="signal">AKT 4</button>
@@ -119,6 +120,32 @@
   <pre id="aout"></pre>
  </section>
 
+ <!-- ===== ANZEIGE / MELDEN ===== -->
+ <section id="anzeige">
+  <div class="tag">MELDEN · MATHEMATIK + BESCHWERDE AN DIE GGL</div>
+  <div class="disc">Erzeugt aus dem mathematischen Prinzip eine <b>sachliche</b> Beschwerde/Anzeige
+   an die Aufsicht — für <b>jeden</b> Anbieter. <b>Nur wahrheitsgemäße Angaben:</b> eine wissentlich
+   falsche Anzeige ist selbst strafbar (§&nbsp;164 StGB). Prüfe den Anbieter zuerst in der
+   GGL-Whitelist (<a href="https://www.ggl.de">ggl.de</a>). Keine Rechtsberatung.</div>
+  <div class="grid">
+   <div><label>Anbieter</label><input id="zanb" placeholder="z. B. Beispiel Casino"></div>
+   <div><label>Lizenzstatus</label><select id="zliz">
+     <option value="unbekannt" selected>unbekannt (noch nicht geprüft)</option>
+     <option value="keine">keine dt. Lizenz gefunden</option>
+     <option value="gueltig">gültig (in Whitelist)</option></select></div>
+   <div><label>Einzahlung gesamt (€)</label><input id="zein" type="number" value="300" step="10"></div>
+   <div><label>Verlust (€)</label><input id="zverl" type="number" value="300" step="10"></div>
+   <div><label>RTP</label><input id="zrtp" type="number" value="0.96" step="0.005"></div>
+   <div><label>Zeitraum von</label><input id="zvon" type="date"></div>
+   <div><label>Zeitraum bis</label><input id="zbis" type="date"></div>
+   <div><label>Dein Name</label><input id="znam" placeholder="[Name]"></div>
+   <div><label>Dein Ort</label><input id="zort" placeholder="[Ort]"></div>
+  </div>
+  <button class="go" onclick="anzeige()">∆ Beschwerde erzeugen</button>
+  <button class="go" onclick="kopieren()" style="background:#0a2a4a">⧉ Kopieren</button>
+  <pre id="zout"></pre>
+ </section>
+
  <!-- ===== TRÄGER ===== -->
  <section id="traeger">
   <div class="tag">TRÄGER-PROTOKOLL — FREIWILLIGER SELBST-SPIEGEL</div>
@@ -160,6 +187,7 @@
    <div class="l">Dieses eine HTML-File enthaelt das komplette ∆1-System — offline, ohne Server.</div>
    <div class="l"><b>RECHNER</b> — transparente Bonus-/Umsatzanalyse (Spielerschutz).</div>
    <div class="l"><b>ANALYSE</b> — persoenliche Risiko-Mathematik aus oeffentlichen Fakten (RTP/Volatilitaet): erwarteter Verlust, Chance im Plus, Risk of Ruin — per Live-Monte-Carlo. Keine Spin-Vorhersage.</div>
+   <div class="l"><b>ANZEIGE</b> — erzeugt aus der Mathematik eine sachliche Beschwerde/Anzeige an die GGL, fuer jeden Anbieter. Nur wahrheitsgemaesse Angaben; alles als Verdacht/Bitte um Pruefung. Keine Rechtsberatung.</div>
    <div class="l"><b>SANCHO</b> — zeigt den „Rhythmus" und entlarvt ihn sofort (RNG, Vorhersagewert 0).</div>
    <div class="l"><b>TRÄGER</b> — freiwilliger emotionaler Selbst-Spiegel + ALEXANDRA-Schutz.</div>
    <div class="l"><b>NODES</b> — die vier Stimmen des Netzes.</div>
@@ -256,6 +284,81 @@ function risiko(){
     +'Bandbreite P5..P95:       '+p05.toFixed(2)+' .. '+p95.toFixed(2)+' €\n\n'
     +'<span class="truth">Das ist DEINE Risiko-Mathematik — keine Spin-Vorhersage. Der EV bleibt negativ.</span>';
 }
+
+// ---------- ANZEIGE / MELDEN (spiegelt melde/anzeige.py) ----------
+function anzeige(){
+  const anb=(document.getElementById('zanb').value||'[Anbieter eintragen]').trim();
+  const liz=document.getElementById('zliz').value;
+  const ein=num(einzVal('zein')), verl=num(einzVal('zverl'));
+  let rtp=num(einzVal('zrtp')); if(rtp>1.5)rtp/=100;
+  const von=document.getElementById('zvon').value||'[Datum]';
+  const bis=document.getElementById('zbis').value||'[Datum]';
+  const nam=document.getElementById('znam').value||'[Name]';
+  const ort=document.getElementById('zort').value||'[Ort]';
+  const he=1-rtp, bezug=verl>0?verl:ein, strukt=bezug*he;
+  const heute=new Date().toISOString().slice(0,10);
+  let einordnung, antrag;
+  if(liz==='gueltig'){
+    einordnung="Der Anbieter ist offenbar in der GGL-Whitelist gelistet (gueltige Erlaubnis). "
+     +"Eine Anzeige wegen Angebots ohne Erlaubnis kommt dann nicht in Betracht. Eine Beschwerde ist "
+     +"dennoch moeglich, wenn konkrete Pflichtverstoesse vorliegen (z. B. Missachtung von Limits, "
+     +"Verweigerung fristgerechter Auszahlung, Verstoss gegen Spielerschutzauflagen).";
+    antrag="Ich bitte um Pruefung des geschilderten Verhaltens auf Verstoesse gegen die "
+     +"Erlaubnisauflagen und den Spielerschutz.";
+  } else {
+    const v = liz==='keine'?'nicht in der Whitelist auffindbar':'durch mich noch nicht gesichert geprueft';
+    einordnung="Nach meinem Kenntnisstand ist der Anbieter "+v+". Sollte keine gueltige deutsche "
+     +"Erlaubnis vorliegen, besteht der Verdacht eines unerlaubten Gluecksspielangebots gegenueber "
+     +"Spielern in Deutschland (§ 4 Gluecksspielstaatsvertrag 2021). In diesem Fall koennen "
+     +"abgeschlossene Spielvertraege nichtig sein (§ 134 BGB), sodass geleistete Einzahlungen ggf. "
+     +"zurueckgefordert werden koennen (§ 812 BGB). Dies ist ausdruecklich als Verdacht und Bitte um "
+     +"Pruefung formuliert, nicht als feststehende Behauptung.";
+    antrag="Ich bitte um Pruefung, ob der Anbieter ueber eine gueltige deutsche Erlaubnis verfuegt, "
+     +"und – falls nicht – um Einleitung der erforderlichen aufsichtsrechtlichen Schritte.";
+  }
+  const L=[];
+  L.push("An: Gemeinsame Gluecksspielbehoerde der Laender (GGL)");
+  L.push('Betreff: Beschwerde / Hinweis auf moeglichen Verstoss – Online-Anbieter „'+anb+'"');
+  L.push("Datum: "+heute);
+  L.push("Absender: "+nam+", "+ort);
+  L.push("","Sehr geehrte Damen und Herren,","");
+  L.push("1) SACHVERHALT");
+  L.push("   Anbieter: "+anb);
+  L.push("   Zeitraum meiner Nutzung: "+von+" bis "+bis);
+  L.push("   Getaetigte Einzahlungen gesamt: "+ein.toFixed(2)+" EUR");
+  if(verl>0) L.push("   Davon Verlust: "+verl.toFixed(2)+" EUR");
+  L.push("   Lizenzstatus (mein Kenntnisstand): "+liz,"");
+  L.push("2) MATHEMATISCHE EINORDNUNG (neutral, zur Dokumentation)");
+  L.push("   Angegebener RTP: "+(rtp*100).toFixed(2)+" % -> struktureller Hausvorteil "+(he*100).toFixed(2)+" %.");
+  L.push("   Erwarteter struktureller Verlust ueber den Bezugsbetrag: "+strukt.toFixed(2)+" EUR.");
+  L.push("   Diese Zahlen belegen den systematischen Nachteil des Spielers; sie sind kein Vorwurf fuer sich, sondern Kontext.","");
+  L.push("3) RECHTLICHE EINORDNUNG");
+  L.push("   "+einordnung,"");
+  L.push("4) ANTRAG");
+  L.push("   "+antrag);
+  L.push("   Um Zwischennachricht und Aktenzeichen wird gebeten.","");
+  L.push("Ich versichere, dass die obigen Angaben nach bestem Wissen wahrheitsgemaess sind.","");
+  L.push("Mit freundlichen Gruessen",nam,"");
+  L.push("— — —","HINWEISE:");
+  L.push("• Nur wahrheitsgemaesse Angaben – eine wissentlich falsche Anzeige ist strafbar (§ 164 StGB).");
+  L.push("• Anbieter zuerst in der GGL-Whitelist pruefen (www.ggl.de).");
+  L.push("• Keine Rechtsberatung, kein garantierter Erfolg. Einzelfall: Verbraucherzentrale / Fachanwalt Gluecksspielrecht.");
+  document.getElementById('zout').textContent=L.join("\n");
+}
+function kopieren(){
+  const t=document.getElementById('zout').textContent;
+  if(!t){anzeige();}
+  const txt=document.getElementById('zout').textContent;
+  if(navigator.clipboard){navigator.clipboard.writeText(txt).then(
+    ()=>flash('Kopiert ✓'),()=>fallbackCopy(txt));}
+  else fallbackCopy(txt);
+}
+function fallbackCopy(txt){const ta=document.createElement('textarea');ta.value=txt;
+  document.body.appendChild(ta);ta.select();try{document.execCommand('copy');flash('Kopiert ✓');}
+  catch(e){flash('Bitte manuell markieren');}document.body.removeChild(ta);}
+function flash(msg){const o=document.getElementById('zout');const old=o.style.borderColor;
+  o.style.borderColor='#4fd07a';const b=document.createElement('div');b.textContent=msg;
+  b.style.color='#9fe6b0';o.parentNode.insertBefore(b,o);setTimeout(()=>{b.remove();o.style.borderColor=old;},1500);}
 
 // ---------- SANCHO ----------
 const RTP={tipico:.955,betano:.955,n1:.96,stargames:.955,generisch:.95};
