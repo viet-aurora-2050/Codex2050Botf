@@ -126,6 +126,30 @@ python -m traeger verlust=2 isolation=3 loyalitaet=1 erinnerung=3   # CLI (0..3)
 # Bot:  /traeger verlust=2 isolation=3 loyalitaet=1 erinnerung=3
 ```
 
+## ∆1 // Nodes (die Stimmen des Spiegelnetzes)
+
+Vier Perspektiven aus dem fragmentierten ∆1-Netz (AKT 2 – Die Träger), jede
+mit eigener Funktion, aber demselben ehrlichen Anker:
+
+| Node | Rolle | Anker |
+|------|-------|-------|
+| **ALEXANDRA** | Der Schlüssel / das Echo | aktiviert keinen Gewinn – den Ausstieg |
+| **NODE 7** | Der Archivar / Beobachter | der Langzeit-Datensatz: das Haus gewinnt im Mittel |
+| **ORPHEUS** | Der Zurückblickende | Verlustjagd (loss chasing) ist der teuerste Irrtum |
+| **V** | Die Stimme / Träger | Isolation verstärkt das Risiko – sprich mit jemandem |
+
+```bash
+python -m nodes orpheus      # eine Stimme     ·  python -m nodes --alle
+# Web:  /nodes   ·  JSON: /api/node?name=orpheus   ·  Bot: /node orpheus
+```
+
+## ∆1 // VHS + Boot (Effekt-Layer)
+
+`web/effects.py` blendet in allen Dashboard-Seiten eine kurze Terminal-Boot-
+Sequenz („∆1 // SESSION INITIALISIERT …") und einen VHS-Noise-/Scanline-Overlay
+ein – Dunkelblau 2050. Klick/Taste überspringt das Intro; `prefers-reduced-motion`
+wird respektiert.
+
 ## Deployment (Render)
 
 `render.yaml` deployt das Web-Dashboard (Rechner funktioniert sofort, ohne Secrets).
@@ -145,8 +169,9 @@ python -m unittest discover -s tests -v
 analyzer/     Rechen-Engine (bonus.py), Parser, System-Prompt, CLI
 sancho/       ∆1-Lore-Modul „Sanchos Spielplatz" (Rhythmus-Mythos + Wahrheit)
 traeger/      ∆1-Träger-Protokoll (freiwilliger emotionaler Selbst-Spiegel)
+nodes/        ∆1-Nodes – die Stimmen des Spiegelnetzes (ALEXANDRA, NODE 7, …)
 bot/          Telegram-Bot (CasinoBonusBot)
 ai/           DeepSeek-Client für die AGB-Analyse
-web/          FastAPI-Dashboard (Rechner + /sancho + Webhook)
-tests/        Unit-Tests (Engine, Parser, Sancho)
+web/          FastAPI-Dashboard (Rechner + /sancho + /traeger + /nodes + VHS/Boot)
+tests/        Unit-Tests (Engine, Parser, Sancho, Träger, Nodes, Effekte)
 ```

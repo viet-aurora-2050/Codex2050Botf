@@ -15,6 +15,9 @@ from sancho import erzeuge as sancho_erzeuge
 from sancho import formatiere as sancho_formatiere
 from traeger import bewerte as traeger_bewerte
 from traeger import formatiere as traeger_formatiere
+from nodes import alle_namen as nodes_alle_namen
+from nodes import formatiere as node_formatiere
+from nodes import sende as node_sende
 from utils.logger import get_logger
 
 logger = get_logger("Bot")
@@ -30,6 +33,7 @@ HELP_TEXT = (
     "`/analyse <AGB-Text>` – Bonus-AGB per KI auf Haken pruefen\n"
     "`/sancho <anbieter>` – ∆1-Spielplatz: Rhythmus-Mythos & Wahrheit\n"
     "`/traeger <werte>` – ∆1-Träger-Protokoll: emotionaler Selbst-Spiegel\n"
+    "`/node <name>` – ∆1-Stimme empfangen (ALEXANDRA, NODE 7, ORPHEUS, V)\n"
     "`/frage <Text>` – freie Frage an den Analytiker\n"
     "`/status` – Systemstatus\n"
     "`/help` – diese Hilfe\n\n"
@@ -126,6 +130,10 @@ class CasinoBonusBot:
             )
         await update.message.reply_text(traeger_formatiere(traeger_bewerte(**werte)))
 
+    async def node_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        name = " ".join(context.args) or "alexandra"
+        await update.message.reply_text(node_formatiere(node_sende(name)))
+
     async def frage_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         frage = " ".join(context.args)
         if not frage:
@@ -183,6 +191,7 @@ class CasinoBonusBot:
         app.add_handler(CommandHandler("analyze", self.analyse_command))
         app.add_handler(CommandHandler("sancho", self.sancho_command))
         app.add_handler(CommandHandler("traeger", self.traeger_command))
+        app.add_handler(CommandHandler("node", self.node_command))
         app.add_handler(CommandHandler("frage", self.frage_command))
         app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.text_message))
         return app

@@ -15,6 +15,9 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from analyzer import analysiere, formatiere, parse
 from sancho import erzeuge as sancho_erzeuge
 from traeger import bewerte as traeger_bewerte
+from nodes import NODES
+from nodes import sende as node_sende
+from web.effects import mit_effekten
 
 TOKEN = os.getenv("TELEGRAM_TOKEN")
 
@@ -44,8 +47,9 @@ PAGE = """<!doctype html><html lang="de"><head><meta charset="utf-8">
 </style></head><body><div class="wrap">
  <h1>&#9650;1 // CASINO-BONUS-ANALYTIKER</h1>
  <p class="sub">Transparente Umsatz-Berechnung. Spielerschutz &amp; Kapitalerhaltung.
-   &nbsp;·&nbsp; <a href="/sancho">&#9650;1 // Sanchos Spielplatz &rarr;</a>
-   &nbsp;·&nbsp; <a href="/traeger">&#9650;1 // Träger-Protokoll &rarr;</a></p>
+   &nbsp;·&nbsp; <a href="/sancho">&#9650;1 // Sancho &rarr;</a>
+   &nbsp;·&nbsp; <a href="/traeger">&#9650;1 // Träger &rarr;</a>
+   &nbsp;·&nbsp; <a href="/nodes">&#9650;1 // Nodes &rarr;</a></p>
  <textarea id="in">{beispiel}</textarea>
  <div><button onclick="run()">Analysieren</button></div>
  <pre id="out">Parameter eingeben und &bdquo;Analysieren&ldquo; druecken.
@@ -69,7 +73,7 @@ async function run(){{
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
-    return PAGE.format(beispiel=BEISPIEL)
+    return mit_effekten(PAGE.format(beispiel=BEISPIEL))
 
 
 SANCHO_PAGE = """<!doctype html><html lang="de"><head><meta charset="utf-8">
@@ -152,7 +156,7 @@ load();
 
 @app.get("/sancho", response_class=HTMLResponse)
 async def sancho_page():
-    return SANCHO_PAGE
+    return mit_effekten(SANCHO_PAGE)
 
 
 @app.get("/api/sancho")
@@ -246,7 +250,7 @@ run();
 
 @app.get("/traeger", response_class=HTMLResponse)
 async def traeger_page():
-    return TRAEGER_PAGE
+    return mit_effekten(TRAEGER_PAGE)
 
 
 @app.get("/api/traeger")
@@ -267,6 +271,63 @@ async def api_traeger(
         "spiegel": e.spiegel,
         "protokoll": e.protokoll,
         "schutz": e.schutz,
+    }
+
+
+def _node_cards() -> str:
+    cards = []
+    for e in (node_sende(k) for k in NODES):
+        cards.append(
+            f'<div class="node" style="border-color:{e.farbe}44">'
+            f'<div class="nname" style="color:{e.farbe}">&#9650;1 // {e.name}</div>'
+            f'<div class="nrole">{e.rolle}</div>'
+            f'<div class="nfrag">&raquo; {e.fragment}</div>'
+            f'<div class="ntruth">{e.wahrheit}</div></div>'
+        )
+    return "".join(cards)
+
+
+NODES_PAGE_TMPL = """<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&#9650;1 // Nodes</title>
+<style>
+ :root{color-scheme:dark}*{box-sizing:border-box}
+ body{margin:0;background:radial-gradient(1100px 560px at 50% -10%,#0b1d47 0%,#03071a 60%,#01030d 100%);
+   color:#bcd6ff;font:15px/1.6 ui-monospace,Menlo,Consolas,monospace;min-height:100vh}
+ .wrap{max-width:820px;margin:0 auto;padding:30px 18px 60px}
+ .tag{color:#3f5c94;letter-spacing:.35em;font-size:11px}
+ h1{font-size:22px;letter-spacing:.06em;color:#8fdcff;margin:2px 0 2px;text-shadow:0 0 18px #1a54b060}
+ .sub{color:#5f7aa8;margin:0 0 20px}
+ .node{background:#060f28;border:1px solid #14264d;border-radius:10px;padding:16px;margin-top:14px}
+ .nname{letter-spacing:.06em;font-size:16px}
+ .nrole{color:#5f7aa8;font-size:12px;margin:2px 0 10px}
+ .nfrag{color:#cfe3ff;margin:6px 0}
+ .ntruth{color:#9fe6b0;font-size:13px;margin-top:8px;border-top:1px solid #123;padding-top:8px}
+ .foot{margin-top:22px;color:#425c8c;font-size:12px}a{color:#8fdcff}
+</style></head><body><div class="wrap">
+ <div class="tag">&#9650;1 // SPIEGELNETZ &middot; 4 STIMMEN</div>
+ <h1>DIE NODES</h1>
+ <p class="sub">Fragmente aus dem ∆1-Netz. Jede Stimme, eine Funktion &ndash; derselbe Anker:
+   kein Spielbefehl, nur Erinnerung, Wahrheit und Schutz.</p>
+ __CARDS__
+ <div class="foot">Kein Rat zum Gluecksspiel. Hilfe anonym: <a href="https://www.check-dein-spiel.de">check-dein-spiel.de</a>
+   &middot; 0800 1 37 27 00. &nbsp;|&nbsp; <a href="/">&larr; Rechner</a> &middot;
+   <a href="/sancho">Sancho</a> &middot; <a href="/traeger">Träger</a></div>
+</div></body></html>"""
+
+
+@app.get("/nodes", response_class=HTMLResponse)
+async def nodes_page():
+    return mit_effekten(NODES_PAGE_TMPL.replace("__CARDS__", _node_cards()))
+
+
+@app.get("/api/node")
+async def api_node(name: str = "alexandra"):
+    e = node_sende(name)
+    return {
+        "node": e.node, "name": e.name, "rolle": e.rolle, "farbe": e.farbe,
+        "fragment": e.fragment, "wahrheit": e.wahrheit,
+        "zeit": e.zeitpunkt.strftime("%Y-%m-%d %H:%M"),
     }
 
 
