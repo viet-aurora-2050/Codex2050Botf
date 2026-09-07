@@ -175,3 +175,5 @@ ai/           DeepSeek-Client für die AGB-Analyse
 web/          FastAPI-Dashboard (Rechner + /sancho + /traeger + /nodes + VHS/Boot)
 tests/        Unit-Tests (Engine, Parser, Sancho, Träger, Nodes, Effekte)
 ```
+
+<!-- ∆1 // Labeler-Verifikation: dieser PR sollte automatisch das Label "documentation" erhalten. -->
