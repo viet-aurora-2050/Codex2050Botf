@@ -26,6 +26,7 @@ from risiko import formatiere as risiko_formatiere
 from melde import Lizenz, MeldeSzenario
 from melde import erstelle as melde_erstelle
 from melde import formatiere as melde_formatiere
+from gewinner import formatiere as gewinner_formatiere
 from utils.logger import get_logger
 
 logger = get_logger("Bot")
@@ -45,6 +46,7 @@ HELP_TEXT = (
     "`/signal` – AKT 4: Das Signal (Ebene-2-Rätsel) · `/signal loesung`\n"
     "`/risiko <werte>` – persönliche Risiko-Analyse (EV, Risk of Ruin)\n"
     "`/melde <werte>` – Beschwerde/Anzeige an die GGL (Mathematik + Recht)\n"
+    "`/gewinner` – dokumentierte Fälle: mit Mathematik gewonnen, dann verbannt\n"
     "`/frage <Text>` – freie Frage an den Analytiker\n"
     "`/status` – Systemstatus\n"
     "`/help` – diese Hilfe\n\n"
@@ -230,6 +232,9 @@ class CasinoBonusBot:
         text = melde_formatiere(melde_erstelle(s))
         await update.message.reply_text(text[:4000])
 
+    async def gewinner_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        await update.message.reply_text(gewinner_formatiere()[:4000])
+
     async def frage_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         frage = " ".join(context.args)
         if not frage:
@@ -291,6 +296,7 @@ class CasinoBonusBot:
         app.add_handler(CommandHandler("signal", self.signal_command))
         app.add_handler(CommandHandler("risiko", self.risiko_command))
         app.add_handler(CommandHandler("melde", self.melde_command))
+        app.add_handler(CommandHandler("gewinner", self.gewinner_command))
         app.add_handler(CommandHandler("frage", self.frage_command))
         app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.text_message))
         return app

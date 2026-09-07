@@ -173,6 +173,23 @@ python -m aktvier            # das Rätsel   ·   python -m aktvier --loesung
 
 > Modulname `aktvier`, weil `signal` ein Python-Standardmodul ist und nicht überschattet werden darf.
 
+## Gewinner (`gewinner/`) – mit Mathematik gewonnen, dann verbannt
+
+Dokumentierte, mit Quellen belegte Fälle von Menschen, die Glücksspiele mit
+Intelligenz und Mathematik **legal** geschlagen haben — und dafür **Hausverbot**
+bekamen (Thorp, MIT-Team, García-Pelayo, Jarecki, Mandel, Selbee/Cash WinFall;
+Ivey als Gegenbeispiel).
+
+Der mathematische Grund ist bei jedem Fall benannt — und die **Lehre**: Gewinnen
+war nur über einen **echten strukturellen Riss** möglich (abhängige Karten,
+unwuchtige Kessel, fehlerhafter +EV-Auszahlungsmechanismus). Ein zertifizierter
+**RNG-Slot hat keinen dieser Risse** — darum gibt es keinen „Slot-Thorp". Und die
+Belohnung fürs Gewinnen war fast immer der Rauswurf.
+
+```bash
+python -m gewinner          # alle Fälle + Lehre  ·  Web-App: Tab „GEWINNER"  ·  Bot: /gewinner
+```
+
 ## Melde-Assistent (`melde/`) – Mathematik + Beschwerde/Anzeige an die GGL
 
 Verbindet das mathematische Prinzip (Hausvorteil, struktureller Verlust,
@@ -246,6 +263,7 @@ nodes/        ∆1-Nodes – die Stimmen des Spiegelnetzes (ALEXANDRA, NODE 7, �
 aktvier/      ∆1-AKT 4 „Das Signal" – Finale + Ebene-2-Rätsel (Morse/Base64/ROT13/Uhr)
 risiko/       Personal-Risiko-Analyse (Monte-Carlo: EV, Risk of Ruin) aus öffentlichen Fakten
 melde/        Melde-Assistent (Mathematik + Beschwerde/Anzeige an die GGL, für jeden Anbieter)
+gewinner/     Dokumentierte Advantage-Play-Fälle (mit Mathematik gewonnen, dann verbannt)
 bot/          Telegram-Bot (CasinoBonusBot)
 ai/           DeepSeek-Client für die AGB-Analyse
 web/          FastAPI-Dashboard (Rechner + /sancho + /traeger + /nodes + /signal + VHS/Boot)

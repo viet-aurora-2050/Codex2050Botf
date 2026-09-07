@@ -52,6 +52,7 @@
    <button data-t="rechner">RECHNER</button>
    <button data-t="analyse">ANALYSE</button>
    <button data-t="anzeige">ANZEIGE</button>
+   <button data-t="gewinner">GEWINNER</button>
    <button data-t="traeger">TRÄGER</button>
    <button data-t="nodes">NODES</button>
    <button data-t="signal">AKT 4</button>
@@ -146,6 +147,19 @@
   <pre id="zout"></pre>
  </section>
 
+ <!-- ===== GEWINNER (Advantage Play, dokumentiert) ===== -->
+ <section id="gewinner">
+  <div class="tag">MIT MATHEMATIK GEWONNEN — UND VERBANNT</div>
+  <div class="panel truth" style="border-color:#2b4a2f;background:#08160c">
+   Alle echten Gewinner nutzten einen <b>realen strukturellen Riss</b>: abhängige Karten (Blackjack),
+   unwuchtige Roulette-Kessel, oder einen fehlerhaften +EV-Auszahlungsmechanismus (Lotto-Rolldown /
+   alle Kombinationen kaufen). Ein zertifizierter <b>RNG-Slot hat keinen dieser Risse</b> — darum gibt
+   es keinen „Slot-Thorp". Und die Belohnung fürs Gewinnen war fast immer: <b>Hausverbot</b>.
+  </div>
+  <div id="gcards"></div>
+  <div class="foot">Quellen als nachprüfbare Referenzen (Buch/Gericht/Presse). Kein Rat zum Glücksspiel.</div>
+ </section>
+
  <!-- ===== TRÄGER ===== -->
  <section id="traeger">
   <div class="tag">TRÄGER-PROTOKOLL — FREIWILLIGER SELBST-SPIEGEL</div>
@@ -188,6 +202,7 @@
    <div class="l"><b>RECHNER</b> — transparente Bonus-/Umsatzanalyse (Spielerschutz).</div>
    <div class="l"><b>ANALYSE</b> — persoenliche Risiko-Mathematik aus oeffentlichen Fakten (RTP/Volatilitaet): erwarteter Verlust, Chance im Plus, Risk of Ruin — per Live-Monte-Carlo. Keine Spin-Vorhersage.</div>
    <div class="l"><b>ANZEIGE</b> — erzeugt aus der Mathematik eine sachliche Beschwerde/Anzeige an die GGL, fuer jeden Anbieter. Nur wahrheitsgemaesse Angaben; alles als Verdacht/Bitte um Pruefung. Keine Rechtsberatung.</div>
+   <div class="l"><b>GEWINNER</b> — dokumentierte Faelle, die mit Mathematik legal gewannen (Thorp, MIT-Team, Garcia-Pelayo, Mandel, Selbee …) und Hausverbot bekamen. Mit Quelle und dem mathematischen Grund.</div>
    <div class="l"><b>SANCHO</b> — zeigt den „Rhythmus" und entlarvt ihn sofort (RNG, Vorhersagewert 0).</div>
    <div class="l"><b>TRÄGER</b> — freiwilliger emotionaler Selbst-Spiegel + ALEXANDRA-Schutz.</div>
    <div class="l"><b>NODES</b> — die vier Stimmen des Netzes.</div>
@@ -431,6 +446,37 @@ document.getElementById('ncards').innerHTML=NODES.map(n=>
  '<div class="node" style="border-color:'+n[2]+'44"><div style="color:'+n[2]+';font-size:16px">∆1 // '+n[0]+'</div>'
  +'<div class="tag" style="margin:2px 0 8px">'+n[1]+'</div><div class="l">» '+n[3]+'</div>'
  +'<div class="truth" style="margin-top:8px;border-top:1px solid #123;padding-top:8px">'+n[4]+'</div></div>').join('');
+
+// ---------- GEWINNER (spiegelt gewinner/faelle.py) ----------
+const GEW=[
+ ["Edward O. Thorp","ab 1962 · Blackjack","Kartenzaehlen (High-Low), mathematisch hergeleitet.",
+  "Karten ohne Zuruecklegen -> Wahrscheinlichkeiten haengen vom Reststapel ab. Viele hohe Karten = Vorteil Spieler. Riss: abhaengige Ziehungen.",
+  "Bewies Blackjack als schlagbar; Casinos: mehr Decks, Mischmaschinen, Hausverbote.","„Beat the Dealer\" (1962)"],
+ ["MIT Blackjack Team","1980er–90er · Blackjack","Team-Zaehlen, Spotter/Big Player, Bankroll.",
+  "Thorp im Team skaliert: hohe Einsaetze nur bei positiver Zaehlung -> Vorteil ueber Volumen.",
+  "Millionengewinne; von vielen Casinos mit Hausverbot belegt.","„Bringing Down the House\"; Film „21\""],
+ ["Gonzalo Garcia-Pelayo","1990er · Roulette","Tausende Kessel-Ergebnisse protokolliert, Unwucht gefunden.",
+  "Echte Kessel sind nie perfekt — kleine Unwucht macht Zahlen haeufiger, kippt den EV. Nur Beobachtung.",
+  "Hohe Gewinne; spanischer Oberster Gerichtshof entschied zu seinen Gunsten.","Tribunal Supremo (Spanien)"],
+ ["Richard Jarecki","1960er–70er · Roulette","Systematische Kessel-Analyse in Europa.",
+  "Gleicher Riss: physikalische Unwucht schlaegt den theoretischen Nachteil.",
+  "Ca. 1,2 Mio. USD; von Casinos ausgeschlossen.","Nachrufe, u. a. New York Times (2018)"],
+ ["Stefan Mandel","bis 1992 · Lotterie","Alle Kombinationen kaufen, wenn Jackpot > Gesamtkosten.",
+  "Jackpot + Nebengewinne > Kosten ALLER Tickets = positiver EV. Regelfehler, kein Zufall.",
+  "14 Lotterien gewonnen (u. a. Virginia 1992); Regeln danach geaendert.","Virginia-Lottery-Fall 1992"],
+ ["Jerry Selbee (Cash WinFall)","2005–2011 · Lotterie","Grosskauf in den „Rolldown\"-Wochen.",
+  "Beim Rolldown wurde der EV kleinerer Stufen kurzfristig POSITIV — Konstruktionsfehler der Regel.",
+  "Selbee- und MIT-Gruppe gewannen Millionen, bis der Staat das Spiel 2012 beendete.","Mass. Inspector General (2012); „Jerry & Marge Go Large\""],
+ ["Phil Ivey (Gegenbeispiel)","2012 · Baccarat","„Edge Sorting\" — Asymmetrie im Kartenruecken.",
+  "Informationsvorteil, aber mit aktiver Manipulation des Ablaufs.",
+  "~7,7 Mio. GBP und ~10 Mio. USD gewonnen — musste beides zurueckgeben.","UK Supreme Court, Ivey v Genting (2017)"]];
+document.getElementById('gcards').innerHTML=GEW.map(g=>
+ '<div class="node"><div style="color:#8fdcff;font-size:15px">▮ '+g[0]+'</div>'
+ +'<div class="tag" style="margin:2px 0 8px">'+g[1]+'</div>'
+ +'<div class="l"><b>Methode:</b> '+g[2]+'</div>'
+ +'<div class="l"><b>Mathe:</b> '+g[3]+'</div>'
+ +'<div class="l"><b>Ergebnis:</b> '+g[4]+'</div>'
+ +'<div class="truth" style="margin-top:6px;border-top:1px solid #123;padding-top:6px">Quelle: '+g[5]+'</div></div>').join('');
 
 // ---------- AKT 4 ----------
 const FINAL="Ich wollte nie frei sein. Ich wollte erinnert werden.";
