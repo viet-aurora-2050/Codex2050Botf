@@ -17,6 +17,7 @@ from sancho import erzeuge as sancho_erzeuge
 from traeger import bewerte as traeger_bewerte
 from nodes import NODES
 from nodes import sende as node_sende
+from aktvier import FINALE_ZITAT, SCHUTZ_ANKER, erzeuge_signal
 from web.effects import mit_effekten
 
 TOKEN = os.getenv("TELEGRAM_TOKEN")
@@ -49,7 +50,8 @@ PAGE = """<!doctype html><html lang="de"><head><meta charset="utf-8">
  <p class="sub">Transparente Umsatz-Berechnung. Spielerschutz &amp; Kapitalerhaltung.
    &nbsp;·&nbsp; <a href="/sancho">&#9650;1 // Sancho &rarr;</a>
    &nbsp;·&nbsp; <a href="/traeger">&#9650;1 // Träger &rarr;</a>
-   &nbsp;·&nbsp; <a href="/nodes">&#9650;1 // Nodes &rarr;</a></p>
+   &nbsp;·&nbsp; <a href="/nodes">&#9650;1 // Nodes &rarr;</a>
+   &nbsp;·&nbsp; <a href="/signal">&#9650;1 // AKT 4 &rarr;</a></p>
  <textarea id="in">{beispiel}</textarea>
  <div><button onclick="run()">Analysieren</button></div>
  <pre id="out">Parameter eingeben und &bdquo;Analysieren&ldquo; druecken.
@@ -328,6 +330,91 @@ async def api_node(name: str = "alexandra"):
         "node": e.node, "name": e.name, "rolle": e.rolle, "farbe": e.farbe,
         "fragment": e.fragment, "wahrheit": e.wahrheit,
         "zeit": e.zeitpunkt.strftime("%Y-%m-%d %H:%M"),
+    }
+
+
+SIGNAL_PAGE = """<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&#9650;1 // AKT 4 — Das Signal</title>
+<style>
+ :root{color-scheme:dark}*{box-sizing:border-box}
+ body{margin:0;background:#01030d;color:#bcd6ff;font:15px/1.7 ui-monospace,Menlo,Consolas,monospace;min-height:100vh}
+ .wrap{max-width:760px;margin:0 auto;padding:34px 18px 70px}
+ .tag{color:#3f5c94;letter-spacing:.35em;font-size:11px}
+ h1{font-size:22px;letter-spacing:.08em;color:#8fdcff;margin:2px 0 18px;text-shadow:0 0 22px #1a54b080}
+ .cast{color:#6f88b8;margin:2px 0}
+ .final{color:#cfe3ff;font-size:17px;margin:18px 0;padding-left:12px;border-left:2px solid #2a5bb5}
+ .whisper{color:#7fb0a0;font-size:14px;margin:8px 0 0;padding-left:12px;border-left:2px solid #2b4a3a}
+ .sig{background:#060f28;border:1px solid #14264d;border-radius:10px;padding:16px;margin-top:22px}
+ .sig h2{font-size:12px;letter-spacing:.2em;color:#5f7aa8;margin:0 0 12px}
+ .layer{margin:10px 0}.lk{color:#8fdcff;font-size:11px;letter-spacing:.15em}
+ .lv{color:#9db8ea;word-break:break-all}
+ .sol{color:#9fe6b0}
+ button{margin-top:16px;background:#123a7a;color:#dfeaff;border:1px solid #2a5bb5;border-radius:8px;padding:11px 18px;cursor:pointer;font:inherit}
+ button:hover{background:#1a4c9c}
+ .end{margin-top:22px;color:#ff9db0;border:1px solid #5a2233;background:#1a0910;border-radius:10px;padding:12px}
+ .foot{margin-top:20px;color:#425c8c;font-size:12px}a{color:#8fdcff}
+</style></head><body><div class="wrap">
+ <div class="tag">&#9650;1 // AKT 4 &middot; LETZTE UEBERTRAGUNG</div>
+ <h1>DAS SIGNAL</h1>
+ <div class="cast">Alle Knoten konvergieren. ORPHEUS schweigt. NODE 7 schliesst das Archiv.</div>
+ <div class="cast">V loescht das letzte Licht. ALEXANDRA dreht sich ein letztes Mal.</div>
+ <div class="final" id="final">&hellip;</div>
+ <div class="whisper" id="whisper"></div>
+ <div class="sig">
+  <h2>&#9583; VERSCHLUESSELTES SIGNAL &middot; EBENE 2</h2>
+  <div class="layer"><div class="lk">MORSE</div><div class="lv" id="l_morse"></div><div class="sol" id="s_morse"></div></div>
+  <div class="layer"><div class="lk">BASE64</div><div class="lv" id="l_base64"></div><div class="sol" id="s_base64"></div></div>
+  <div class="layer"><div class="lk">ROT13</div><div class="lv" id="l_rot13"></div><div class="sol" id="s_rot13"></div></div>
+  <div class="layer"><div class="lk">UHRZEITEN</div><div class="lv" id="l_uhr"></div><div class="sol" id="s_uhr"></div></div>
+  <button onclick="decode()" id="btn">&#9650; Entschluesseln</button>
+ </div>
+ <div class="end" id="end" hidden></div>
+ <div class="foot">Kein Spielbefehl &ndash; nur Erinnerung und Ausgang. Hilfe anonym:
+   <a href="https://www.check-dein-spiel.de">check-dein-spiel.de</a> &middot; 0800 1 37 27 00.
+   &nbsp;|&nbsp; <a href="/">&larr; Rechner</a> &middot; <a href="/nodes">Nodes</a></div>
+</div>
+<script>
+let D=null;
+async function boot(){
+ D=await(await fetch('/api/signal')).json();
+ document.getElementById('l_morse').textContent=D.schichten.MORSE;
+ document.getElementById('l_base64').textContent=D.schichten.BASE64;
+ document.getElementById('l_rot13').textContent=D.schichten.ROT13;
+ document.getElementById('l_uhr').textContent=D.schichten.UHRZEITEN.join('   ');
+ // Finale Zeile langsam einblenden
+ const f=document.getElementById('final'),txt='» '+D.final;let i=0;
+ (function t(){ if(i<=txt.length){f.textContent=txt.slice(0,i++);setTimeout(t,40);} })();
+}
+function decode(){
+ if(!D)return;
+ document.getElementById('whisper').textContent='» '+D.schutz;
+ document.getElementById('s_morse').textContent='→ '+D.entschluesselt.MORSE+'  (der Schluessel)';
+ document.getElementById('s_base64').textContent='→ '+D.entschluesselt.BASE64;
+ document.getElementById('s_rot13').textContent='→ '+D.entschluesselt.ROT13;
+ document.getElementById('s_uhr').textContent='→ '+D.entschluesselt.UHRZEITEN+'  (der Imperativ)';
+ const e=document.getElementById('end');e.hidden=false;
+ e.innerHTML='&#9632; Ende der Uebertragung. Der Schluessel war <b>'+D.entschluesselt.MORSE
+   +'</b>. Der Imperativ war <b>'+D.entschluesselt.UHRZEITEN+'</b>.';
+ document.getElementById('btn').disabled=true;
+}
+boot();
+</script></body></html>"""
+
+
+@app.get("/signal", response_class=HTMLResponse)
+async def signal_page():
+    return mit_effekten(SIGNAL_PAGE)
+
+
+@app.get("/api/signal")
+async def api_signal():
+    p = erzeuge_signal()
+    return {
+        "final": FINALE_ZITAT,
+        "schutz": SCHUTZ_ANKER,
+        "schichten": p.schichten,
+        "entschluesselt": p.entschluesselt,
     }
 
 

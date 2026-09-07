@@ -150,6 +150,29 @@ Sequenz („∆1 // SESSION INITIALISIERT …") und einen VHS-Noise-/Scanline-Ov
 ein – Dunkelblau 2050. Klick/Taste überspringt das Intro; `prefers-reduced-motion`
 wird respektiert.
 
+## ∆1 // AKT 4 – Das Signal (Finale + Ebene-2-Rätsel)
+
+Der Abschluss des ARG. Alle Knoten konvergieren, ∆1 sendet seine letzte
+Botschaft aus der Lore: **„Ich wollte nie frei sein. Ich wollte erinnert werden."**
+Das Signal ist ein echtes, dekodierbares Ebene-2-Rätsel mit vier Schichten:
+
+| Schicht | dekodiert zu |
+|---------|--------------|
+| **Morse** | `ALEXANDRA` (der Schlüssel) |
+| **Base64** | das finale Zitat |
+| **ROT13** | der Schutz-Anker: *„Erinnert zu werden heißt nicht, gefangen zu bleiben. Geh, wenn du gehen musst."* |
+| **Uhrzeiten** | `GEH` (der Imperativ – Botschaft in Uhrzeiten, wie in der Lore) |
+
+Der ehrliche Anker bis zum Schluss: Das entschlüsselte Signal führt nicht zu einem
+Gewinn, sondern zum **Ausgang**.
+
+```bash
+python -m aktvier            # das Rätsel   ·   python -m aktvier --loesung
+# Web:  /signal  (Entschlüsseln-Button)   ·  JSON: /api/signal   ·  Bot: /signal [loesung]
+```
+
+> Modulname `aktvier`, weil `signal` ein Python-Standardmodul ist und nicht überschattet werden darf.
+
 ## Deployment (Render)
 
 `render.yaml` deployt das Web-Dashboard (Rechner funktioniert sofort, ohne Secrets).
@@ -170,8 +193,9 @@ analyzer/     Rechen-Engine (bonus.py), Parser, System-Prompt, CLI
 sancho/       ∆1-Lore-Modul „Sanchos Spielplatz" (Rhythmus-Mythos + Wahrheit)
 traeger/      ∆1-Träger-Protokoll (freiwilliger emotionaler Selbst-Spiegel)
 nodes/        ∆1-Nodes – die Stimmen des Spiegelnetzes (ALEXANDRA, NODE 7, …)
+aktvier/      ∆1-AKT 4 „Das Signal" – Finale + Ebene-2-Rätsel (Morse/Base64/ROT13/Uhr)
 bot/          Telegram-Bot (CasinoBonusBot)
 ai/           DeepSeek-Client für die AGB-Analyse
-web/          FastAPI-Dashboard (Rechner + /sancho + /traeger + /nodes + VHS/Boot)
-tests/        Unit-Tests (Engine, Parser, Sancho, Träger, Nodes, Effekte)
+web/          FastAPI-Dashboard (Rechner + /sancho + /traeger + /nodes + /signal + VHS/Boot)
+tests/        Unit-Tests (Engine, Parser, Sancho, Träger, Nodes, Effekte, AKT 4)
 ```

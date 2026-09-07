@@ -18,6 +18,8 @@ from traeger import formatiere as traeger_formatiere
 from nodes import alle_namen as nodes_alle_namen
 from nodes import formatiere as node_formatiere
 from nodes import sende as node_sende
+from aktvier import erzeuge_signal
+from aktvier import formatiere as signal_formatiere
 from utils.logger import get_logger
 
 logger = get_logger("Bot")
@@ -34,6 +36,7 @@ HELP_TEXT = (
     "`/sancho <anbieter>` – ∆1-Spielplatz: Rhythmus-Mythos & Wahrheit\n"
     "`/traeger <werte>` – ∆1-Träger-Protokoll: emotionaler Selbst-Spiegel\n"
     "`/node <name>` – ∆1-Stimme empfangen (ALEXANDRA, NODE 7, ORPHEUS, V)\n"
+    "`/signal` – AKT 4: Das Signal (Ebene-2-Rätsel) · `/signal loesung`\n"
     "`/frage <Text>` – freie Frage an den Analytiker\n"
     "`/status` – Systemstatus\n"
     "`/help` – diese Hilfe\n\n"
@@ -134,6 +137,13 @@ class CasinoBonusBot:
         name = " ".join(context.args) or "alexandra"
         await update.message.reply_text(node_formatiere(node_sende(name)))
 
+    async def signal_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        args = " ".join(context.args).lower()
+        mit_loesung = any(w in args for w in ("loesung", "lösung", "solve", "decode"))
+        await update.message.reply_text(
+            signal_formatiere(erzeuge_signal(), mit_loesung=mit_loesung)
+        )
+
     async def frage_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         frage = " ".join(context.args)
         if not frage:
@@ -192,6 +202,7 @@ class CasinoBonusBot:
         app.add_handler(CommandHandler("sancho", self.sancho_command))
         app.add_handler(CommandHandler("traeger", self.traeger_command))
         app.add_handler(CommandHandler("node", self.node_command))
+        app.add_handler(CommandHandler("signal", self.signal_command))
         app.add_handler(CommandHandler("frage", self.frage_command))
         app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.text_message))
         return app
