@@ -1,0 +1,36 @@
+# Konfiguration fuer actions/labeler@v4 (.github/workflows/label.yml).
+# Format: <label>: Liste von Pfad-Globs. Ein PR erhaelt das Label, wenn eine
+# geaenderte Datei zu einem der Globs passt.
+
+analyzer:
+  - 'analyzer/**'
+
+lore:
+  - 'sancho/**'
+  - 'traeger/**'
+  - 'nodes/**'
+
+bot:
+  - 'bot/**'
+  - 'main.py'
+
+web:
+  - 'web/**'
+
+ai:
+  - 'ai/**'
+
+tests:
+  - 'tests/**'
+
+documentation:
+  - '**/*.md'
+
+ci:
+  - '.github/**'
+
+deployment:
+  - 'render.yaml'
+  - 'Procfile'
+  - 'requirements.txt'
+  - 'runtime.txt'
