@@ -50,6 +50,7 @@
  <nav>
    <button data-t="sancho" class="on">SANCHO ◉ LIVE</button>
    <button data-t="rechner">RECHNER</button>
+   <button data-t="analyse">ANALYSE</button>
    <button data-t="traeger">TRÄGER</button>
    <button data-t="nodes">NODES</button>
    <button data-t="signal">AKT 4</button>
@@ -96,6 +97,28 @@
   <div class="panel" id="spanel"></div>
  </section>
 
+ <!-- ===== ANALYSE (Personal-Risiko, aus oeffentlichen Fakten) ===== -->
+ <section id="analyse">
+  <div class="tag">PERSONAL-RISIKO-ANALYSE · AUS ÖFFENTLICHEN FAKTEN</div>
+  <div class="disc">Nutzt nur <b>öffentliche</b> Parameter (veröffentlichter RTP, Volatilität) +
+   deine Angaben. Berechnet <b>dein</b> Risiko live per Monte-Carlo — <b>kein</b> Server-Zugriff,
+   <b>keine</b> Spin-Vorhersage. Der RNG bleibt unabhängig; der Erwartungswert bleibt negativ.</div>
+  <div class="grid">
+   <div><label>Budget (€)</label><input id="abudget" type="number" value="100" step="10"></div>
+   <div><label>Einsatz/Spin (€)</label><input id="aeinsatz" type="number" value="1" step="0.1"></div>
+   <div><label>Anzahl Spins</label><input id="aspins" type="number" value="500"></div>
+   <div><label>RTP (öffentlich)</label><input id="artp" type="number" value="0.96" step="0.005"></div>
+   <div><label>Volatilität</label><select id="avola">
+     <option value="niedrig">niedrig</option><option value="mittel" selected>mittel</option>
+     <option value="hoch">hoch</option></select></div>
+   <div><label>Simulationen</label><input id="aruns" type="number" value="3000"></div>
+  </div>
+  <button class="go" onclick="risiko()">∆ Live berechnen</button>
+  <div class="bars" id="ahist" style="margin-top:14px"></div>
+  <div class="tag" id="ahistlab" style="margin-top:4px"></div>
+  <pre id="aout"></pre>
+ </section>
+
  <!-- ===== TRÄGER ===== -->
  <section id="traeger">
   <div class="tag">TRÄGER-PROTOKOLL — FREIWILLIGER SELBST-SPIEGEL</div>
@@ -136,6 +159,7 @@
   <div class="panel">
    <div class="l">Dieses eine HTML-File enthaelt das komplette ∆1-System — offline, ohne Server.</div>
    <div class="l"><b>RECHNER</b> — transparente Bonus-/Umsatzanalyse (Spielerschutz).</div>
+   <div class="l"><b>ANALYSE</b> — persoenliche Risiko-Mathematik aus oeffentlichen Fakten (RTP/Volatilitaet): erwarteter Verlust, Chance im Plus, Risk of Ruin — per Live-Monte-Carlo. Keine Spin-Vorhersage.</div>
    <div class="l"><b>SANCHO</b> — zeigt den „Rhythmus" und entlarvt ihn sofort (RNG, Vorhersagewert 0).</div>
    <div class="l"><b>TRÄGER</b> — freiwilliger emotionaler Selbst-Spiegel + ALEXANDRA-Schutz.</div>
    <div class="l"><b>NODES</b> — die vier Stimmen des Netzes.</div>
@@ -195,6 +219,43 @@ function rechne(){
     +'\n\n<span class="'+emo+'">➤ EMPFEHLUNG: '+rec+'</span>';
 }
 function einzVal(id){return document.getElementById(id).value;}
+
+// ---------- ANALYSE (Monte-Carlo, spiegelt risiko/analyse.py) ----------
+const HIT={niedrig:.32,mittel:.18,hoch:.09};
+function risiko(){
+  const BR=num(einzVal('abudget')), B=num(einzVal('aeinsatz'))||1, K=Math.max(1,Math.round(num(einzVal('aspins'))||1));
+  let rtp=num(einzVal('artp')); if(rtp>1.5)rtp/=100;
+  const h=HIT[document.getElementById('avola').value]||.18;
+  const runs=Math.min(20000,Math.max(200,Math.round(num(einzVal('aruns'))||3000)));
+  const he=1-rtp, ev=BR-K*B*he, mean=rtp/h;
+  const finals=[];let ruin=0,plus=0;
+  for(let r=0;r<runs;r++){let k=BR,dead=false;
+    for(let i=0;i<K;i++){ if(k<B){dead=true;break;}
+      let pay=0; if(Math.random()<h) pay=B*(-mean*Math.log(1-Math.random())); k+=pay-B; }
+    if(dead||k<B)ruin++; k=Math.max(0,k); finals.push(k); if(k>BR)plus++;}
+  finals.sort((a,b)=>a-b);
+  const n=finals.length, perc=p=>finals[Math.min(n-1,Math.max(0,Math.floor(p*n)))];
+  const median=perc(.5),p05=perc(.05),p95=perc(.95);
+  const hi=Math.max(BR*2,p95*1.2)||1, bins=new Array(24).fill(0);
+  finals.forEach(x=>{bins[Math.min(23,Math.floor(x/hi*24))]++;});
+  const mx=Math.max(...bins)||1, bh=document.getElementById('ahist');bh.innerHTML='';
+  bins.forEach((c,i)=>{const d=document.createElement('div');d.className='bar';
+    d.style.height=Math.max(2,c/mx*100)+'%';
+    if(i*hi/24<=BR&&(i+1)*hi/24>BR)d.classList.add('now');bh.appendChild(d);});
+  document.getElementById('ahistlab').innerHTML='Verteilung Endkapital (0 … '+hi.toFixed(0)+' €) · Markierung = Startbudget '+BR.toFixed(0)+' €';
+  document.getElementById('aout').innerHTML=
+    '<span class="tag">RECHENWEG</span>\n'
+    +'Hausvorteil = '+(he*100).toFixed(2)+' %\n'
+    +'Erwarteter Verlust = '+K+' × '+B.toFixed(2)+' × '+(he*100).toFixed(2)+'% = '+(K*B*he).toFixed(2)+' €\n'
+    +'Erwartetes Endkapital = '+ev.toFixed(2)+' €\n'
+    +'Monte-Carlo über '+runs+' Sessions (öffentliche Parameter, kein Server)\n\n'
+    +'<span class="tag">DEINE AUSWERTUNG</span>\n'
+    +'Median-Endkapital:       '+median.toFixed(2)+' €\n'
+    +'Chance, im Plus zu enden: '+(plus/runs*100).toFixed(1)+' %\n'
+    +'<span class="stop">Risk of Ruin (pleite):    '+(ruin/runs*100).toFixed(1)+' %</span>\n'
+    +'Bandbreite P5..P95:       '+p05.toFixed(2)+' .. '+p95.toFixed(2)+' €\n\n'
+    +'<span class="truth">Das ist DEINE Risiko-Mathematik — keine Spin-Vorhersage. Der EV bleibt negativ.</span>';
+}
 
 // ---------- SANCHO ----------
 const RTP={tipico:.955,betano:.955,n1:.96,stargames:.955,generisch:.95};

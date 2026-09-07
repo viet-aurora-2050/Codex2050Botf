@@ -173,6 +173,24 @@ python -m aktvier            # das Rätsel   ·   python -m aktvier --loesung
 
 > Modulname `aktvier`, weil `signal` ein Python-Standardmodul ist und nicht überschattet werden darf.
 
+## Personal-Risiko-Analyse (`risiko/`) – aus öffentlichen Fakten
+
+Beantwortet die legitime Frage: *Kann man aus öffentlich verfügbaren Infos
+(veröffentlichter RTP, Volatilitätsklasse) eine live, persönliche mathematische
+Auswertung rechnen?* **Ja** — für **dein** Risiko, nicht für den nächsten Spin.
+
+Per Monte-Carlo (kein Server-Zugriff, keine Fremddaten) werden berechnet:
+erwarteter Verlust, erwartetes/median Endkapital, **Chance im Plus zu enden**,
+**Risk of Ruin** und die Bandbreite P5..P95.
+
+```bash
+python -m risiko budget=100 einsatz=1 spins=500 rtp=0.96 vola=mittel
+# Web-App: Tab „ANALYSE"   ·   Bot: /risiko budget=100 einsatz=1 spins=500 rtp=0.96 vola=mittel
+```
+
+> Wichtig: Das ist **deine** Erwartungswert-/Risiko-Mathematik. Es sagt **keinen**
+> einzelnen Spin voraus — der RNG bleibt unabhängig, der Erwartungswert bleibt negativ.
+
 ## Offline-App fürs Handy (`docs/index.html`)
 
 Eine **einzige HTML-Datei** mit dem kompletten ∆1-System (Rechner · Sancho ·
@@ -206,6 +224,7 @@ sancho/       ∆1-Lore-Modul „Sanchos Spielplatz" (Rhythmus-Mythos + Wahrheit
 traeger/      ∆1-Träger-Protokoll (freiwilliger emotionaler Selbst-Spiegel)
 nodes/        ∆1-Nodes – die Stimmen des Spiegelnetzes (ALEXANDRA, NODE 7, …)
 aktvier/      ∆1-AKT 4 „Das Signal" – Finale + Ebene-2-Rätsel (Morse/Base64/ROT13/Uhr)
+risiko/       Personal-Risiko-Analyse (Monte-Carlo: EV, Risk of Ruin) aus öffentlichen Fakten
 bot/          Telegram-Bot (CasinoBonusBot)
 ai/           DeepSeek-Client für die AGB-Analyse
 web/          FastAPI-Dashboard (Rechner + /sancho + /traeger + /nodes + /signal + VHS/Boot)
