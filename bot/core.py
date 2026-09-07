@@ -13,6 +13,8 @@ from ai.providers import AIManager
 from analyzer import SYSTEM_PROMPT, analysiere, formatiere, parse
 from sancho import erzeuge as sancho_erzeuge
 from sancho import formatiere as sancho_formatiere
+from traeger import bewerte as traeger_bewerte
+from traeger import formatiere as traeger_formatiere
 from utils.logger import get_logger
 
 logger = get_logger("Bot")
@@ -27,6 +29,7 @@ HELP_TEXT = (
     "`/bonus <parameter>` – Bonus berechnen\n"
     "`/analyse <AGB-Text>` – Bonus-AGB per KI auf Haken pruefen\n"
     "`/sancho <anbieter>` – ∆1-Spielplatz: Rhythmus-Mythos & Wahrheit\n"
+    "`/traeger <werte>` – ∆1-Träger-Protokoll: emotionaler Selbst-Spiegel\n"
     "`/frage <Text>` – freie Frage an den Analytiker\n"
     "`/status` – Systemstatus\n"
     "`/help` – diese Hilfe\n\n"
@@ -98,6 +101,31 @@ class CasinoBonusBot:
         ergebnis = sancho_erzeuge(anbieter=anbieter)
         await update.message.reply_text(sancho_formatiere(ergebnis))
 
+    async def traeger_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        import re
+
+        alias = {"verlust": "verlust", "v": "verlust", "isolation": "isolation",
+                 "i": "isolation", "loyalitaet": "loyalitaet", "l": "loyalitaet",
+                 "erinnerung": "erinnerung", "e": "erinnerung"}
+        werte = {"verlust": 0.0, "isolation": 0.0, "loyalitaet": 0.0, "erinnerung": 0.0}
+        gefunden = False
+        for k, v in re.findall(r"([a-zA-Z]+)\s*[=:]\s*([0-9.,]+)", " ".join(context.args)):
+            key = alias.get(k.lower())
+            if key:
+                try:
+                    werte[key] = float(v.replace(",", "."))
+                    gefunden = True
+                except ValueError:
+                    pass
+        if not gefunden:
+            return await update.message.reply_text(
+                "∆1 TRÄGER-PROTOKOLL – freiwilliger Selbst-Check (Werte 0..3):\n"
+                "`/traeger verlust=2 isolation=3 loyalitaet=1 erinnerung=3`\n\n"
+                "0 = nie · 3 = fast immer. Keine Diagnose, anonym.",
+                parse_mode="Markdown",
+            )
+        await update.message.reply_text(traeger_formatiere(traeger_bewerte(**werte)))
+
     async def frage_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         frage = " ".join(context.args)
         if not frage:
@@ -154,6 +182,7 @@ class CasinoBonusBot:
         app.add_handler(CommandHandler("analyse", self.analyse_command))
         app.add_handler(CommandHandler("analyze", self.analyse_command))
         app.add_handler(CommandHandler("sancho", self.sancho_command))
+        app.add_handler(CommandHandler("traeger", self.traeger_command))
         app.add_handler(CommandHandler("frage", self.frage_command))
         app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.text_message))
         return app

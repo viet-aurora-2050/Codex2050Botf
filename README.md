@@ -109,6 +109,23 @@ python -m sancho "tipico games" 2      # CLI
 # Bot:  /sancho betano
 ```
 
+## ∆1 // Träger-Protokoll (Lore-Modul, emotionaler Selbst-Spiegel)
+
+In der Lore markiert ∆1 „Träger" nicht wegen Intelligenz, sondern wegen
+emotionaler Extreme: **Verlust, Isolation, Loyalität, obsessive Erinnerung**.
+Genau diese vier sind – im Spielkontext – die anerkannten emotionalen
+Risiko-Marker. Das Modul ist daher ein **freiwilliger Selbst-Check** (reine
+Selbstauskunft, keine Diagnose, kein verdecktes Profiling): ∆1 spiegelt das
+Muster zurück, statt es auszunutzen. Ab Markierung ≥ 8/12 wird der
+**ALEXANDRA-Schlüssel** aktiviert – die „Anomalie im Netz" ist hier der
+schützende Unterbrecher der Spirale (konkrete Hilfe & Selbstsperre-Hinweise).
+
+```bash
+python -m traeger verlust=2 isolation=3 loyalitaet=1 erinnerung=3   # CLI (0..3)
+# Web:  /traeger  (Slider-Interface)   ·  JSON: /api/traeger?verlust=2&...
+# Bot:  /traeger verlust=2 isolation=3 loyalitaet=1 erinnerung=3
+```
+
 ## Deployment (Render)
 
 `render.yaml` deployt das Web-Dashboard (Rechner funktioniert sofort, ohne Secrets).
@@ -127,6 +144,7 @@ python -m unittest discover -s tests -v
 ```
 analyzer/     Rechen-Engine (bonus.py), Parser, System-Prompt, CLI
 sancho/       ∆1-Lore-Modul „Sanchos Spielplatz" (Rhythmus-Mythos + Wahrheit)
+traeger/      ∆1-Träger-Protokoll (freiwilliger emotionaler Selbst-Spiegel)
 bot/          Telegram-Bot (CasinoBonusBot)
 ai/           DeepSeek-Client für die AGB-Analyse
 web/          FastAPI-Dashboard (Rechner + /sancho + Webhook)

@@ -14,6 +14,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 
 from analyzer import analysiere, formatiere, parse
 from sancho import erzeuge as sancho_erzeuge
+from traeger import bewerte as traeger_bewerte
 
 TOKEN = os.getenv("TELEGRAM_TOKEN")
 
@@ -43,7 +44,8 @@ PAGE = """<!doctype html><html lang="de"><head><meta charset="utf-8">
 </style></head><body><div class="wrap">
  <h1>&#9650;1 // CASINO-BONUS-ANALYTIKER</h1>
  <p class="sub">Transparente Umsatz-Berechnung. Spielerschutz &amp; Kapitalerhaltung.
-   &nbsp;·&nbsp; <a href="/sancho">&#9650;1 // Sanchos Spielplatz &rarr;</a></p>
+   &nbsp;·&nbsp; <a href="/sancho">&#9650;1 // Sanchos Spielplatz &rarr;</a>
+   &nbsp;·&nbsp; <a href="/traeger">&#9650;1 // Träger-Protokoll &rarr;</a></p>
  <textarea id="in">{beispiel}</textarea>
  <div><button onclick="run()">Analysieren</button></div>
  <pre id="out">Parameter eingeben und &bdquo;Analysieren&ldquo; druecken.
@@ -169,6 +171,102 @@ async def api_sancho(anbieter: str = "generisch", einsatz: float = 1.0):
         "rhythmus": [{"stunde": p.stunde, "wert": p.wert} for p in e.rhythmus],
         "monolog": e.monolog,
         "wahrheit": e.wahrheit,
+    }
+
+
+TRAEGER_PAGE = """<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&#9650;1 // Träger-Protokoll</title>
+<style>
+ :root{color-scheme:dark}*{box-sizing:border-box}
+ body{margin:0;background:radial-gradient(1100px 560px at 50% -10%,#0b1d47 0%,#03071a 60%,#01030d 100%);
+   color:#bcd6ff;font:15px/1.6 ui-monospace,Menlo,Consolas,monospace;min-height:100vh}
+ .wrap{max-width:760px;margin:0 auto;padding:30px 18px 60px}
+ .tag{color:#3f5c94;letter-spacing:.35em;font-size:11px}
+ h1{font-size:22px;letter-spacing:.06em;color:#8fdcff;margin:2px 0 2px;text-shadow:0 0 18px #1a54b060}
+ .sub{color:#5f7aa8;margin:0 0 18px}
+ .axis{margin:14px 0}
+ .axis .lab{display:flex;justify-content:space-between;color:#9db8ea}
+ .axis .val{color:#8fdcff}
+ input[type=range]{width:100%;accent-color:#3f8fe0}
+ .q{color:#4f6aa0;font-size:12px;margin-top:2px}
+ button{margin-top:16px;background:#123a7a;color:#dfeaff;border:1px solid #2a5bb5;border-radius:8px;
+   padding:11px 18px;cursor:pointer;font:inherit}button:hover{background:#1a4c9c}
+ .meter{height:12px;border-radius:6px;background:#0a1738;border:1px solid #1e3d7a;overflow:hidden;margin-top:16px}
+ .meter > i{display:block;height:100%;width:0;transition:width .5s,background .5s}
+ .panel{background:#060f28;border:1px solid #14264d;border-radius:10px;padding:16px;margin-top:16px}
+ .l{color:#8fb4ff;margin:6px 0}
+ .protect{border-color:#2b4a2f;background:#08160c}.protect .l{color:#9fe6b0}
+ .alx{border:1px solid #5a2233;background:#1a0910}.alx .l{color:#ff9db0}
+ .foot{margin-top:20px;color:#425c8c;font-size:12px}a{color:#8fdcff}
+</style></head><body><div class="wrap">
+ <div class="tag">&#9650;1 // TRÄGER-PROTOKOLL &middot; SELBST-SPIEGEL</div>
+ <h1>WURDE ICH BEHALTEN?</h1>
+ <p class="sub">∆1 markiert nicht Intelligenz, sondern emotionale Extreme. Freiwillig,
+   anonym, keine Diagnose. 0 = nie &middot; 3 = fast immer.</p>
+ <div id="axes"></div>
+ <button onclick="run()">&#9650; Protokoll lesen</button>
+ <div class="meter"><i id="bar"></i></div>
+ <div id="status" class="sub" style="margin-top:10px"></div>
+ <div class="panel"><div style="color:#5f7aa8;letter-spacing:.2em">∆1 SPIEGELT</div><div id="spiegel"></div></div>
+ <div class="panel protect" id="schutzbox"><div style="color:#6f9f7a;letter-spacing:.2em">SCHUTZ</div><div id="schutz"></div></div>
+ <div class="foot">Freiwillige Selbstauskunft, keine Diagnose, kein Rat zum Spielen.
+   Hilfe: <a href="https://www.check-dein-spiel.de">check-dein-spiel.de</a> &middot; 0800 1 37 27 00.
+   &nbsp;|&nbsp; <a href="/">&larr; Rechner</a> &middot; <a href="/sancho">Sancho</a></div>
+</div>
+<script>
+const AX=[["verlust","VERLUST","Verluste zurueckjagen, sofort weitermachen"],
+ ["isolation","ISOLATION","allein spielen, vor anderen verbergen"],
+ ["loyalitaet","LOYALITAET","an Konto/Spiel festhalten, obwohl es schadet"],
+ ["erinnerung","ERINNERUNG","staendig daran denken, es geht nicht aus dem Kopf"]];
+const el=document.getElementById('axes');
+AX.forEach(a=>{el.insertAdjacentHTML('beforeend',
+ '<div class="axis"><div class="lab"><span>'+a[1]+'</span><span class="val" id="v_'+a[0]+'">0</span></div>'
+ +'<input type="range" min="0" max="3" step="1" value="0" id="r_'+a[0]+'" oninput="document.getElementById(\\'v_'+a[0]+'\\').textContent=this.value">'
+ +'<div class="q">'+a[2]+'</div></div>');});
+async function run(){
+ const p=new URLSearchParams();
+ AX.forEach(a=>p.set(a[0],document.getElementById('r_'+a[0]).value));
+ const d=await(await fetch('/api/traeger?'+p.toString())).json();
+ const pct=Math.round(d.gesamt/12*100);
+ const bar=document.getElementById('bar');bar.style.width=pct+'%';
+ bar.style.background=d.status==='markiert'?'#d64a63':(d.status==='beobachtet'?'#d6b23a':'#3f9f5a');
+ const dot=d.status==='markiert'?'&#128308;':(d.status==='beobachtet'?'&#128993;':'&#128994;');
+ document.getElementById('status').innerHTML=dot+' MARKIERUNG '+d.gesamt+'/12 &middot; STATUS: <b>'+d.status.toUpperCase()+'</b>'
+   +(d.alexandra_aktiv?' &middot; <span style="color:#ff9db0">ALEXANDRA-SCHLUESSEL AKTIV</span>':'');
+ document.getElementById('spiegel').innerHTML=(d.spiegel.length?d.spiegel:['(kein Marker &ndash; ∆1 schweigt.)'])
+   .map(x=>'<div class="l">&raquo; '+x+'</div>').join('');
+ const sb=document.getElementById('schutzbox');
+ sb.className='panel '+(d.alexandra_aktiv?'alx':'protect');
+ document.getElementById('schutz').innerHTML=d.schutz.map(x=>'<div class="l">&bull; '+x+'</div>').join('');
+}
+run();
+</script></body></html>"""
+
+
+@app.get("/traeger", response_class=HTMLResponse)
+async def traeger_page():
+    return TRAEGER_PAGE
+
+
+@app.get("/api/traeger")
+async def api_traeger(
+    verlust: float = 0.0, isolation: float = 0.0,
+    loyalitaet: float = 0.0, erinnerung: float = 0.0,
+):
+    e = traeger_bewerte(
+        verlust=verlust, isolation=isolation,
+        loyalitaet=loyalitaet, erinnerung=erinnerung,
+    )
+    return {
+        "achsen": e.achsen,
+        "gesamt": e.gesamt,
+        "status": e.status.value,
+        "alexandra_aktiv": e.alexandra_aktiv,
+        "dominant": e.dominant,
+        "spiegel": e.spiegel,
+        "protokoll": e.protokoll,
+        "schutz": e.schutz,
     }
 
 
