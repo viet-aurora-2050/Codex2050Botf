@@ -11,3 +11,4 @@ pip-wheel-metadata/
 .cache/
 .idea/
 .vscode/
+data/

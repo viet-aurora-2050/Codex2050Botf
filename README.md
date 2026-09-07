@@ -1,39 +1,113 @@
-# Codex2050
+# 🎰 Casino-Bonus- & Umsatz-Analytiker
 
-Telegram bot powered by DeepSeek AI with optional RPC endpoints.
+Ein sachlicher, mathematisch präziser Analyzer für Online-Casino-Boni,
+Freispiele und Umsatzbedingungen. Er rechnet **jeden Schritt transparent vor**,
+schätzt die Machbarkeit unter Zeitlimits realistisch ein und gibt eine ehrliche
+Empfehlung – im Sinne von **Spielerschutz und Kapitalerhaltung**.
 
-## Setup
-1. Create a virtual environment and install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-2. Copy the sample environment file and fill in your private tokens (never commit them):
-   ```bash
-   cp .env.example .env
-   # edit .env to add TELEGRAM_TOKEN and any other overrides
-   ```
-3. Start the bot locally:
-   ```bash
-   python main.py
-   ```
+> Kein Rat zum Glücksspiel. Werte sind theoretische Langzeit-Erwartungswerte.
+> Hilfe bei Glücksspielsucht: [bzga.de](https://www.bzga.de) · 0800 1 37 27 00 (kostenlos).
 
-Das Web-Dashboard ist jetzt standardmäßig aktiviert (`ENABLE_WEB=true`) und die benötigten Pakete sind in `requirements.txt` enthalten.
+Drei Nutzungsarten – zwei davon **ohne jegliche Secrets**:
 
-## Deployment
-Render configuration (`render.yaml`) reference secret environment variables. Keep deine TELEGRAM_TOKEN und DEEPSEEK_API_KEY in Renders Dashboard; sie werden nicht im Repository gespeichert. Der Bot läuft als Worker, das Dashboard als eigener Web Service.
+| Modus | Was | Secrets nötig? |
+|-------|-----|----------------|
+| **CLI** | `python -m analyzer "..."` | nein |
+| **Web-Dashboard** | Browser-Rechner + JSON-API | nein |
+| **Telegram-Bot** | `/bonus`, `/analyse`, `/frage` | Token (+ optional KI-Key) |
 
-### Render secrets
-- Secrets such as `TELEGRAM_TOKEN` and `DEEPSEEK_API_KEY` stay in Render's Environment Variables page (already set up in the dashboard screenshot) and are **not** checked into git.
-- If you need to rotate or review a value, open the Render dashboard, edit the corresponding key, and redeploy—no code changes are required.
+---
 
-## Render-Deployment neu aufsetzen (Worker + Web)
-So stellst du den Bot und das Dashboard in einem sauberen GitHub→Render-Flow wieder her:
+## Schnellstart
 
-1. **Repository vorbereiten**: `main.py`, `requirements.txt`, `render.yaml` und `Procfile` müssen im Root liegen (keine Unterordner). `render.yaml` enthält jetzt **zwei Services**: `codex2050-bot` (Worker) und `codex2050-dashboard` (Web).
-2. **Render anlegen**: Auf Render „New Web Service“ → GitHub-Repo `codex2050bot` wählen → Runtime Python 3.11 → Build Command leer lassen oder `pip install -r requirements.txt`.
-   - Worker-Start: `python main.py` (Procfile nutzt `worker: python main.py`).
-   - Dashboard-Start: `uvicorn web.dashboard:app --host 0.0.0.0 --port $PORT` (im Render-Webservice definiert).
-3. **Build-Cache leeren** (falls vorherige Deploys fehlschlugen): Render → *Advanced* → *Clear build cache* → *Manual Deploy → Deploy latest commit*.
-4. **Secrets kontrollieren**: `TELEGRAM_TOKEN` und `DEEPSEEK_API_KEY` nur im Render-Dashboard hinterlegen und bei Bedarf rotieren. Für das Dashboard reicht `PORT`, das in `render.yaml` gesetzt ist.
+```bash
+pip install -r requirements.txt
 
-Damit erhältst du einen Neustart ohne alte Cache-Artefakte und einen getrennten Webservice, der das Dashboard wieder erreichbar macht.
+# 1) Direkt in der Konsole rechnen (keine Secrets nötig)
+python -m analyzer "einzahlung=100 bonus=100% faktor=30 basis=db rtp=0.96 zeit=3 einsatz=1"
+
+# 2) Web-Rechner starten -> http://localhost:8080
+uvicorn web.dashboard:app --host 0.0.0.0 --port 8080
+
+# 3) Telegram-Bot starten (TELEGRAM_TOKEN erforderlich)
+cp .env.example .env      # Token eintragen
+python main.py
+```
+
+## Parameter
+
+| Schlüssel | Bedeutung | Beispiel |
+|-----------|-----------|----------|
+| `einzahlung=` | Einzahlung | `einzahlung=100` |
+| `bonus=` | Bonus als Betrag **oder** Prozent | `bonus=100%` / `bonus=50` |
+| `deckel=` | Maximaler Bonusbetrag | `deckel=200` |
+| `faktor=` | Umsatzfaktor (WR) | `faktor=30` |
+| `basis=` | Umsatzbasis: `b` (Bonus), `db` (Einz.+Bonus), `d` (Einzahlung) | `basis=db` |
+| `rtp=` | Return to Player (0.96 oder 96) | `rtp=0.96` |
+| `zeit=` | Zeitlimit in Tagen | `zeit=3` |
+| `einsatz=` | Durchschnittseinsatz pro Spin | `einsatz=1` |
+| `fs_gewinn=` | Freispielgewinn | `fs_gewinn=50` |
+| `fs_faktor=` | eigener Umsatzfaktor für Freispiele | `fs_faktor=40` |
+| `maxgewinn=` | Maximale Auszahlung (Cap) | `maxgewinn=500` |
+| `maxeinsatz=` | erlaubter Maximaleinsatz im Bonus | `maxeinsatz=5` |
+| `spins=` | Spins pro Stunde | `spins=500` |
+| `stunden=` | Spielstunden pro Tag | `stunden=3` |
+
+## Rechenlogik (transparent)
+
+```
+Bonus            = Einzahlung × Prozent  (gedeckelt)
+Umsatzbasis      = Bonus  |  Einzahlung+Bonus  |  Einzahlung
+Mindestumsatz    = Umsatzbasis × Faktor  +  Freispielgewinn × Faktor
+Hausvorteil      = 1 − RTP
+Erwart. Verlust  = Mindestumsatz × Hausvorteil
+Erwartungswert   = (Bonus + Freispielgewinn) − Erwarteter Verlust   (durch Cap begrenzt)
+Benötigte Spins  = Mindestumsatz / Einsatz
+Reine Spielzeit  = Spins / (Spins/h × Stunden/Tag)
+```
+
+**Empfehlung:** `STORNIEREN`, wenn das Zeitlimit unrealistisch ist oder der
+Erwartungswert negativ – dann Bonus löschen und Echtgeld sichern.
+`RISIKO` bei knapp positivem EV, `SPIELEN` bei klar vertretbaren Bedingungen.
+
+## Telegram-Befehle
+
+| Befehl | Funktion |
+|--------|----------|
+| `/bonus <parameter>` | Bonus transparent durchrechnen |
+| `/analyse <AGB-Text>` | Bonus-AGB per KI auf versteckte Haken prüfen (DEEPSEEK_API_KEY nötig) |
+| `/frage <Text>` | freie Frage an den Analytiker |
+| `/status` · `/help` | Status / Hilfe |
+
+Freitext mit `=` (z. B. `bonus=100 faktor=30`) wird automatisch als Berechnung erkannt.
+
+## Web-API
+
+```bash
+curl -X POST localhost:8080/api/analyse \
+  -H "Content-Type: application/json" \
+  -d '{"input":"einzahlung=100 bonus=100% faktor=30 basis=db rtp=0.96 zeit=3 einsatz=1"}'
+```
+
+## Deployment (Render)
+
+`render.yaml` deployt das Web-Dashboard (Rechner funktioniert sofort, ohne Secrets).
+`TELEGRAM_TOKEN` und `DEEPSEEK_API_KEY` optional im Render-Dashboard hinterlegen –
+sie werden **nie** ins Repository geschrieben. Für reinen Polling-Bot einen Worker
+mit Startbefehl `python main.py` anlegen.
+
+## Tests
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+## Projektstruktur
+
+```
+analyzer/     Rechen-Engine (bonus.py), Parser, System-Prompt, CLI
+bot/          Telegram-Bot (CasinoBonusBot)
+ai/           DeepSeek-Client für die AGB-Analyse
+web/          FastAPI-Dashboard (Rechner + Webhook)
+tests/        Unit-Tests der Engine
+```
