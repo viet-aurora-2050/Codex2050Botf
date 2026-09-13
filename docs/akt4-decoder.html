@@ -80,6 +80,17 @@ var Akt4GameRiddleDecoder = (function(){
     var b=c<="Z"?65:97;return String.fromCharCode((c.charCodeAt(0)-b+13)%26+b);});}
   function decodeClockAlphabet(hhmm){var h=parseInt((hhmm||"").split(":")[0],10);
     return (h>=1&&h<=26)?String.fromCharCode(64+h):null;}
+  function decodeClockAlphabetMinute(hhmm){var m=parseInt((hhmm||"").split(":")[1],10);
+    return (m>=1&&m<=26)?String.fromCharCode(64+m):null;}
+  // Grundrate: Anteil der Games mit diesem Anfangsbuchstaben (Anti-Zufall).
+  function baseRate(letter,games){
+    var total=games.filter(function(g){return norm(g.title);}).length;
+    var treffer=findGameMatches(letter,games).length;
+    var quote=total?treffer/total:0;
+    var bk = treffer===0?"kein Treffer"
+      :(treffer>1||quote>=0.05)?"dekorativ (hohe Grundrate) – bestätigend, nicht beweisend"
+      :"schwach – Einzeltreffer, keine unabhängige Bestätigung";
+    return {treffer:treffer,total:total,quote:quote,beweiskraft:bk};}
 
   // --- Game-Quelle laden (Priorität: URL → SPIELE-localStorage → Fallback) ---
   function verifyGameSource(url){
@@ -167,9 +178,17 @@ var Akt4GameRiddleDecoder = (function(){
     var fromExtern=/extern/.test(bundle.source);
     var chain=TIMES.map(function(t){var L=decodeClockAlphabet(t);var mm=findGameMatches(L,bundle.games);
       var c={time:t,hour:parseInt(t.split(":")[0],10),letter:L,matches:mm};
-      c.st=status(L,mm);c.conf=confidence(L,mm,fromExtern);return c;});
+      c.st=status(L,mm);c.conf=confidence(L,mm,fromExtern);
+      c.br=baseRate(L,bundle.games); c.minL=decodeClockAlphabetMinute(t); c.regelNoetig=(L!==c.minL);
+      if(c.conf==="HIGH"&&c.br.quote>=0.05)c.conf="MEDIUM"; // striktere Confidence
+      return c;});
+    var hoheGrundrate=chain.some(function(c){return c.br.quote>=0.05;});
+    var regelNoetig=chain.some(function(c){return c.regelNoetig;});
     var val=validateRiddleChain(chain);
     var sc=sanchoCheck(chain,val, m3.indexOf("gefangen")>=0);
+    if(sc.confidence==="HIGH"&&hoheGrundrate)sc.confidence="MEDIUM"; // striktere Confidence
+    sc.game_beweiskraft=hoheGrundrate?"dekorativ (bestätigend, nicht beweisend)":"gering";
+    sc.clock_eindeutig=regelNoetig?"nur mit vorab-festgelegter Regel (Stunde=Position)":"ja";
 
     var h='';
     h+='<div class="panel">';
@@ -186,7 +205,11 @@ var Akt4GameRiddleDecoder = (function(){
     h+='<div class="lvl"><b>LEVEL 3 · ROT13</b><div class="truth">→ '+esc(m3)+'</div></div>';
     h+='<div class="arrow">↓ Uhrzeit</div>';
     h+='<div class="lvl"><b>LEVEL 4 · CLOCK KEY</b>'+chain.map(function(c){
-      return '<div class="l">'+c.time+' → '+(c.hour<10?"0":"")+c.hour+' → '+(c.letter||"?")+'</div>';}).join("")+'</div>';
+      return '<div class="l">'+c.time+' → '+(c.hour<10?"0":"")+c.hour+' → '+(c.letter||"?")
+        +' <span class="tag">(Minute-Lesart: '+(c.minL||"?")+(c.regelNoetig?' ⚠ abweichend':' = gleich')+')</span></div>';}).join("")
+      +'<div class="'+(regelNoetig?'warn':'tag')+'" style="font-size:12px;margin-top:4px">'
+      +(regelNoetig?'⚠ Stunde- und Minute-Lesart weichen ab — Buchstabe nur mit vorab festgelegter Regel (Stunde=Position) eindeutig.'
+        :'Stunde==Minute bei allen dreien — beide Lesarten ergeben denselben Buchstaben (nicht durch die Regel erzwungen).')+'</div></div>';
     h+='<div class="arrow">↓ öffentliche Game-Titel</div>';
     h+='<div class="lvl"><b>LEVEL 5 · GAME KEY</b>';
     chain.forEach(function(c){
@@ -199,6 +222,7 @@ var Akt4GameRiddleDecoder = (function(){
             +'<br><span class="tag">Reason: Titel beginnt mit '+(c.letter||"?")+' · Source: '+esc(g.source)+'</span></div>';});
         if(c.matches.length>1)h+='<div class="warn" style="font-size:12px">Mehrere Kandidaten — keine Auto-Auswahl, kein „definitiv richtig".</div>';
       } else { h+='<div class="stop" style="font-size:12px">NO VERIFIED MATCH — kein Titel erfunden.</div>'; }
+      h+='<div class="tag" style="font-size:11px">Grundrate: '+c.br.treffer+'/'+c.br.total+' Titel ('+(c.br.quote*100).toFixed(1)+'%) → '+esc(c.br.beweiskraft)+'</div>';
       h+='</div>';
     });
     h+='</div>';
@@ -224,8 +248,8 @@ var Akt4GameRiddleDecoder = (function(){
     // Sancho Check
     h+='<div class="panel"><div class="tag">SANCHO CHECK</div>';
     h+='<div class="l">Decoded text: '+sc.decoded_text+'</div>';
-    h+='<div class="l">Clock conversion: '+sc.clock_conversion+'</div>';
-    h+='<div class="l">Game-title verification: '+sc.game_title_verification+'</div>';
+    h+='<div class="l">Clock conversion: '+sc.clock_conversion+' · eindeutig: '+sc.clock_eindeutig+'</div>';
+    h+='<div class="l">Game-title verification: '+sc.game_title_verification+' · Beweiskraft: '+sc.game_beweiskraft+'</div>';
     h+='<div class="l">Independent confirmation: '+sc.independent_confirmation+'</div>';
     h+='<div class="truth">Final interpretation: '+sc.final_interpretation+'</div>';
     h+='<div class="l">Confidence: <span class="chip c'+sc.confidence+'">'+sc.confidence+'</span></div>';
@@ -243,7 +267,8 @@ var Akt4GameRiddleDecoder = (function(){
   return {
     MORSE:MORSE, BASE64:BASE64, ROT13:ROT13, TIMES:TIMES, FALLBACK:FALLBACK,
     decodeMorse:decodeMorse, decodeBase64:decodeBase64, decodeROT13:decodeROT13,
-    decodeClockAlphabet:decodeClockAlphabet, findGameMatches:findGameMatches,
+    decodeClockAlphabet:decodeClockAlphabet, decodeClockAlphabetMinute:decodeClockAlphabetMinute,
+    baseRate:baseRate, findGameMatches:findGameMatches,
     verifyGameSource:verifyGameSource, validateRiddleChain:validateRiddleChain,
     sanchoCheck:sanchoCheck, renderRiddleResult:renderRiddleResult, run:run
   };
