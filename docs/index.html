@@ -62,6 +62,7 @@
    <button data-t="mobile">MOBILE</button>
    <button data-t="spiele">SPIELE</button>
    <button data-t="multiplier">MULTIPLIER</button>
+   <button data-t="quellen">QUELLEN</button>
    <button data-t="anzeige">ANZEIGE</button>
    <button data-t="gewinner">GEWINNER</button>
    <button data-t="traeger">TRÄGER</button>
@@ -191,6 +192,28 @@
   <pre id="mlout"></pre>
  </section>
 
+ <!-- ===== QUELLEN (Quellenprinzip) ===== -->
+ <section id="quellen">
+  <div class="tag">QUELLENPRINZIP · QUELLE → GEGENQUELLE → PRIMÄRDOKUMENT → MATHE-CHECK</div>
+  <div class="disc">Jede externe Angabe muss die Prüfkette durchlaufen. Reizwörter wie
+   „hot/fällig/zahlt jetzt/bestes Spiel" sind <b>kein</b> Beweis. Nur lokal gespeichert.</div>
+  <label>Behauptung (z. B. aus einem Forum/Video)</label>
+  <input id="q_beh" placeholder='z. B. "Slot XY ist heiß und zahlt jetzt"'>
+  <div id="q_flag" class="disc" hidden></div>
+  <label>1) Quelle</label><input id="q_q" placeholder="wer sagt es? (Link/Name)">
+  <label>2) Gegenquelle</label><input id="q_g" placeholder="unabhängige zweite Quelle">
+  <label>3) Primärdokument</label><input id="q_p" placeholder="offizielle Spielinfo / Regulierer">
+  <label>4) Eigener Mathe-Check</label><input id="q_m" placeholder="z. B. 1 − RTP = Hausvorteil; passt es?">
+  <label>Ergebnis</label>
+  <select id="q_e"><option value="offen">offen</option>
+   <option value="bestaetigt">bestätigt</option><option value="widerlegt">widerlegt</option></select>
+  <button class="go" onclick="quellen_pruefe()">∆ Kette prüfen</button>
+  <button class="go" onclick="quellen_save()" style="background:#0a2a4a">＋ In Register speichern</button>
+  <pre id="q_out"></pre>
+  <div class="tag" style="margin-top:12px">REGISTER (lokal)</div>
+  <div id="q_list"></div>
+ </section>
+
  <!-- ===== ANZEIGE / MELDEN ===== -->
  <section id="anzeige">
   <div class="tag">MELDEN · MATHEMATIK + BESCHWERDE AN DIE GGL</div>
@@ -274,6 +297,7 @@
    <div class="l"><b>MOBILE</b> — Netzwerkstatus nur aus dem eigenen HTTPS-Verkehr (online/offline, Latenz). Kein SIM/APN/Paket-Zugriff; auf iOS „nicht verfügbar", wenn das System es sperrt.</div>
    <div class="l"><b>SPIELE</b> — Public Game Data Engine + Game Matrix + Data Quality (A–F). Nur öffentliche Angaben, lokal gespeichert. Sortierung nach Fakten, nie nach „gewinnt jetzt".</div>
    <div class="l"><b>MULTIPLIER</b> — Zielbeträge (2x/3x/…) immer; Wahrscheinlichkeit NUR mit veröffentlichter Verteilung, sonst „Probability unavailable". RTP allein reicht nicht.</div>
+   <div class="l"><b>QUELLEN</b> — Quellenprinzip: Quelle → Gegenquelle → Primärdokument → eigener Mathe-Check → Ergebnis. Marketing-Wörter („hot/fällig/zahlt jetzt/bestes Spiel") werden als Nicht-Beweis markiert.</div>
    <div class="l"><b>ANZEIGE</b> — erzeugt aus der Mathematik eine sachliche Beschwerde/Anzeige an die GGL, fuer jeden Anbieter. Nur wahrheitsgemaesse Angaben; alles als Verdacht/Bitte um Pruefung. Keine Rechtsberatung.</div>
    <div class="l"><b>GEWINNER</b> — dokumentierte Faelle, die mit Mathematik legal gewannen (Thorp, MIT-Team, Garcia-Pelayo, Mandel, Selbee …) und Hausverbot bekamen. Mit Quelle und dem mathematischen Grund.</div>
    <div class="l"><b>SANCHO</b> — zeigt den „Rhythmus" und entlarvt ihn sofort (RNG, Vorhersagewert 0).</div>
@@ -575,6 +599,48 @@ function multiplier(){
     'Mathematical scenario only. No prediction. No guarantee.');
   document.getElementById('mlout').textContent=L.join('\n');
 }
+
+// ---------- QUELLEN (Quellenprinzip · spiegelt quellen/prinzip.py) ----------
+const QFLAGS=["hot","heiss","heiß","loose","locker","high paying","zahlt jetzt","zahlt gut",
+ "due","faellig","fällig","winning","gewinnt jetzt","gewinnt","best game","bestes spiel",
+ "guaranteed","garantiert","sicherer gewinn","jackpot soon","jackpot bald","ueberfaellig",
+ "überfällig","must hit","muss treffen","easy win","leichter gewinn"];
+function q_scan(t){t=(t||'').toLowerCase();return QFLAGS.filter(f=>t.indexOf(f)>=0);}
+function q_val(id){return document.getElementById(id).value.trim();}
+function q_build(){
+  const beh=q_val('q_beh'), fl=q_scan(beh);
+  const q=q_val('q_q'),g=q_val('q_g'),p=q_val('q_p'),m=q_val('q_m'),e=document.getElementById('q_e').value;
+  const voll=q&&g&&p&&m;
+  const fb=document.getElementById('q_flag');
+  if(fl.length){fb.hidden=false;fb.innerHTML='⚠ MARKETING erkannt: <b>'+fl.join(', ')+'</b> — kein Beweis, nicht übernehmen.';}
+  else{fb.hidden=true;}
+  const L=['QUELLENPRINZIP','Behauptung: "'+(beh||'[keine]')+'"'];
+  L.push(fl.length?('⚠ MARKETING: '+fl.join(', ')+' → KEIN Beweis.'):'Marketing-Wächter: keine Reizwörter — trotzdem prüfen.');
+  L.push('','1) Quelle:            '+(q||'[fehlt]'));
+  L.push('2) Gegenquelle:       '+(g||'[fehlt]'));
+  L.push('3) Primärdokument:    '+(p||'[fehlt]'));
+  L.push('4) Eigener Mathe-Check: '+(m||'[fehlt]'));
+  L.push('', voll?('→ Ergebnis: '+e.toUpperCase()):'→ Ergebnis: OFFEN — Kette unvollständig, noch nicht belastbar.');
+  L.push('','Regel: keine Quelle nur wegen „hot/fällig/zahlt jetzt/bestes Spiel“ übernehmen.');
+  return {text:L.join('\n'),rec:{beh:beh,q:q,g:g,p:p,m:m,e:voll?e:'offen',fl:fl}};
+}
+function quellen_pruefe(){document.getElementById('q_out').textContent=q_build().text;}
+function q_load(){try{return JSON.parse(localStorage.getItem('codex_quellen')||'[]')}catch(e){return []}}
+function q_store(a){try{localStorage.setItem('codex_quellen',JSON.stringify(a))}catch(e){}}
+function quellen_save(){const b=q_build();document.getElementById('q_out').textContent=b.text;
+  if(!b.rec.beh){return;} const a=q_load();a.unshift(b.rec);q_store(a);quellen_render();}
+function quellen_del(i){const a=q_load();a.splice(i,1);q_store(a);quellen_render();}
+function quellen_render(){const a=q_load();
+  document.getElementById('q_list').innerHTML = a.length? a.map((r,i)=>
+   '<div class="node"><div class="l">„'+esc(r.beh)+'"'
+   +(r.fl&&r.fl.length?' <span class="stop">[Marketing: '+esc(r.fl.join(", "))+']</span>':'')+'</div>'
+   +'<div class="tag" style="margin:4px 0">Ergebnis: '+esc((r.e||'offen').toUpperCase())+'</div>'
+   +'<div class="l" style="font-size:12px">Q: '+esc(r.q||'—')+' · Gegen: '+esc(r.g||'—')+' · Primär: '+esc(r.p||'—')+'</div>'
+   +'<div class="truth" style="font-size:12px">Mathe: '+esc(r.m||'—')+'</div>'
+   +'<button class="gbtn" style="margin-top:6px" onclick="quellen_del('+i+')">✕ entfernen</button></div>'
+  ).join('') : '<div class="l" style="color:#5f7aa8">Noch keine Einträge.</div>';
+}
+quellen_render();
 
 // ---------- SANCHO ----------
 const RTP={tipico:.955,betano:.955,n1:.96,stargames:.955,generisch:.95};
