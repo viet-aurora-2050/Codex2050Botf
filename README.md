@@ -190,6 +190,34 @@ Belohnung fürs Gewinnen war fast immer der Rauswurf.
 python -m gewinner          # alle Fälle + Lehre  ·  Web-App: Tab „GEWINNER"  ·  Bot: /gewinner
 ```
 
+## Mobile Analytics Layer (App-Tabs MOBILE · SPIELE · MULTIPLIER)
+
+Ein passiver, mathematischer Analyse-Layer in der Offline-App — läuft auf dem
+iPhone auch über mobile Daten, **ohne** auf private Mobilfunkdaten oder fremde
+Systeme zuzugreifen. Zentrale Regel: **verfügbar ≠ vorhersagbar**.
+
+- **MOBILE** — Netzwerkstatus nur aus dem **eigenen** HTTPS-Verkehr (online/offline,
+  gemessene Latenz). **Kein** Zugriff auf SIM/APN/IMSI/ICCID, kein Packet-Sniffing,
+  kein fremder Verkehr. Auf iOS/Safari nicht bereitgestellte Werte → „nicht verfügbar".
+- **SPIELE** — *Public Game Data Engine* + *Game Matrix* + *Data Quality* (A–F).
+  Nur öffentliche Angaben, lokal gespeichert (localStorage). Sortierung nach Fakten
+  (RTP, Hausvorteil, Volatilität, Max Win, Datenqualität) — nie nach „gewinnt jetzt".
+- **MULTIPLIER** — Zielbeträge (1x…100x) immer; **P(Return ≥ k) nur mit veröffentlichter
+  Verteilung**, sonst „Probability unavailable — RTP alone does not determine payout
+  distribution". Kein Spin wird vorhergesagt.
+
+Die Verteilungs-Mathematik ist als getestetes Modul `verteilung/` hinterlegt und
+in der App 1:1 gespiegelt:
+
+```bash
+python -m verteilung 10 "0:0.7, 2:0.2, 5:0.1"   # EV, Hausvorteil, P(>=k)
+python -m verteilung 5                            # ohne Verteilung -> Probability unavailable
+```
+
+Die bestehende **ANALYSE** (Monte-Carlo) wurde additiv erweitert: Perzentile
+P5/P25/P75/P95, Chance 25 %/50 %/alles zu verlieren, Chance auf 2x/3x des Budgets
+(Session-Szenario, keine Spin-Vorhersage).
+
 ## Melde-Assistent (`melde/`) – Mathematik + Beschwerde/Anzeige an die GGL
 
 Verbindet das mathematische Prinzip (Hausvorteil, struktureller Verlust,
