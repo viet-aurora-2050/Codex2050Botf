@@ -36,6 +36,14 @@
  .livedot{color:#4fd07a;animation:pulse 1.4s infinite}
  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
  .disc{margin:8px 0 4px;padding:10px;border:1px solid #5a2233;background:#160a10;border-radius:8px;color:#ffb0be;font-size:12.5px}
+ .tblwrap{overflow-x:auto;margin-top:12px}
+ table{width:100%;border-collapse:collapse;font-size:12px;min-width:520px}
+ th,td{border:1px solid #14264d;padding:6px 8px;text-align:left;white-space:nowrap}
+ th{color:#8fdcff}
+ .q{display:inline-block;min-width:16px;text-align:center;border-radius:4px;padding:1px 6px;font-weight:bold}
+ .qA{background:#123a1a;color:#9fe6b0}.qB{background:#123a2a;color:#9fe6b0}
+ .qC{background:#2a2a12;color:#ffcf8f}.qD{background:#2a1a12;color:#ffb08f}.qF{background:#2a1010;color:#ff9db0}
+ .gbtn{background:#0a1738;border:1px solid #1e3d7a;color:#ff9db0;border-radius:6px;padding:3px 8px;font:inherit;cursor:pointer}
  #d1-vhs{position:fixed;inset:0;pointer-events:none;z-index:9998;mix-blend-mode:screen;opacity:.05}
  #d1-vhs::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(140,220,255,.10) 0 1px,transparent 1px 3px)}
  #boot{position:fixed;inset:0;z-index:9999;background:#01030d;color:#8fdcff;font:12px/1.7 ui-monospace,monospace;padding:24px 18px;transition:opacity .6s;white-space:pre-wrap}
@@ -51,6 +59,9 @@
    <button data-t="sancho" class="on">SANCHO ◉ LIVE</button>
    <button data-t="rechner">RECHNER</button>
    <button data-t="analyse">ANALYSE</button>
+   <button data-t="mobile">MOBILE</button>
+   <button data-t="spiele">SPIELE</button>
+   <button data-t="multiplier">MULTIPLIER</button>
    <button data-t="anzeige">ANZEIGE</button>
    <button data-t="gewinner">GEWINNER</button>
    <button data-t="traeger">TRÄGER</button>
@@ -119,6 +130,65 @@
   <div class="bars" id="ahist" style="margin-top:14px"></div>
   <div class="tag" id="ahistlab" style="margin-top:4px"></div>
   <pre id="aout"></pre>
+ </section>
+
+ <!-- ===== MOBILE (Connection Analytics) ===== -->
+ <section id="mobile">
+  <div class="tag">MOBILE NETWORK / CONNECTION ANALYTICS</div>
+  <div class="disc">Nur der <b>eigene</b>, normale HTTPS-Verkehr dieser App. <b>Kein</b> Zugriff auf
+   SIM/APN/IMSI/ICCID, kein Packet-Sniffing, kein fremder Netzwerkverkehr, keine Anbieter-Server.
+   Auf iOS/Safari liefert das System manche Werte bewusst nicht — dann steht „nicht verfügbar".</div>
+  <button class="go" onclick="mobile()">∆ Netzwerkstatus prüfen</button>
+  <pre id="mout">Noch nicht geprüft.</pre>
+ </section>
+
+ <!-- ===== SPIELE (Public Game Data Engine · Matrix · Data Quality) ===== -->
+ <section id="spiele">
+  <div class="tag">PUBLIC GAME DATA ENGINE · GAME MATRIX · DATA QUALITY</div>
+  <div class="disc">Nur <b>öffentliche</b> Angaben (offizielle Spielinfo) — bitte gegen die Quelle prüfen.
+   <b>Keine</b> Anbieter-API, keine Login-Daten, keine geschützten Endpunkte. Daten liegen nur
+   lokal auf deinem Gerät. „Verfügbar" heißt nicht „vorhersagbar".</div>
+  <div class="grid">
+   <div><label>Spielname</label><input id="g_name" placeholder="z. B. Beispiel-Slot"></div>
+   <div><label>Anbieter/Studio</label><input id="g_anb" placeholder="öffentlich"></div>
+   <div><label>RTP (öffentlich)</label><input id="g_rtp" type="number" value="0.96" step="0.005"></div>
+   <div><label>Volatilität</label><select id="g_vola">
+     <option value="">unbekannt</option><option value="niedrig">niedrig</option>
+     <option value="mittel" selected>mittel</option><option value="hoch">hoch</option></select></div>
+   <div><label>Max Win (x Einsatz)</label><input id="g_max" type="number" value="5000"></div>
+   <div><label>Min/Max Einsatz (€)</label><div class="grid"><input id="g_minb" type="number" value="0.1" step="0.1"><input id="g_maxb" type="number" value="100"></div></div>
+  </div>
+  <label>Öffentliche Verteilung/Paytable (optional) — Format: mult:P, mult:P</label>
+  <input id="g_dist" placeholder="z. B. 0:0.7, 2:0.2, 5:0.1">
+  <button class="go" onclick="spiele_add()">∆ Spiel hinzufügen (nur öffentliche Daten)</button>
+  <label>Sortieren</label>
+  <select id="g_sort" onchange="spiele_render()">
+   <option value="rtp">Höchster RTP</option>
+   <option value="edge">Niedrigster Hausvorteil</option>
+   <option value="vola">Niedrigste Volatilität</option>
+   <option value="max">Höchster Max Win</option>
+   <option value="quali">Beste Datenqualität</option>
+  </select>
+  <div class="tblwrap"><table id="matrix"></table></div>
+  <div class="foot">Sortierung nach Fakten — <b>nicht</b> „bestes Spiel um jetzt zu gewinnen". Kein Spiel
+   ist „fällig" oder „heiß".</div>
+ </section>
+
+ <!-- ===== MULTIPLIER (Return Multiplier Analysis) ===== -->
+ <section id="multiplier">
+  <div class="tag">RETURN MULTIPLIER ANALYSIS</div>
+  <div class="disc"><b>RTP allein bestimmt keine 2x/3x/10x-Wahrscheinlichkeit.</b> Ohne veröffentlichte
+   Verteilung: „Probability unavailable". Es wird <b>kein</b> Spin vorhergesagt — nur die Verteilung
+   eines Einsatzes beschrieben.</div>
+  <div class="grid">
+   <div><label>Einsatz (€)</label><input id="ml_einsatz" type="number" value="5" step="0.5"></div>
+   <div><label>Quelle Verteilung</label><select id="ml_src" onchange="ml_fill()">
+     <option value="manual">manuell eingeben</option></select></div>
+  </div>
+  <label>Verteilung (mult:P, …) — leer = keine Wahrscheinlichkeit</label>
+  <input id="ml_dist" placeholder="z. B. 0:0.7, 2:0.2, 5:0.1">
+  <button class="go" onclick="multiplier()">∆ Multiplikatoren berechnen</button>
+  <pre id="mlout"></pre>
  </section>
 
  <!-- ===== ANZEIGE / MELDEN ===== -->
@@ -200,7 +270,10 @@
   <div class="panel">
    <div class="l">Dieses eine HTML-File enthaelt das komplette ∆1-System — offline, ohne Server.</div>
    <div class="l"><b>RECHNER</b> — transparente Bonus-/Umsatzanalyse (Spielerschutz).</div>
-   <div class="l"><b>ANALYSE</b> — persoenliche Risiko-Mathematik aus oeffentlichen Fakten (RTP/Volatilitaet): erwarteter Verlust, Chance im Plus, Risk of Ruin — per Live-Monte-Carlo. Keine Spin-Vorhersage.</div>
+   <div class="l"><b>ANALYSE</b> — persoenliche Risiko-Mathematik aus oeffentlichen Fakten (RTP/Volatilitaet): erwarteter Verlust, Perzentile, Verlust-Schwellen, 2x/3x-Chance, Risk of Ruin — per Live-Monte-Carlo. Keine Spin-Vorhersage.</div>
+   <div class="l"><b>MOBILE</b> — Netzwerkstatus nur aus dem eigenen HTTPS-Verkehr (online/offline, Latenz). Kein SIM/APN/Paket-Zugriff; auf iOS „nicht verfügbar", wenn das System es sperrt.</div>
+   <div class="l"><b>SPIELE</b> — Public Game Data Engine + Game Matrix + Data Quality (A–F). Nur öffentliche Angaben, lokal gespeichert. Sortierung nach Fakten, nie nach „gewinnt jetzt".</div>
+   <div class="l"><b>MULTIPLIER</b> — Zielbeträge (2x/3x/…) immer; Wahrscheinlichkeit NUR mit veröffentlichter Verteilung, sonst „Probability unavailable". RTP allein reicht nicht.</div>
    <div class="l"><b>ANZEIGE</b> — erzeugt aus der Mathematik eine sachliche Beschwerde/Anzeige an die GGL, fuer jeden Anbieter. Nur wahrheitsgemaesse Angaben; alles als Verdacht/Bitte um Pruefung. Keine Rechtsberatung.</div>
    <div class="l"><b>GEWINNER</b> — dokumentierte Faelle, die mit Mathematik legal gewannen (Thorp, MIT-Team, Garcia-Pelayo, Mandel, Selbee …) und Hausverbot bekamen. Mit Quelle und dem mathematischen Grund.</div>
    <div class="l"><b>SANCHO</b> — zeigt den „Rhythmus" und entlarvt ihn sofort (RNG, Vorhersagewert 0).</div>
@@ -278,7 +351,12 @@ function risiko(){
     if(dead||k<B)ruin++; k=Math.max(0,k); finals.push(k); if(k>BR)plus++;}
   finals.sort((a,b)=>a-b);
   const n=finals.length, perc=p=>finals[Math.min(n-1,Math.max(0,Math.floor(p*n)))];
-  const median=perc(.5),p05=perc(.05),p95=perc(.95);
+  const median=perc(.5),p05=perc(.05),p25=perc(.25),p75=perc(.75),p95=perc(.95);
+  const lose25=finals.filter(x=>x<BR*0.75).length/n;
+  const lose50=finals.filter(x=>x<BR*0.5).length/n;
+  const loseAll=finals.filter(x=>x<Math.max(B,BR*0.001)).length/n;
+  const reach2=finals.filter(x=>x>=BR*2).length/n;
+  const reach3=finals.filter(x=>x>=BR*3).length/n;
   const hi=Math.max(BR*2,p95*1.2)||1, bins=new Array(24).fill(0);
   finals.forEach(x=>{bins[Math.min(23,Math.floor(x/hi*24))]++;});
   const mx=Math.max(...bins)||1, bh=document.getElementById('ahist');bh.innerHTML='';
@@ -296,8 +374,14 @@ function risiko(){
     +'Median-Endkapital:       '+median.toFixed(2)+' €\n'
     +'Chance, im Plus zu enden: '+(plus/runs*100).toFixed(1)+' %\n'
     +'<span class="stop">Risk of Ruin (pleite):    '+(ruin/runs*100).toFixed(1)+' %</span>\n'
-    +'Bandbreite P5..P95:       '+p05.toFixed(2)+' .. '+p95.toFixed(2)+' €\n\n'
-    +'<span class="truth">Das ist DEINE Risiko-Mathematik — keine Spin-Vorhersage. Der EV bleibt negativ.</span>';
+    +'Perzentile P5/P25/P75/P95: '+p05.toFixed(0)+' / '+p25.toFixed(0)+' / '+p75.toFixed(0)+' / '+p95.toFixed(0)+' €\n'
+    +'Chance, 25 % zu verlieren:  '+(lose25*100).toFixed(1)+' %\n'
+    +'Chance, 50 % zu verlieren:  '+(lose50*100).toFixed(1)+' %\n'
+    +'<span class="stop">Chance, alles zu verlieren: '+(loseAll*100).toFixed(1)+' %</span>\n'
+    +'Chance, Budget zu verdoppeln (2x): '+(reach2*100).toFixed(1)+' %\n'
+    +'Chance, Budget zu verdreifachen (3x): '+(reach3*100).toFixed(1)+' %\n\n'
+    +'<span class="truth">Das ist DEINE Risiko-Mathematik (Session-Szenario) — keine Spin-Vorhersage. '
+    +'Reaching 2x/3x = ganze Session, nicht der nächste Spin. Der EV bleibt negativ.</span>';
 }
 
 // ---------- ANZEIGE / MELDEN (spiegelt melde/anzeige.py) ----------
@@ -375,6 +459,123 @@ function flash(msg){const o=document.getElementById('zout');const old=o.style.bo
   o.style.borderColor='#4fd07a';const b=document.createElement('div');b.textContent=msg;
   b.style.color='#9fe6b0';o.parentNode.insertBefore(b,o);setTimeout(()=>{b.remove();o.style.borderColor=old;},1500);}
 
+// ---------- MOBILE (Connection Analytics, nur eigener HTTPS-Verkehr) ----------
+function mobile(){
+  const o=document.getElementById('mout'), on=navigator.onLine;
+  const c=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
+  let typ='nicht verfügbar über Web-App / iOS-Sicherheitsmodell', dl='', rttApi='';
+  if(c){ typ=(c.type||c.effectiveType||'unbekannt');
+    if(c.downlink!=null)dl=c.downlink+' Mbit/s (Browser-Schätzung)';
+    if(c.rtt!=null)rttApi=c.rtt+' ms (Browser-Schätzung)'; }
+  o.textContent='NETWORK STATUS\n... messe Latenz (eigener Request) ...';
+  const t0=performance.now();
+  fetch(location.href.split('?')[0]+'?_p='+Date.now(),{cache:'no-store'}).then(()=>{
+    const lat=Math.round(performance.now()-t0), now=new Date().toLocaleTimeString('de-DE');
+    o.textContent=[
+      'NETWORK STATUS',
+      'Verbindung: '+(on?'ONLINE':'OFFLINE'),
+      'Transport: '+typ,
+      '5G: nicht zuverlässig über Web-App ermittelbar',
+      (dl?'Downlink: '+dl:''),
+      (rttApi?'RTT (Browser): '+rttApi:''),
+      'Gemessene Latenz (eigener HTTPS-Request): '+lat+' ms',
+      'Last successful request: '+now,
+      'Data source: eigener HTTPS-Endpunkt (first-party)',
+      'No carrier credentials accessed.',
+      'No private traffic inspected.'
+    ].filter(x=>x).join('\n');
+  }).catch(()=>{
+    o.textContent=['NETWORK STATUS','Verbindung: '+(on?'ONLINE (Request fehlgeschlagen)':'OFFLINE'),
+      'Transport: '+typ,'Request: FAILED / TIMEOUT','No carrier credentials accessed.',
+      'No private traffic inspected.'].join('\n');
+  });
+}
+
+// ---------- SPIELE (Public Game Data Engine · Matrix · Data Quality) ----------
+function parseDist(s){const out=[];(s||'').split(/[,;\n]/).forEach(t=>{const m=t.split(':');
+  if(m.length===2){const a=parseFloat(m[0].replace(',','.')),b=parseFloat(m[1].replace(',','.'));
+   if(!isNaN(a)&&!isNaN(b))out.push([a,b]);}});return out;}
+function quali(g){const d=parseDist(g.dist); const hasPay=d.length>0 && Math.abs(d.reduce((a,x)=>a+x[1],0)-1)<0.05;
+  const hasRtp=g.rtp>0, hasVola=!!g.vola;
+  if(hasPay)return 'A'; if(hasRtp&&hasVola)return 'C'; if(hasRtp||hasVola)return 'D'; return 'F';}
+function loadSpiele(){try{return JSON.parse(localStorage.getItem('codex_spiele')||'null')}catch(e){return null}}
+function saveSpiele(a){try{localStorage.setItem('codex_spiele',JSON.stringify(a))}catch(e){}}
+let SPIELE=loadSpiele();
+if(!SPIELE){SPIELE=[
+  {name:'Beispiel-Slot A (prüfen!)',anb:'—',rtp:0.96,vola:'mittel',max:5000,minb:0.1,maxb:100,dist:''},
+  {name:'Beispiel-Slot B (prüfen!)',anb:'—',rtp:0.94,vola:'hoch',max:20000,minb:0.2,maxb:100,dist:''}
+];saveSpiele(SPIELE);}
+function spiele_add(){
+  const g={name:(document.getElementById('g_name').value||'Unbenannt').trim(),
+    anb:(document.getElementById('g_anb').value||'—').trim(),
+    rtp:(function(){let r=num(einzVal('g_rtp'));return r>1.5?r/100:r;})(),
+    vola:document.getElementById('g_vola').value,
+    max:num(einzVal('g_max')),minb:num(einzVal('g_minb')),maxb:num(einzVal('g_maxb')),
+    dist:document.getElementById('g_dist').value.trim()};
+  SPIELE.push(g);saveSpiele(SPIELE);spiele_render();
+  document.getElementById('g_name').value='';document.getElementById('g_dist').value='';
+  ml_sources();
+}
+function spiele_del(i){SPIELE.splice(i,1);saveSpiele(SPIELE);spiele_render();ml_sources();}
+const VOLARANK={niedrig:1,mittel:2,hoch:3,'':9};
+function spiele_render(){
+  const sort=document.getElementById('g_sort').value;
+  const idx=SPIELE.map((g,i)=>i);
+  idx.sort((a,b)=>{const x=SPIELE[a],y=SPIELE[b];
+    if(sort==='rtp')return (y.rtp||0)-(x.rtp||0);
+    if(sort==='edge')return (1-(x.rtp||0))-(1-(y.rtp||0));
+    if(sort==='vola')return (VOLARANK[x.vola]||9)-(VOLARANK[y.vola]||9);
+    if(sort==='max')return (y.max||0)-(x.max||0);
+    if(sort==='quali')return quali(x).localeCompare(quali(y));
+    return 0;});
+  let h='<tr><th>Spiel</th><th>Anbieter</th><th>RTP</th><th>Hausvorteil</th><th>Vola</th><th>Max Win</th><th>Verteilung?</th><th>Qual.</th><th></th></tr>';
+  idx.forEach(i=>{const g=SPIELE[i], q=quali(g), hasD=parseDist(g.dist).length>0;
+    h+='<tr><td>'+esc(g.name)+'</td><td>'+esc(g.anb)+'</td>'
+      +'<td>'+((g.rtp||0)*100).toFixed(1)+'%</td>'
+      +'<td>'+((1-(g.rtp||0))*100).toFixed(1)+'%</td>'
+      +'<td>'+(g.vola||'—')+'</td><td>'+(g.max||0)+'x</td>'
+      +'<td>'+(hasD?'ja (A)':'nein')+'</td>'
+      +'<td><span class="q q'+q+'">'+q+'</span></td>'
+      +'<td><button class="gbtn" onclick="spiele_del('+i+')">✕</button></td></tr>';});
+  document.getElementById('matrix').innerHTML=h;
+}
+function esc(s){return (''+s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+spiele_render();
+
+// ---------- MULTIPLIER (Return Multiplier Analysis) ----------
+function ml_sources(){
+  const sel=document.getElementById('ml_src');const cur=sel.value;
+  sel.innerHTML='<option value="manual">manuell eingeben</option>'
+    +SPIELE.map((g,i)=>'<option value="'+i+'">'+esc(g.name)+'</option>').join('');
+  sel.value=cur;
+}
+function ml_fill(){const v=document.getElementById('ml_src').value;
+  if(v!=='manual'&&SPIELE[+v])document.getElementById('ml_dist').value=SPIELE[+v].dist||'';}
+ml_sources();
+function multiplier(){
+  const S=num(einzVal('ml_einsatz'))||1, dist=parseDist(document.getElementById('ml_dist').value);
+  const ziele=[1,2,3,4,5,10,20,50,100];
+  const L=['RETURN MULTIPLIER ANALYSIS','Einsatz: '+S.toFixed(2)+' €','','Ziel   Betrag'];
+  ziele.forEach(k=>L.push((k+'x').padEnd(5)+'= '+(S*k).toFixed(2)+' €'));
+  L.push('');
+  if(dist.length){
+    const sum=dist.reduce((a,x)=>a+x[1],0), ev=dist.reduce((a,x)=>a+x[0]*x[1],0), he=1-ev;
+    const varr=dist.reduce((a,x)=>a+x[1]*(x[0]-ev)**2,0);
+    L.push('Verteilung erkannt (Summe P='+sum.toFixed(3)+(Math.abs(sum-1)>0.05?' ⚠ nicht ~1':'')+').');
+    L.push('EV = '+(ev*100).toFixed(1)+'% · Hausvorteil = '+(he*100).toFixed(1)+'% · SD = '+Math.sqrt(varr).toFixed(2));
+    L.push('','Ziel   P(Return >= k)');
+    ziele.forEach(k=>{const p=dist.filter(x=>x[0]>=k).reduce((a,x)=>a+x[1],0);
+      L.push((k+'x').padEnd(5)+'= '+(p*100).toFixed(2)+' %');});
+  } else {
+    L.push('Probability unavailable.');
+    L.push('Reason: RTP alone does not determine payout distribution.');
+    L.push('Gib eine öffentliche Verteilung ein (z. B. 0:0.7, 2:0.2, 5:0.1).');
+  }
+  L.push('','Nächster Spin: NICHT VORHERSAGBAR (RNG unabhängig).',
+    'Mathematical scenario only. No prediction. No guarantee.');
+  document.getElementById('mlout').textContent=L.join('\n');
+}
+
 // ---------- SANCHO ----------
 const RTP={tipico:.955,betano:.955,n1:.96,stargames:.955,generisch:.95};
 const SMONO=["Du willst den Rhythmus. Ich zeige ihn dir – und dann zeige ich dir, dass er luegt.",
@@ -402,7 +603,8 @@ function sancho(){
     +'<div class="truth" style="margin-top:8px">• RNG: jeder Spin unabhaengig. Vorhersagewert 0.</div>'
     +'<div class="truth">• RTP '+(RTP[a]*100).toFixed(1)+'% → Hausvorteil '+(he*100).toFixed(1)+'%.</div>'
     +'<div class="truth">• Erwarteter Verlust/100 Spins × '+e.toFixed(2)+' = '+loss+' €.</div>'
-    +'<div class="stop" style="margin-top:8px">🛑 KEIN SPIELBEFEHL. Es gibt kein Gewinnfenster.</div>';
+    +'<div class="truth">• Nächster Spin: NICHT VORHERSAGBAR · Nächster Gewinn: NICHT VORHERSAGBAR.</div>'
+    +'<div class="stop" style="margin-top:8px">🛑 KEIN SPIELBEFEHL. Es gibt kein Gewinnfenster. Mathematisch auswertbar, aber nicht vorhersagbar.</div>';
 }
 
 // ---------- TRÄGER ----------
@@ -504,7 +706,8 @@ setInterval(sanchoLive,15000);  // alle 15s neu lesen -> sichtbar "live"
 
 // ---------- Boot ----------
 (function(){var lines=["∆1 // SESSION INITIALISIERT","KANON: geladen (6 Nodes, Register V2)",
- "MODULE: RECHNER · SANCHO · TRAEGER · NODES · AKT 4 ... [OK]","SPIELERSCHUTZ-KERN: aktiv ... [OK]",
+ "MODULE: SANCHO · ANALYSE · MOBILE · SPIELE · MULTIPLIER · ANZEIGE ... [OK]",
+ "REGEL: verfuegbar != vorhersagbar · SPIELERSCHUTZ-KERN aktiv ... [OK]",
  "'Was erinnert wird, existiert weiter.'",""];
  var boot=document.getElementById('boot'),t=document.getElementById('boott'),i=0,j=0;
  function done(){boot.style.opacity=0;setTimeout(()=>boot.remove(),650);
