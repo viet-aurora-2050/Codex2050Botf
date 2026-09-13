@@ -218,6 +218,19 @@ Die bestehende **ANALYSE** (Monte-Carlo) wurde additiv erweitert: Perzentile
 P5/P25/P75/P95, Chance 25 %/50 %/alles zu verlieren, Chance auf 2x/3x des Budgets
 (Session-Szenario, keine Spin-Vorhersage).
 
+## Quellenprinzip (`quellen/`) – App-Tab QUELLEN
+
+Jede externe Angabe muss eine Prüfkette durchlaufen, bevor sie zählt:
+**Quelle → Gegenquelle → Primärdokument → eigener Mathe-Check → Ergebnis.**
+Ein **Marketing-Wächter** markiert Reizwörter wie „hot", „fällig", „zahlt jetzt",
+„bestes Spiel", „garantiert" als **kein Beweis** — eine Quelle wird nie nur
+deshalb übernommen, weil sie so etwas behauptet. Einträge liegen lokal.
+
+```bash
+python -m quellen "Dieser Slot ist heiss und zahlt jetzt"   # -> Marketing erkannt
+# Web-App: Tab „QUELLEN" (Kette prüfen + lokales Register)
+```
+
 ## Melde-Assistent (`melde/`) – Mathematik + Beschwerde/Anzeige an die GGL
 
 Verbindet das mathematische Prinzip (Hausvorteil, struktureller Verlust,
