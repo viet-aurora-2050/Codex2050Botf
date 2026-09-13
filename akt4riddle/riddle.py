@@ -74,6 +74,31 @@ def clock_letters(times: List[str]) -> List[dict]:
     return res
 
 
+def clock_letter_minute(hhmm: str) -> Optional[str]:
+    """Alternative Lesart: MINUTE als Alphabetposition (07:07 -> Minute 7 -> 'G')."""
+    try:
+        minute = int((hhmm or "").split(":")[1])
+    except (ValueError, IndexError):
+        return None
+    return chr(ord("A") + minute - 1) if 1 <= minute <= 26 else None
+
+
+def mehrdeutigkeit(times: List[str]) -> List[dict]:
+    """Prüft, ob Stunde- und Minute-Lesart denselben Buchstaben ergeben.
+
+    Anti-Zufall: nur wenn die Mapping-Regel (Stunde=Alphabetposition) vorab
+    feststeht, ist der Buchstabe eindeutig. Wo Stunde==Minute, sind beide
+    Lesarten gleich -> zufällig eindeutig, nicht durch die Regel erzwungen.
+    """
+    out = []
+    for t in times:
+        sl, ml = clock_to_letter(t), clock_letter_minute(t)
+        out.append({"time": t, "stunde_letter": sl, "minute_letter": ml,
+                    "eindeutig": bool(sl) and sl == ml,
+                    "regel_noetig": sl != ml})
+    return out
+
+
 # ---------------------------------------------------------------- Game-Matching
 @dataclass
 class Game:
@@ -93,6 +118,25 @@ def find_game_matches(letter: str, games: List[Game]) -> List[Game]:
         return []
     L = letter.upper()
     return [g for g in games if _norm(g.title)[:1].upper() == L]
+
+
+def base_rate(letter: str, games: List[Game]) -> dict:
+    """Grundrate: Anteil der Games, die mit `letter` beginnen.
+
+    Hohe Grundrate = ein Treffer ist statistisch belanglos, die Game-Ebene
+    'bestätigt' dann nichts (dekorativ, nicht beweisend).
+    """
+    total = len([g for g in games if _norm(g.title)])
+    treffer = len(find_game_matches(letter, games))
+    quote = (treffer / total) if total else 0.0
+    if treffer == 0:
+        beweiskraft = "kein Treffer"
+    elif treffer > 1 or quote >= 0.05:
+        beweiskraft = "dekorativ (hohe Grundrate) – bestätigend, nicht beweisend"
+    else:
+        beweiskraft = "schwach – Einzeltreffer, keine unabhängige Bestätigung"
+    return {"letter": letter, "treffer": treffer, "total": total,
+            "quote": round(quote, 4), "beweiskraft": beweiskraft}
 
 
 @dataclass
@@ -139,6 +183,8 @@ def riddle_validation(times: List[str], games: List[Game]) -> Dict[str, object]:
     """7 Prüfungen gegen Zufallstreffer und erfundene Zuordnungen."""
     ketten = match_chain(times, games)
     wort = "".join(k.letter for k in ketten)
+    grundraten = [base_rate(k.letter, games) for k in ketten]
+    mehrdeutig = mehrdeutigkeit(times)
     checks = {
         "1_buchstabe_eindeutig": all(k.letter for k in ketten),
         "2_game_existiert": all(k.matches for k in ketten),
@@ -148,9 +194,11 @@ def riddle_validation(times: List[str], games: List[Game]) -> Dict[str, object]:
             len({g.source for g in k.matches if g.verified}) >= 2 for k in ketten
         ) if all(k.matches for k in ketten) else False,
         "6_ergibt_sinnvolles_wort": wort.isalpha() and len(wort) >= 2,
-        "7_moeglicherweise_zufall": (not all(k.status == "VERIFIED" for k in ketten)),
+        "7_moeglicherweise_zufall": (not all(k.status == "VERIFIED" for k in ketten))
+                                     or any(g["quote"] >= 0.05 for g in grundraten),
     }
-    return {"wort": wort, "ketten": ketten, "checks": checks}
+    return {"wort": wort, "ketten": ketten, "checks": checks,
+            "grundraten": grundraten, "mehrdeutigkeit": mehrdeutig}
 
 
 def sancho_check(times: List[str], games: List[Game], rot13_ok: bool = True) -> Dict[str, str]:
@@ -165,10 +213,19 @@ def sancho_check(times: List[str], games: List[Game], rot13_ok: bool = True) -> 
     else:
         title_status, conf = "FAILED", "LOW"
     unabh = "OK" if v["checks"]["5_unabhaengige_bestaetigung"] else "NOT AVAILABLE"
+    # Striktere Confidence: hohe Grundrate ODER fehlende unabhängige Bestätigung
+    # deckelt die Gesamt-Confidence – die Game-Ebene ist dekorativ, nicht beweisend.
+    hohe_grundrate = any(g["quote"] >= 0.05 for g in v["grundraten"])
+    if conf == "HIGH" and (hohe_grundrate or unabh != "OK"):
+        conf = "MEDIUM"
+    # Mapping-Regel nötig (Stunde != Minute irgendwo)? -> Hinweis auf Mehrdeutigkeit
+    regel_noetig = any(m["regel_noetig"] for m in v["mehrdeutigkeit"])
     return {
         "decoded_text": "OK" if rot13_ok else "UNKNOWN",
         "clock_conversion": "OK" if all(k.letter for k in ketten) else "UNKNOWN",
+        "clock_eindeutig": "ja" if not regel_noetig else "nur mit vorab-festgelegter Regel (Stunde=Position)",
         "game_title_verification": title_status,
+        "game_beweiskraft": "dekorativ (bestätigend, nicht beweisend)" if hohe_grundrate else "gering",
         "independent_confirmation": unabh,
         "final_interpretation": v["wort"] or "UNKNOWN",
         "confidence": conf,

@@ -14,6 +14,7 @@ from akt4riddle import (
     riddle_validation,
     sancho_check,
 )
+from akt4riddle.riddle import base_rate, clock_letter_minute, mehrdeutigkeit
 
 TIMES = ["07:07", "05:05", "08:08"]
 
@@ -90,6 +91,33 @@ class TestValidierungUndSancho(unittest.TestCase):
         blob = " ".join(str(v) for v in sancho_check(TIMES, FALLBACK_GAMES).values()).lower()
         for wort in ("gewinnt", "zahlt jetzt", "faellig", "spin", "jackpot"):
             self.assertNotIn(wort, blob)
+
+
+class TestHaertung(unittest.TestCase):
+    def test_grundrate_markiert_game_ebene_als_dekorativ(self):
+        br = base_rate("E", FALLBACK_GAMES)
+        self.assertGreaterEqual(br["treffer"], 2)      # mehrere Spiele mit E
+        self.assertIn("dekorativ", br["beweiskraft"])
+
+    def test_grundrate_kein_treffer(self):
+        self.assertEqual(base_rate("Q", FALLBACK_GAMES)["treffer"], 0)
+
+    def test_minute_lesart_alternative(self):
+        self.assertEqual(clock_letter_minute("05:05"), "E")
+        self.assertEqual(clock_letter_minute("07:19"), "S")   # Minute 19 -> S
+
+    def test_mehrdeutigkeit_regel_noetig_wenn_stunde_ungleich_minute(self):
+        m = mehrdeutigkeit(["07:19"])[0]
+        self.assertTrue(m["regel_noetig"])                    # 07->G vs 19->S
+        self.assertFalse(m["eindeutig"])
+
+    def test_confidence_nie_high_bei_hoher_grundrate(self):
+        sc = sancho_check(TIMES, FALLBACK_GAMES)
+        self.assertNotEqual(sc["confidence"], "HIGH")
+        self.assertIn("dekorativ", sc["game_beweiskraft"])
+
+    def test_check7_zufall_bei_hoher_grundrate(self):
+        self.assertTrue(riddle_validation(TIMES, FALLBACK_GAMES)["checks"]["7_moeglicherweise_zufall"])
 
 
 if __name__ == "__main__":

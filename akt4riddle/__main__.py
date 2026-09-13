@@ -37,6 +37,14 @@ def main() -> int:
     v = riddle_validation(TIMES, FALLBACK_GAMES)
     print("FINAL WORD ->", v["wort"])
     print()
+    print("GRUNDRATE (Anti-Zufall)")
+    for g in v["grundraten"]:
+        print(f"  {g['letter']}: {g['treffer']}/{g['total']} Titel ({g['quote']*100:.1f}%) -> {g['beweiskraft']}")
+    print("MEHRDEUTIGKEIT")
+    for m in v["mehrdeutigkeit"]:
+        print(f"  {m['time']}: Stunde={m['stunde_letter']} Minute={m['minute_letter']} "
+              f"-> {'Regel noetig' if m['regel_noetig'] else 'beide Lesarten gleich'}")
+    print()
     print("SANCHO CHECK")
     for kk, vv in sancho_check(TIMES, FALLBACK_GAMES).items():
         print(f"  {kk}: {vv}")
