@@ -1,0 +1,252 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>∆1 // AKT 4 — Game-Riddle Decoder</title>
+<meta name="theme-color" content="#01030d">
+<style>
+ /* Eigenständige Seite – spiegelt die CODEX-Ästhetik, ändert aber index.html NICHT. */
+ :root{color-scheme:dark}*{box-sizing:border-box}
+ body{margin:0;background:radial-gradient(1100px 560px at 50% -8%,#0b1d47 0%,#03071a 55%,#01030d 100%);
+   color:#bcd6ff;font:15px/1.6 ui-monospace,Menlo,Consolas,monospace;min-height:100vh;-webkit-text-size-adjust:100%}
+ .wrap{max-width:820px;margin:0 auto;padding:22px 16px 70px}
+ .tag{color:#3f5c94;letter-spacing:.3em;font-size:11px}
+ h1{font-size:20px;letter-spacing:.06em;color:#8fdcff;margin:2px 0 6px;text-shadow:0 0 18px #1a54b060}
+ a{color:#8fdcff}
+ label{display:block;color:#7f9bcb;font-size:12px;margin:12px 0 3px}
+ input{width:100%;background:#0a1738;color:#cfe3ff;border:1px solid #1e3d7a;border-radius:8px;padding:10px;font:inherit}
+ button.go{margin-top:14px;background:#123a7a;color:#dfeaff;border:1px solid #2a5bb5;border-radius:8px;padding:11px 18px;cursor:pointer;font:inherit;width:100%}
+ button.go:hover{background:#1a4c9c}
+ pre,.panel{background:#060f28;border:1px solid #14264d;border-radius:10px;padding:14px;margin-top:14px;white-space:pre-wrap;word-break:break-word}
+ .l{color:#8fb4ff;margin:5px 0}.truth{color:#9fe6b0}.warn{color:#ffcf8f}.stop{color:#ff9db0}
+ .disc{margin:8px 0 4px;padding:10px;border:1px solid #23406e;background:#0a1636;border-radius:8px;color:#9db8ea;font-size:12.5px}
+ .lvl{border-left:2px solid #2a5bb5;padding:6px 0 6px 12px;margin:10px 0}
+ .lvl b{color:#8fdcff}
+ .arrow{color:#3f5c94;text-align:center;margin:2px 0}
+ .final{font-size:26px;letter-spacing:.4em;color:#8fdcff;text-align:center;padding:14px;
+   border:1px solid #2a5bb5;border-radius:10px;background:#0a1636;margin-top:12px;text-shadow:0 0 18px #1a54b0}
+ .cand{border:1px solid #14264d;border-radius:8px;padding:8px 10px;margin:6px 0;background:#060f28}
+ .chip{display:inline-block;border-radius:5px;padding:1px 7px;font-size:11px;font-weight:bold}
+ .cHIGH{background:#123a1a;color:#9fe6b0}.cMEDIUM{background:#2a2a12;color:#ffcf8f}
+ .cLOW{background:#2a1a12;color:#ffb08f}.cUNKNOWN{background:#2a1010;color:#ff9db0}
+ .foot{margin-top:22px;color:#425c8c;font-size:12px}
+</style></head><body>
+<div class="wrap">
+ <div class="tag">∆1 // CODEX 2050 · ZUSATZ-EBENE (ADD, NOT REPLACE)</div>
+ <h1>AKT 4 — GAME-RIDDLE DECODER</h1>
+ <div class="disc">Isolierte Zusatz-Ebene über dem bestehenden AKT 4. Reproduzierbarer Lösungsweg:
+  Morse → Base64 → ROT13 → Uhrzeit → Alphabet → öffentliche Game-Titel → Buchstaben → Wort.
+  <b>Kein</b> Casino-Signal, <b>keine</b> Gewinn-Vorhersage — Game-Titel sind reine Wortschlüssel.
+  Diese Seite verändert das bestehende CODEX2050 nicht (<a href="./index.html">← zur Hauptapp</a>).</div>
+
+ <label>Optionale öffentliche Game-Liste (JSON-URL, Array mit „title") — leer = Fallback</label>
+ <input id="src" placeholder="https://…/games.json (nur was du selbst einträgst)">
+ <button class="go" onclick="Akt4GameRiddleDecoder.run()">∆ Entschlüsseln &amp; verifizieren</button>
+
+ <div id="out"></div>
+
+ <div class="foot">Prioritätskette der Datenquelle: eigene öffentliche URL → lokaler SPIELE-Datensatz
+  (falls in der Hauptapp gepflegt) → kuratierter öffentlicher Fallback. Keine versteckten Requests,
+  keine Login-Daten, keine geschützten APIs. Kein Rat zum Glücksspiel.</div>
+</div>
+
+<script>
+/* ===================================================================== *
+ *  Akt4GameRiddleDecoder — eigener Namespace, keine globalen Kollisionen *
+ * ===================================================================== */
+var Akt4GameRiddleDecoder = (function(){
+  // --- Konstanten der bestehenden AKT-4-Kette (reproduziert, nicht verändert) ---
+  var MORSE = ".- .-.. . -..- .- -. -.. .-. .-";
+  var BASE64 = "SWNoIHdvbGx0ZSBuaWUgZnJlaSBzZWluLiBJY2ggd29sbHRlIGVyaW5uZXJ0IHdlcmRlbi4=";
+  var ROT13  = "Revaareg mh jreqra urvffg avpug, trsnatra mh oyrvora. Tru, jraa qh trura zhffg.";
+  var TIMES  = ["07:07","05:05","08:08"];
+
+  var MORSE_INV = {".-":"A","-...":"B","-.-.":"C","-..":"D",".":"E","..-.":"F","--.":"G","....":"H",
+    "..":"I",".---":"J","-.-":"K",".-..":"L","--":"M","-.":"N","---":"O",".--.":"P","--.-":"Q",
+    ".-.":"R","...":"S","-":"T","..-":"U","...-":"V",".--":"W","-..-":"X","-.--":"Y","--..":"Z"};
+
+  // --- Kuratierter öffentlicher Fallback (REALE, bekannte Titel; nicht erfunden) ---
+  var FALLBACK = [
+    ["Gates of Olympus","Pragmatic Play"],["Gonzo's Quest","NetEnt"],
+    ["Eye of Horus","Reel Time Gaming / Merkur"],["Extra Chilli","Big Time Gaming"],["El Torero","Merkur"],
+    ["Holla die Waldfee","Bally Wulff"],["Hall of Gods","NetEnt"],["Book of Ra","Novomatic"],
+    ["Big Bass Bonanza","Pragmatic Play"],["Starburst","NetEnt"],["Sweet Bonanza","Pragmatic Play"],
+    ["Legacy of Dead","Play'n GO"],["Reactoonz","Play'n GO"],["Money Train","Relax Gaming"],
+    ["Dead or Alive","NetEnt"],["Fire Joker","Play'n GO"]
+  ].map(function(g){return {title:g[0],provider:g[1],source:"kuratierter oeffentlicher Fallback",verified:true};});
+
+  // --- Decoder-Ebenen ---
+  function decodeMorse(code){return (code||"").split(" ").map(function(t){return t==="/"?" ":(MORSE_INV[t]||"");}).join("");}
+  function decodeBase64(s){try{return decodeURIComponent(escape(atob(s)));}catch(e){return "";}}
+  function decodeROT13(s){return (s||"").replace(/[a-zA-Z]/g,function(c){
+    var b=c<="Z"?65:97;return String.fromCharCode((c.charCodeAt(0)-b+13)%26+b);});}
+  function decodeClockAlphabet(hhmm){var h=parseInt((hhmm||"").split(":")[0],10);
+    return (h>=1&&h<=26)?String.fromCharCode(64+h):null;}
+
+  // --- Game-Quelle laden (Priorität: URL → SPIELE-localStorage → Fallback) ---
+  function verifyGameSource(url){
+    return new Promise(function(resolve){
+      var now=new Date().toLocaleString('de-DE');
+      if(url && /^https:\/\//i.test(url)){
+        fetch(url,{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){
+          var arr=Array.isArray(j)?j:(j.games||[]);
+          var games=arr.map(function(x){return {title:(x.title||x.name||"").trim(),
+            provider:x.provider||"",source:"externe oeffentliche Primaerquelle",verified:!!(x.title||x.name)};})
+            .filter(function(g){return g.title;});
+          if(games.length)resolve({games:games,source:"externe oeffentliche Primaerquelle: "+url,fetchedAt:now,quality:"B (extern, öffentlich)"});
+          else resolve(localOrFallback(now));
+        }).catch(function(){resolve(localOrFallback(now,"externe Quelle nicht erreichbar"));});
+      } else { resolve(localOrFallback(now)); }
+    });
+  }
+  function localOrFallback(now,note){
+    // Read-only Zugriff auf den SPIELE-Datensatz der Hauptapp (gleiche Origin) — verändert ihn nicht.
+    try{
+      var raw=JSON.parse(localStorage.getItem('codex_spiele')||'null');
+      if(raw&&raw.length){
+        var games=raw.filter(function(g){return g.name&&(''+g.name).trim();})
+          .map(function(g){return {title:(''+g.name).trim(),provider:g.anb||"",
+            source:"lokaler Nutzer-Datensatz (SPIELE-Tab)",verified:true};});
+        if(games.length)return {games:games,source:"lokaler Nutzer-Datensatz (SPIELE-Tab)"+(note?" · "+note:""),fetchedAt:now,quality:"C (lokal, vom Nutzer gepflegt)"};
+      }
+    }catch(e){}
+    return {games:FALLBACK,source:"kuratierter oeffentlicher Fallback"+(note?" · "+note:""),fetchedAt:now,quality:"C (Fallback, öffentlich bekannt — bitte prüfen)"};
+  }
+
+  // --- Matching (erfindet nichts) ---
+  function norm(s){return (s||"").replace(/^[„"'\s]+/,"").trim();}
+  function findGameMatches(letter,games){if(!letter)return [];var L=letter.toUpperCase();
+    return games.filter(function(g){return norm(g.title).charAt(0).toUpperCase()===L;});}
+  function status(letter,matches){
+    if(!letter)return "CLOCK INVALID";
+    if(!matches.length)return "NO VERIFIED MATCH";
+    if(!matches.some(function(g){return g.verified;}))return "NO VERIFIED MATCH";
+    return matches.length===1?"VERIFIED":"MULTIPLE CANDIDATES";}
+  function confidence(letter,matches,fromExtern){
+    var st=status(letter,matches);
+    if(st==="VERIFIED")return fromExtern?"HIGH":"MEDIUM";
+    if(st==="MULTIPLE CANDIDATES")return "LOW";
+    return "UNKNOWN";}
+
+  // --- Validierung (Anti-Zufall, 7 Prüfungen) ---
+  function validateRiddleChain(chain){
+    var wort=chain.map(function(c){return c.letter||"";}).join("");
+    var allMatch=chain.every(function(c){return c.matches.length;});
+    return {
+      wort:wort,
+      checks:{
+        "1_buchstabe_eindeutig": chain.every(function(c){return !!c.letter;}),
+        "2_game_existiert": allMatch,
+        "3_titel_verifiziert": allMatch && chain.every(function(c){return c.matches.some(function(g){return g.verified;});}),
+        "4_mehrere_treffer": chain.some(function(c){return c.matches.length>1;}),
+        "5_unabhaengige_bestaetigung": allMatch && chain.every(function(c){
+          var q={};c.matches.forEach(function(g){if(g.verified)q[g.source]=1;});return Object.keys(q).length>=2;}),
+        "6_ergibt_sinnvolles_wort": /^[A-Z]{2,}$/.test(wort),
+        "7_moeglicherweise_zufall": !chain.every(function(c){return c.st==="VERIFIED";})
+      }
+    };
+  }
+  function sanchoCheck(chain,val,rot13ok){
+    var titleStatus, conf;
+    if(chain.length && chain.every(function(c){return c.st==="VERIFIED"&&c.conf==="HIGH";})){titleStatus="OK";conf="HIGH";}
+    else if(chain.length && chain.every(function(c){return c.matches.length&&c.matches.some(function(g){return g.verified;});})){titleStatus="PARTIAL";conf="MEDIUM";}
+    else if(chain.some(function(c){return c.matches.length;})){titleStatus="PARTIAL";conf="LOW";}
+    else {titleStatus="FAILED";conf="LOW";}
+    return {
+      decoded_text: rot13ok?"OK":"UNKNOWN",
+      clock_conversion: chain.every(function(c){return !!c.letter;})?"OK":"UNKNOWN",
+      game_title_verification: titleStatus,
+      independent_confirmation: val.checks["5_unabhaengige_bestaetigung"]?"OK":"NOT AVAILABLE",
+      final_interpretation: val.wort||"UNKNOWN",
+      confidence: conf
+    };
+  }
+
+  // --- Render ---
+  function esc(s){return (""+s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+  function renderRiddleResult(bundle){
+    var m1=decodeMorse(MORSE), m2=decodeBase64(BASE64), m3=decodeROT13(ROT13);
+    var fromExtern=/extern/.test(bundle.source);
+    var chain=TIMES.map(function(t){var L=decodeClockAlphabet(t);var mm=findGameMatches(L,bundle.games);
+      var c={time:t,hour:parseInt(t.split(":")[0],10),letter:L,matches:mm};
+      c.st=status(L,mm);c.conf=confidence(L,mm,fromExtern);return c;});
+    var val=validateRiddleChain(chain);
+    var sc=sanchoCheck(chain,val, m3.indexOf("gefangen")>=0);
+
+    var h='';
+    h+='<div class="panel">';
+    h+='<div class="tag">QUELLE</div>';
+    h+='<div class="l">Datenquelle: '+esc(bundle.source)+'</div>';
+    h+='<div class="l">Abrufzeit: '+esc(bundle.fetchedAt)+' · Datenqualität: '+esc(bundle.quality)+'</div>';
+    h+='</div>';
+
+    h+='<div class="panel">';
+    h+='<div class="lvl"><b>LEVEL 1 · MORSE</b><div class="l">'+esc(MORSE)+' → '+esc(m1)+' <span class="tag">(Schlüssel)</span></div></div>';
+    h+='<div class="arrow">↓ Base64</div>';
+    h+='<div class="lvl"><b>LEVEL 2 · BASE64</b><div class="l">→ '+esc(m2)+'</div></div>';
+    h+='<div class="arrow">↓ ROT13</div>';
+    h+='<div class="lvl"><b>LEVEL 3 · ROT13</b><div class="truth">→ '+esc(m3)+'</div></div>';
+    h+='<div class="arrow">↓ Uhrzeit</div>';
+    h+='<div class="lvl"><b>LEVEL 4 · CLOCK KEY</b>'+chain.map(function(c){
+      return '<div class="l">'+c.time+' → '+(c.hour<10?"0":"")+c.hour+' → '+(c.letter||"?")+'</div>';}).join("")+'</div>';
+    h+='<div class="arrow">↓ öffentliche Game-Titel</div>';
+    h+='<div class="lvl"><b>LEVEL 5 · GAME KEY</b>';
+    chain.forEach(function(c){
+      h+='<div class="cand"><div class="l"><b>'+(c.letter||"?")+'</b> · '+c.st
+        +' <span class="chip c'+c.conf+'">'+c.conf+'</span></div>';
+      if(c.matches.length){
+        c.matches.forEach(function(g){
+          h+='<div class="l" style="font-size:12px">✓ '+esc(g.title)
+            +(g.provider?' <span class="tag">'+esc(g.provider)+'</span>':'')
+            +'<br><span class="tag">Reason: Titel beginnt mit '+(c.letter||"?")+' · Source: '+esc(g.source)+'</span></div>';});
+        if(c.matches.length>1)h+='<div class="warn" style="font-size:12px">Mehrere Kandidaten — keine Auto-Auswahl, kein „definitiv richtig".</div>';
+      } else { h+='<div class="stop" style="font-size:12px">NO VERIFIED MATCH — kein Titel erfunden.</div>'; }
+      h+='</div>';
+    });
+    h+='</div>';
+    h+='<div class="arrow">↓ Buchstaben</div>';
+    h+='<div class="final">'+esc(val.wort||"—")+'</div>';
+    h+='</div>';
+
+    // Validierung
+    h+='<div class="panel"><div class="tag">RIDDLE VALIDATION (Anti-Zufall)</div>';
+    var cl={
+      "1_buchstabe_eindeutig":"1) Buchstabe durch Uhrzeit eindeutig",
+      "2_game_existiert":"2) Öffentlich gelistetes Game mit Anfangsbuchstaben",
+      "3_titel_verifiziert":"3) Game-Titel verifiziert",
+      "4_mehrere_treffer":"4) Mehrere mögliche Treffer",
+      "5_unabhaengige_bestaetigung":"5) Unabhängige Bestätigung (≥2 Quellen)",
+      "6_ergibt_sinnvolles_wort":"6) Ergibt sinnvolles Wort",
+      "7_moeglicherweise_zufall":"7) Möglicherweise nur Zufall?"};
+    Object.keys(cl).forEach(function(k){var v=val.checks[k];
+      h+='<div class="l">'+(v?'✓':'—')+' '+cl[k]+': <b>'+(v?'ja':'nein')+'</b></div>';});
+    h+='<div class="warn" style="font-size:12px;margin-top:6px">Ein sinnvolles Wort allein beweist nichts. '
+      +'Solange nicht jede Ebene VERIFIED/HIGH ist, bleibt „möglicherweise Zufall" = ja.</div></div>';
+
+    // Sancho Check
+    h+='<div class="panel"><div class="tag">SANCHO CHECK</div>';
+    h+='<div class="l">Decoded text: '+sc.decoded_text+'</div>';
+    h+='<div class="l">Clock conversion: '+sc.clock_conversion+'</div>';
+    h+='<div class="l">Game-title verification: '+sc.game_title_verification+'</div>';
+    h+='<div class="l">Independent confirmation: '+sc.independent_confirmation+'</div>';
+    h+='<div class="truth">Final interpretation: '+sc.final_interpretation+'</div>';
+    h+='<div class="l">Confidence: <span class="chip c'+sc.confidence+'">'+sc.confidence+'</span></div>';
+    h+='<div class="tag" style="margin-top:8px">Linguistisches/statistisches Puzzle. KEINE Glücksspiel-Vorhersage. '
+      +'Kein „gewinnt/zahlt jetzt/fällig".</div></div>';
+
+    document.getElementById('out').innerHTML=h;
+  }
+
+  function run(){
+    document.getElementById('out').innerHTML='<div class="panel l">... lade Game-Quelle & entschlüssele ...</div>';
+    verifyGameSource((document.getElementById('src').value||"").trim()).then(renderRiddleResult);
+  }
+
+  return {
+    MORSE:MORSE, BASE64:BASE64, ROT13:ROT13, TIMES:TIMES, FALLBACK:FALLBACK,
+    decodeMorse:decodeMorse, decodeBase64:decodeBase64, decodeROT13:decodeROT13,
+    decodeClockAlphabet:decodeClockAlphabet, findGameMatches:findGameMatches,
+    verifyGameSource:verifyGameSource, validateRiddleChain:validateRiddleChain,
+    sanchoCheck:sanchoCheck, renderRiddleResult:renderRiddleResult, run:run
+  };
+})();
+Akt4GameRiddleDecoder.run();
+</script></body></html>
