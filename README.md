@@ -116,8 +116,10 @@ python -m sancho "tipico games" 2      # CLI
 ## SPIELE-Datenbank (App-Tab SPIELE) – automatische öffentliche Anbieter-Daten
 
 Statt manuellem Tippen: **Anbieter wählen → Spiel wählen → Daten werden
-automatisch übernommen** und kombiniert (**RECHNER + ANALYSE**) berechnet
-(Hausvorteil, erwarteter Verlust, Monte-Carlo-Risiko). Datenquelle ist die
+automatisch übernommen** und die komplette Mathematik berechnet
+(struktureller Hausvorteil, erwarteter Verlust, Monte-Carlo-Risiko). Die
+früheren separaten Tabs **RECHNER** und **ANALYSE** wurden entfernt – ihre
+Berechnung steckt vollständig im Tab **SPIELE**. Datenquelle ist die
 öffentliche, für jeden lesbare `docs/games.json` (veröffentlichte Standard-RTPs,
 variieren je Version/Betreiber – gegen die offizielle Spielinfo prüfen). Keine
 Anbieter-API, keine Vorhersage.
@@ -193,7 +195,8 @@ python -m verteilung 10 "0:0.7, 2:0.2, 5:0.1"   # EV, Hausvorteil, P(>=k)
 python -m verteilung 5                            # ohne Verteilung -> Probability unavailable
 ```
 
-Die bestehende **ANALYSE** (Monte-Carlo) wurde additiv erweitert: Perzentile
+Die **Monte-Carlo-Risikoanalyse** (Modul `risiko/`, Bot-Befehl `/risiko`, in der
+Web-App im Tab **SPIELE**) wurde additiv erweitert: Perzentile
 P5/P25/P75/P95, Chance 25 %/50 %/alles zu verlieren, Chance auf 2x/3x des Budgets
 (Session-Szenario, keine Spin-Vorhersage).
 
@@ -242,7 +245,7 @@ erwarteter Verlust, erwartetes/median Endkapital, **Chance im Plus zu enden**,
 
 ```bash
 python -m risiko budget=100 einsatz=1 spins=500 rtp=0.96 vola=mittel
-# Web-App: Tab „ANALYSE"   ·   Bot: /risiko budget=100 einsatz=1 spins=500 rtp=0.96 vola=mittel
+# Web-App: Tab „SPIELE"   ·   Bot: /risiko budget=100 einsatz=1 spins=500 rtp=0.96 vola=mittel
 ```
 
 > Wichtig: Das ist **deine** Erwartungswert-/Risiko-Mathematik. Es sagt **keinen**
