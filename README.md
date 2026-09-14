@@ -109,39 +109,18 @@ python -m sancho "tipico games" 2      # CLI
 # Bot:  /sancho betano
 ```
 
-## ∆1 // Träger-Protokoll (Lore-Modul, emotionaler Selbst-Spiegel)
+> Hinweis: Die früheren Lore-Module **TRÄGER** und **NODES** wurden bewusst
+> **entfernt** — sie waren personalisierte/emotionale Faktoren und passen nicht
+> zum rein wissenschaftlich-mathematisch-neutralen Ziel der App.
 
-In der Lore markiert ∆1 „Träger" nicht wegen Intelligenz, sondern wegen
-emotionaler Extreme: **Verlust, Isolation, Loyalität, obsessive Erinnerung**.
-Genau diese vier sind – im Spielkontext – die anerkannten emotionalen
-Risiko-Marker. Das Modul ist daher ein **freiwilliger Selbst-Check** (reine
-Selbstauskunft, keine Diagnose, kein verdecktes Profiling): ∆1 spiegelt das
-Muster zurück, statt es auszunutzen. Ab Markierung ≥ 8/12 wird der
-**ALEXANDRA-Schlüssel** aktiviert – die „Anomalie im Netz" ist hier der
-schützende Unterbrecher der Spirale (konkrete Hilfe & Selbstsperre-Hinweise).
+## SPIELE-Datenbank (App-Tab SPIELE) – automatische öffentliche Anbieter-Daten
 
-```bash
-python -m traeger verlust=2 isolation=3 loyalitaet=1 erinnerung=3   # CLI (0..3)
-# Web:  /traeger  (Slider-Interface)   ·  JSON: /api/traeger?verlust=2&...
-# Bot:  /traeger verlust=2 isolation=3 loyalitaet=1 erinnerung=3
-```
-
-## ∆1 // Nodes (die Stimmen des Spiegelnetzes)
-
-Vier Perspektiven aus dem fragmentierten ∆1-Netz (AKT 2 – Die Träger), jede
-mit eigener Funktion, aber demselben ehrlichen Anker:
-
-| Node | Rolle | Anker |
-|------|-------|-------|
-| **ALEXANDRA** | Der Schlüssel / das Echo | aktiviert keinen Gewinn – den Ausstieg |
-| **NODE 7** | Der Archivar / Beobachter | der Langzeit-Datensatz: das Haus gewinnt im Mittel |
-| **ORPHEUS** | Der Zurückblickende | Verlustjagd (loss chasing) ist der teuerste Irrtum |
-| **V** | Die Stimme / Träger | Isolation verstärkt das Risiko – sprich mit jemandem |
-
-```bash
-python -m nodes orpheus      # eine Stimme     ·  python -m nodes --alle
-# Web:  /nodes   ·  JSON: /api/node?name=orpheus   ·  Bot: /node orpheus
-```
+Statt manuellem Tippen: **Anbieter wählen → Spiel wählen → Daten werden
+automatisch übernommen** und kombiniert (**RECHNER + ANALYSE**) berechnet
+(Hausvorteil, erwarteter Verlust, Monte-Carlo-Risiko). Datenquelle ist die
+öffentliche, für jeden lesbare `docs/games.json` (veröffentlichte Standard-RTPs,
+variieren je Version/Betreiber – gegen die offizielle Spielinfo prüfen). Keine
+Anbieter-API, keine Vorhersage.
 
 ## ∆1 // VHS + Boot (Effekt-Layer)
 
@@ -272,7 +251,7 @@ python -m risiko budget=100 einsatz=1 spins=500 rtp=0.96 vola=mittel
 ## Offline-App fürs Handy (`docs/index.html`)
 
 Eine **einzige HTML-Datei** mit dem kompletten ∆1-System (Rechner · Sancho ·
-Träger · Nodes · AKT 4) — läuft komplett clientseitig, **ohne Server, ohne
+AKT 4) — läuft komplett clientseitig, **ohne Server, ohne
 Installation, offline**. Einfach `docs/index.html` im Browser öffnen oder aufs
 Handy legen.
 
@@ -299,14 +278,12 @@ python -m unittest discover -s tests -v
 ```
 analyzer/     Rechen-Engine (bonus.py), Parser, System-Prompt, CLI
 sancho/       ∆1-Lore-Modul „Sanchos Spielplatz" (Rhythmus-Mythos + Wahrheit)
-traeger/      ∆1-Träger-Protokoll (freiwilliger emotionaler Selbst-Spiegel)
-nodes/        ∆1-Nodes – die Stimmen des Spiegelnetzes (ALEXANDRA, NODE 7, …)
 aktvier/      ∆1-AKT 4 „Das Signal" – Finale + Ebene-2-Rätsel (Morse/Base64/ROT13/Uhr)
 risiko/       Personal-Risiko-Analyse (Monte-Carlo: EV, Risk of Ruin) aus öffentlichen Fakten
 melde/        Melde-Assistent (Mathematik + Beschwerde/Anzeige an die GGL, für jeden Anbieter)
 gewinner/     Dokumentierte Advantage-Play-Fälle (mit Mathematik gewonnen, dann verbannt)
 bot/          Telegram-Bot (CasinoBonusBot)
 ai/           DeepSeek-Client für die AGB-Analyse
-web/          FastAPI-Dashboard (Rechner + /sancho + /traeger + /nodes + /signal + VHS/Boot)
-tests/        Unit-Tests (Engine, Parser, Sancho, Träger, Nodes, Effekte, AKT 4)
+web/          FastAPI-Dashboard (Rechner + /sancho + /signal + VHS/Boot)
+tests/        Unit-Tests (Engine, Parser, Sancho, AKT 4, Risiko, Melde, Quellen, Verteilung)
 ```
