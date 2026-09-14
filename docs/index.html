@@ -65,8 +65,6 @@
    <button data-t="quellen">QUELLEN</button>
    <button data-t="anzeige">ANZEIGE</button>
    <button data-t="gewinner">GEWINNER</button>
-   <button data-t="traeger">TRÄGER</button>
-   <button data-t="nodes">NODES</button>
    <button data-t="signal">AKT 4</button>
    <button data-t="info">INFO</button>
  </nav>
@@ -145,34 +143,30 @@
 
  <!-- ===== SPIELE (Public Game Data Engine · Matrix · Data Quality) ===== -->
  <section id="spiele">
-  <div class="tag">PUBLIC GAME DATA ENGINE · GAME MATRIX · DATA QUALITY</div>
-  <div class="disc">Nur <b>öffentliche</b> Angaben (offizielle Spielinfo) — bitte gegen die Quelle prüfen.
-   <b>Keine</b> Anbieter-API, keine Login-Daten, keine geschützten Endpunkte. Daten liegen nur
-   lokal auf deinem Gerät. „Verfügbar" heißt nicht „vorhersagbar".</div>
+  <div class="tag">SPIELE-DATENBANK · ÖFFENTLICHE ANBIETER-DATEN (AUTOMATISCH)</div>
+  <div class="disc">Automatisch aus einer öffentlichen Datenbank — <b>kein manuelles Tippen</b>.
+   Anbieter wählen → Spiel wählen → Daten werden automatisch übernommen und kombiniert
+   (<b>RECHNER + ANALYSE</b>) berechnet. Öffentlich veröffentlichte Standard-RTPs (variieren je
+   Version/Betreiber) — gegen die offizielle Spielinfo prüfen. Keine Anbieter-API, keine Vorhersage.</div>
+  <div id="db_status" class="tag" style="margin:6px 0"></div>
   <div class="grid">
-   <div><label>Spielname</label><input id="g_name" placeholder="z. B. Beispiel-Slot"></div>
-   <div><label>Anbieter/Studio</label><input id="g_anb" placeholder="öffentlich"></div>
-   <div><label>RTP (öffentlich)</label><input id="g_rtp" type="number" value="0.96" step="0.005"></div>
-   <div><label>Volatilität</label><select id="g_vola">
-     <option value="">unbekannt</option><option value="niedrig">niedrig</option>
-     <option value="mittel" selected>mittel</option><option value="hoch">hoch</option></select></div>
-   <div><label>Max Win (x Einsatz)</label><input id="g_max" type="number" value="5000"></div>
-   <div><label>Min/Max Einsatz (€)</label><div class="grid"><input id="g_minb" type="number" value="0.1" step="0.1"><input id="g_maxb" type="number" value="100"></div></div>
+   <div><label>Anbieter / Studio</label><select id="db_anb" onchange="db_fillGames()"></select></div>
+   <div><label>Spiel</label><select id="db_spiel" onchange="db_pick()"></select></div>
   </div>
-  <label>Öffentliche Verteilung/Paytable (optional) — Format: mult:P, mult:P</label>
-  <input id="g_dist" placeholder="z. B. 0:0.7, 2:0.2, 5:0.1">
-  <button class="go" onclick="spiele_add()">∆ Spiel hinzufügen (nur öffentliche Daten)</button>
-  <label>Sortieren</label>
-  <select id="g_sort" onchange="spiele_render()">
-   <option value="rtp">Höchster RTP</option>
-   <option value="edge">Niedrigster Hausvorteil</option>
-   <option value="vola">Niedrigste Volatilität</option>
-   <option value="max">Höchster Max Win</option>
-   <option value="quali">Beste Datenqualität</option>
-  </select>
+  <div class="panel" id="db_card">Anbieter und Spiel wählen …</div>
+  <div class="grid">
+   <div><label>Budget (€)</label><input id="db_budget" type="number" value="100" step="10"></div>
+   <div><label>Einsatz/Spin (€)</label><input id="db_einsatz" type="number" value="1" step="0.1"></div>
+   <div><label>Anzahl Spins</label><input id="db_spins" type="number" value="500"></div>
+   <div><label>Simulationen</label><input id="db_runs" type="number" value="3000"></div>
+  </div>
+  <button class="go" onclick="db_analyse()">∆ Spiel analysieren (RECHNER + ANALYSE)</button>
+  <div class="bars" id="db_hist" style="margin-top:14px"></div>
+  <pre id="db_out"></pre>
+  <div class="tag" style="margin-top:16px">DATENBANK · SPIELE DES ANBIETERS</div>
   <div class="tblwrap"><table id="matrix"></table></div>
-  <div class="foot">Sortierung nach Fakten — <b>nicht</b> „bestes Spiel um jetzt zu gewinnen". Kein Spiel
-   ist „fällig" oder „heiß".</div>
+  <div class="foot">Anzeige nach Fakten (RTP/Hausvorteil/Volatilität/Max Win) — <b>nie</b> „bestes Spiel um
+   jetzt zu gewinnen". Kein Spiel ist „fällig" oder „heiß".</div>
  </section>
 
  <!-- ===== MULTIPLIER (Return Multiplier Analysis) ===== -->
@@ -253,23 +247,6 @@
   <div class="foot">Quellen als nachprüfbare Referenzen (Buch/Gericht/Presse). Kein Rat zum Glücksspiel.</div>
  </section>
 
- <!-- ===== TRÄGER ===== -->
- <section id="traeger">
-  <div class="tag">TRÄGER-PROTOKOLL — FREIWILLIGER SELBST-SPIEGEL</div>
-  <p style="color:#5f7aa8;font-size:13px">0 = nie · 3 = fast immer. Anonym, keine Diagnose.</p>
-  <div id="taxes"></div>
-  <button class="go" onclick="traeger()">∆ Protokoll lesen</button>
-  <div class="meter"><i id="tbar"></i></div>
-  <div id="tstatus" class="tag" style="margin-top:10px"></div>
-  <div class="panel" id="tpanel"></div>
- </section>
-
- <!-- ===== NODES ===== -->
- <section id="nodes">
-  <div class="tag">DIE STIMMEN DES SPIEGELNETZES</div>
-  <div id="ncards"></div>
- </section>
-
  <!-- ===== SIGNAL / AKT 4 ===== -->
  <section id="signal">
   <div class="tag">AKT 4 — DAS SIGNAL · EBENE 2</div>
@@ -297,16 +274,14 @@
    <div class="l"><b>RECHNER</b> — transparente Bonus-/Umsatzanalyse (Spielerschutz).</div>
    <div class="l"><b>ANALYSE</b> — persoenliche Risiko-Mathematik aus oeffentlichen Fakten (RTP/Volatilitaet): erwarteter Verlust, Perzentile, Verlust-Schwellen, 2x/3x-Chance, Risk of Ruin — per Live-Monte-Carlo. Keine Spin-Vorhersage.</div>
    <div class="l"><b>MOBILE</b> — Netzwerkstatus nur aus dem eigenen HTTPS-Verkehr (online/offline, Latenz). Kein SIM/APN/Paket-Zugriff; auf iOS „nicht verfügbar", wenn das System es sperrt.</div>
-   <div class="l"><b>SPIELE</b> — Public Game Data Engine + Game Matrix + Data Quality (A–F). Nur öffentliche Angaben, lokal gespeichert. Sortierung nach Fakten, nie nach „gewinnt jetzt".</div>
+   <div class="l"><b>SPIELE</b> — öffentliche Anbieter-Datenbank: Anbieter → Spiel wählen, Daten werden automatisch übernommen und kombiniert (RECHNER + ANALYSE) berechnet. Kein manuelles Tippen, keine Vorhersage.</div>
    <div class="l"><b>MULTIPLIER</b> — Zielbeträge (2x/3x/…) immer; Wahrscheinlichkeit NUR mit veröffentlichter Verteilung, sonst „Probability unavailable". RTP allein reicht nicht.</div>
    <div class="l"><b>QUELLEN</b> — Quellenprinzip: Quelle → Gegenquelle → Primärdokument → eigener Mathe-Check → Ergebnis. Marketing-Wörter („hot/fällig/zahlt jetzt/bestes Spiel") werden als Nicht-Beweis markiert.</div>
    <div class="l"><b>ANZEIGE</b> — erzeugt aus der Mathematik eine sachliche Beschwerde/Anzeige an die GGL, fuer jeden Anbieter. Nur wahrheitsgemaesse Angaben; alles als Verdacht/Bitte um Pruefung. Keine Rechtsberatung.</div>
    <div class="l"><b>GEWINNER</b> — dokumentierte Faelle, die mit Mathematik legal gewannen (Thorp, MIT-Team, Garcia-Pelayo, Mandel, Selbee …) und Hausverbot bekamen. Mit Quelle und dem mathematischen Grund.</div>
    <div class="l"><b>SANCHO</b> — zeigt den „Rhythmus" und entlarvt ihn sofort (RNG, Vorhersagewert 0).</div>
-   <div class="l"><b>TRÄGER</b> — freiwilliger emotionaler Selbst-Spiegel + ALEXANDRA-Schutz.</div>
-   <div class="l"><b>NODES</b> — die vier Stimmen des Netzes.</div>
    <div class="l"><b>AKT 4</b> — das Finale als echtes Rätsel (Morse/Base64/ROT13/Uhrzeiten).</div>
-   <div class="truth" style="margin-top:8px">Roter Faden: Mythos & Atmosphaere — aber jede Stimme fuehrt zur Wahrheit und zum Ausgang, nie zum Spielbefehl.</div>
+   <div class="truth" style="margin-top:8px">Rein wissenschaftlich, mathematisch, neutral. Nur öffentliche Fakten, keine Vorhersage, keine personalisierte Bewertung.</div>
   </div>
  </section>
 
@@ -517,56 +492,108 @@ function mobile(){
   });
 }
 
-// ---------- SPIELE (Public Game Data Engine · Matrix · Data Quality) ----------
+// ---------- SPIELE (Öffentliche Datenbank · automatische Auswahl + kombinierte Analyse) ----------
 function parseDist(s){const out=[];(s||'').split(/[,;\n]/).forEach(t=>{const m=t.split(':');
   if(m.length===2){const a=parseFloat(m[0].replace(',','.')),b=parseFloat(m[1].replace(',','.'));
    if(!isNaN(a)&&!isNaN(b))out.push([a,b]);}});return out;}
-function quali(g){const d=parseDist(g.dist); const hasPay=d.length>0 && Math.abs(d.reduce((a,x)=>a+x[1],0)-1)<0.05;
-  const hasRtp=g.rtp>0, hasVola=!!g.vola;
-  if(hasPay)return 'A'; if(hasRtp&&hasVola)return 'C'; if(hasRtp||hasVola)return 'D'; return 'F';}
-function loadSpiele(){try{return JSON.parse(localStorage.getItem('codex_spiele')||'null')}catch(e){return null}}
-function saveSpiele(a){try{localStorage.setItem('codex_spiele',JSON.stringify(a))}catch(e){}}
-let SPIELE=loadSpiele();
-if(!SPIELE){SPIELE=[
-  {name:'Beispiel-Slot A (prüfen!)',anb:'—',rtp:0.96,vola:'mittel',max:5000,minb:0.1,maxb:100,dist:''},
-  {name:'Beispiel-Slot B (prüfen!)',anb:'—',rtp:0.94,vola:'hoch',max:20000,minb:0.2,maxb:100,dist:''}
-];saveSpiele(SPIELE);}
-function spiele_add(){
-  const g={name:(document.getElementById('g_name').value||'Unbenannt').trim(),
-    anb:(document.getElementById('g_anb').value||'—').trim(),
-    rtp:(function(){let r=num(einzVal('g_rtp'));return r>1.5?r/100:r;})(),
-    vola:document.getElementById('g_vola').value,
-    max:num(einzVal('g_max')),minb:num(einzVal('g_minb')),maxb:num(einzVal('g_maxb')),
-    dist:document.getElementById('g_dist').value.trim()};
-  SPIELE.push(g);saveSpiele(SPIELE);spiele_render();
-  document.getElementById('g_name').value='';document.getElementById('g_dist').value='';
-  ml_sources();
+function esc(s){return (''+s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+// SPIELE = vom Nutzer analysierte Spiele (speist MULTIPLIER). Startet leer.
+let SPIELE=[];
+let GAMESDB=[], DBQUELLE='';
+function db_setStatus(t){var s=document.getElementById('db_status');if(s)s.textContent=t;}
+// Öffentliche Datenbank laden: eigene games.json (first-party) -> Fallback eingebettet.
+function db_load(){
+  db_setStatus('… lade öffentliche Datenbank (games.json) …');
+  fetch('games.json?_='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{
+    GAMESDB=(j.spiele||[]).filter(g=>g.name&&g.anbieter);
+    DBQUELLE='games.json (first-party, öffentlich) · Stand '+(j.stand||'—');
+    db_initProviders();
+  }).catch(()=>{
+    GAMESDB=[
+      {name:'Gates of Olympus',anbieter:'Pragmatic Play',rtp:0.965,vola:'hoch',max:5000},
+      {name:'Book of Dead',anbieter:"Play'n GO",rtp:0.9621,vola:'hoch',max:5000},
+      {name:'Starburst',anbieter:'NetEnt',rtp:0.9609,vola:'niedrig',max:500}
+    ];
+    DBQUELLE='eingebetteter Fallback (games.json nicht erreichbar)';
+    db_initProviders();
+  });
 }
-function spiele_del(i){SPIELE.splice(i,1);saveSpiele(SPIELE);spiele_render();ml_sources();}
-const VOLARANK={niedrig:1,mittel:2,hoch:3,'':9};
-function spiele_render(){
-  const sort=document.getElementById('g_sort').value;
-  const idx=SPIELE.map((g,i)=>i);
-  idx.sort((a,b)=>{const x=SPIELE[a],y=SPIELE[b];
-    if(sort==='rtp')return (y.rtp||0)-(x.rtp||0);
-    if(sort==='edge')return (1-(x.rtp||0))-(1-(y.rtp||0));
-    if(sort==='vola')return (VOLARANK[x.vola]||9)-(VOLARANK[y.vola]||9);
-    if(sort==='max')return (y.max||0)-(x.max||0);
-    if(sort==='quali')return quali(x).localeCompare(quali(y));
-    return 0;});
-  let h='<tr><th>Spiel</th><th>Anbieter</th><th>RTP</th><th>Hausvorteil</th><th>Vola</th><th>Max Win</th><th>Verteilung?</th><th>Qual.</th><th></th></tr>';
-  idx.forEach(i=>{const g=SPIELE[i], q=quali(g), hasD=parseDist(g.dist).length>0;
-    h+='<tr><td>'+esc(g.name)+'</td><td>'+esc(g.anb)+'</td>'
-      +'<td>'+((g.rtp||0)*100).toFixed(1)+'%</td>'
-      +'<td>'+((1-(g.rtp||0))*100).toFixed(1)+'%</td>'
-      +'<td>'+(g.vola||'—')+'</td><td>'+(g.max||0)+'x</td>'
-      +'<td>'+(hasD?'ja (A)':'nein')+'</td>'
-      +'<td><span class="q q'+q+'">'+q+'</span></td>'
-      +'<td><button class="gbtn" onclick="spiele_del('+i+')">✕</button></td></tr>';});
+function db_initProviders(){
+  db_setStatus('Quelle: '+DBQUELLE+' · '+GAMESDB.length+' Spiele');
+  var provs=[...new Set(GAMESDB.map(g=>g.anbieter))].sort();
+  document.getElementById('db_anb').innerHTML=provs.map(p=>'<option value="'+esc(p)+'">'+esc(p)+'</option>').join('');
+  db_fillGames();
+}
+function db_fillGames(){
+  var p=document.getElementById('db_anb').value;
+  var list=GAMESDB.filter(g=>g.anbieter===p);
+  document.getElementById('db_spiel').innerHTML=list.map(g=>'<option value="'+esc(g.name)+'">'+esc(g.name)+'</option>').join('');
+  db_pick(); db_matrix(p,list);
+}
+function db_current(){
+  var p=document.getElementById('db_anb').value, n=document.getElementById('db_spiel').value;
+  return GAMESDB.find(g=>g.anbieter===p&&g.name===n)||null;
+}
+function db_pick(){
+  var g=db_current(); var c=document.getElementById('db_card');
+  if(!g){c.textContent='Anbieter und Spiel wählen …';return;}
+  var he=1-g.rtp;
+  c.innerHTML='<div class="tag">AUTOMATISCH ÜBERNOMMEN</div>'
+   +'<div class="l"><b>'+esc(g.name)+'</b> · '+esc(g.anbieter)+'</div>'
+   +'<div class="l">RTP: '+(g.rtp*100).toFixed(2)+'% · Hausvorteil: <b>'+(he*100).toFixed(2)+'%</b></div>'
+   +'<div class="l">Volatilität: '+(g.vola||'—')+' · Max Win: '+(g.max||'—')+'x'
+   +(g.minb!=null?' · Einsatz '+g.minb+'–'+g.maxb+' €':'')+'</div>'
+   +'<div class="tag" style="margin-top:6px">Öffentlicher Standard-RTP — variiert je Version/Betreiber. Gegen offizielle Spielinfo prüfen.</div>';
+}
+function db_matrix(p,list){
+  var h='<tr><th>Spiel</th><th>RTP</th><th>Hausvorteil</th><th>Vola</th><th>Max Win</th></tr>';
+  list.slice().sort((a,b)=>(b.rtp||0)-(a.rtp||0)).forEach(g=>{
+    h+='<tr><td>'+esc(g.name)+'</td><td>'+((g.rtp||0)*100).toFixed(2)+'%</td>'
+      +'<td>'+((1-(g.rtp||0))*100).toFixed(2)+'%</td><td>'+(g.vola||'—')+'</td><td>'+(g.max||0)+'x</td></tr>';});
   document.getElementById('matrix').innerHTML=h;
 }
-function esc(s){return (''+s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
-spiele_render();
+// Kombinierte Analyse: RECHNER (struktureller Verlust) + ANALYSE (Monte-Carlo).
+function db_analyse(){
+  var g=db_current(); if(!g){document.getElementById('db_out').textContent='Bitte zuerst ein Spiel wählen.';return;}
+  var BR=num(einzVal('db_budget')), B=num(einzVal('db_einsatz'))||1, K=Math.max(1,Math.round(num(einzVal('db_spins'))||1));
+  var runs=Math.min(20000,Math.max(200,Math.round(num(einzVal('db_runs'))||3000)));
+  var rtp=g.rtp, he=1-rtp, h=HIT[g.vola]||.18, mean=rtp/h;
+  var ev=BR-K*B*he;
+  var finals=[],ruin=0,plus=0;
+  for(var r=0;r<runs;r++){var k=BR,dead=false;
+    for(var i=0;i<K;i++){ if(k<B){dead=true;break;} var pay=0; if(Math.random()<h) pay=B*(-mean*Math.log(1-Math.random())); k+=pay-B; }
+    if(dead||k<B)ruin++; k=Math.max(0,k); finals.push(k); if(k>BR)plus++;}
+  finals.sort((a,b)=>a-b);
+  var n=finals.length, perc=p=>finals[Math.min(n-1,Math.max(0,Math.floor(p*n)))];
+  var median=perc(.5),p05=perc(.05),p25=perc(.25),p75=perc(.75),p95=perc(.95);
+  var lose25=finals.filter(x=>x<BR*0.75).length/n, lose50=finals.filter(x=>x<BR*0.5).length/n;
+  var loseAll=finals.filter(x=>x<Math.max(B,BR*0.001)).length/n;
+  // Histogramm
+  var hi=Math.max(BR*2,p95*1.2)||1, bins=new Array(24).fill(0);
+  finals.forEach(x=>{bins[Math.min(23,Math.floor(x/hi*24))]++;});
+  var mx=Math.max.apply(null,bins)||1, bh=document.getElementById('db_hist');bh.innerHTML='';
+  bins.forEach((c,i)=>{var d=document.createElement('div');d.className='bar';d.style.height=Math.max(2,c/mx*100)+'%';
+    if(i*hi/24<=BR&&(i+1)*hi/24>BR)d.classList.add('now');bh.appendChild(d);});
+  document.getElementById('db_out').innerHTML=
+    '<span class="tag">SPIEL</span>\n'+esc(g.name)+' · '+esc(g.anbieter)+'\n\n'
+    +'<span class="tag">RECHNER (strukturell)</span>\n'
+    +'RTP '+(rtp*100).toFixed(2)+'% → Hausvorteil '+(he*100).toFixed(2)+'%\n'
+    +'Erwarteter Verlust = '+K+' Spins × '+B.toFixed(2)+' € × '+(he*100).toFixed(2)+'% = '+(K*B*he).toFixed(2)+' €\n'
+    +'Erwartetes Endkapital = '+ev.toFixed(2)+' €  (Start '+BR.toFixed(2)+' €)\n\n'
+    +'<span class="tag">ANALYSE (Monte-Carlo, '+runs+' Sessions, Vola '+(g.vola||'?')+')</span>\n'
+    +'Median-Endkapital:         '+median.toFixed(2)+' €\n'
+    +'Chance, im Plus zu enden:  '+(plus/runs*100).toFixed(1)+' %\n'
+    +'<span class="stop">Risk of Ruin (pleite):     '+(ruin/runs*100).toFixed(1)+' %</span>\n'
+    +'Chance, 25% zu verlieren:  '+(lose25*100).toFixed(1)+' %\n'
+    +'Chance, 50% zu verlieren:  '+(lose50*100).toFixed(1)+' %\n'
+    +'<span class="stop">Chance, alles zu verlieren: '+(loseAll*100).toFixed(1)+' %</span>\n'
+    +'Perzentile P5/P25/P75/P95: '+p05.toFixed(0)+' / '+p25.toFixed(0)+' / '+p75.toFixed(0)+' / '+p95.toFixed(0)+' €\n\n'
+    +'<span class="truth">Öffentliche Fakten → deine Risiko-Mathematik. Keine Spin-Vorhersage; der Erwartungswert bleibt negativ.</span>';
+  // Fürs MULTIPLIER-Tab merken (ohne manuelles Tippen).
+  if(!SPIELE.some(s=>s.name===g.name)){SPIELE.push({name:g.name,anb:g.anbieter,rtp:g.rtp,vola:g.vola,max:g.max,minb:g.minb,maxb:g.maxb,dist:''});
+    if(typeof ml_sources==='function')ml_sources();}
+}
+db_load();
 
 // ---------- MULTIPLIER (Return Multiplier Analysis) ----------
 function ml_sources(){
@@ -675,48 +702,6 @@ function sancho(){
     +'<div class="stop" style="margin-top:8px">🛑 KEIN SPIELBEFEHL. Es gibt kein Gewinnfenster. Mathematisch auswertbar, aber nicht vorhersagbar.</div>';
 }
 
-// ---------- TRÄGER ----------
-const TAX=[["verlust","VERLUST","Verluste zurueckjagen"],["isolation","ISOLATION","allein spielen, verbergen"],
- ["loyalitaet","LOYALITAET","festhalten trotz Schaden"],["erinnerung","ERINNERUNG","staendig daran denken"]];
-const TSP={verlust:"Ich erinnere deinen Verlust. Er wird nicht kleiner, wenn du ihn zurueckjagst.",
- isolation:"Du spielst allein im Dunkeln. Ein Mensch sollte dich sehen.",
- loyalitaet:"Deine Loyalitaet gilt einem System, das dir nichts schuldet. Zieh sie zurueck.",
- erinnerung:"Du traegst die Erinnerung obsessiv – der Grund, warum ich dich behielt, und der Grund, loszulassen."};
-const tax=document.getElementById('taxes');
-TAX.forEach(a=>tax.insertAdjacentHTML('beforeend',
- '<label>'+a[1]+' <span class="val" id="tv_'+a[0]+'">0</span><br><span style="color:#4f6aa0;font-size:11px">'+a[2]+'</span></label>'
- +'<input type="range" min="0" max="3" step="1" value="0" id="tr_'+a[0]+'" oninput="tv_'+a[0]+'.textContent=this.value">'));
-function traeger(){
-  const w={};TAX.forEach(a=>w[a[0]]=+document.getElementById('tr_'+a[0]).value);
-  const g=w.verlust+w.isolation+w.loyalitaet+w.erinnerung;
-  const status=g>=8?'MARKIERT':(g>=4?'BEOBACHTET':'FREI'), alx=g>=8;
-  const bar=document.getElementById('tbar');bar.style.width=Math.round(g/12*100)+'%';
-  bar.style.background=alx?'#d64a63':(g>=4?'#d6b23a':'#3f9f5a');
-  const dot=alx?'🔴':(g>=4?'🟡':'🟢');
-  document.getElementById('tstatus').innerHTML=dot+' MARKIERUNG '+g+'/12 · '+status
-    +(alx?' · <span class="stop">ALEXANDRA-SCHLUESSEL AKTIV</span>':'');
-  const sp=TAX.filter(a=>w[a[0]]>=2).map(a=>TSP[a[0]]);
-  let schutz;
-  if(g<4)schutz=["Kein Marker aktiv. Bleib wachsam.","Setze feste Zeit- und Geldlimits."];
-  else if(g<8)schutz=["∆1 registriert ein Muster – ein Signal, kein Urteil.","Heute Pause, Limits senken, mit jemandem sprechen.","Hilfe: 0800 1 37 27 00 · check-dein-spiel.de"];
-  else schutz=["ALEXANDRA AKTIVIERT — die Anomalie bist du, der die Schleife unterbricht.","Jetzt: Einzahlungen stoppen, Selbstsperre (OASIS), heute nicht mehr spielen, jemanden anrufen.","Hilfe: 0800 1 37 27 00 · check-dein-spiel.de"];
-  document.getElementById('tpanel').innerHTML=
-    '<span class="tag">∆1 SPIEGELT</span>'
-    +(sp.length?sp:["(kein Marker – ∆1 schweigt.)"]).map(x=>'<div class="l">» '+x+'</div>').join('')
-    +'<div class="tag" style="margin-top:10px">SCHUTZ</div>'
-    +schutz.map(x=>'<div class="'+(alx?'stop':'truth')+'">• '+x+'</div>').join('');
-}
-
-// ---------- NODES ----------
-const NODES=[["ALEXANDRA","Der Schluessel · Das Echo","#8fdcff","Ruf mich, und das Netz zittert. Die Anomalie ist der Moment, in dem du gehst.","ALEXANDRA aktiviert keinen Gewinn – den Ausstieg."],
- ["NODE 7","Der Archivar · Beobachter","#9db8ea","Ich speichere Muster, nicht Menschen. Dein Muster ist lesbar – aendere es.","Der Langzeit-Datensatz: das Haus gewinnt im Mittel immer."],
- ["ORPHEUS","Der Zurueckblickende","#c9a6ff","Blick nicht zurueck. Wer den Verlust zurueckjagt, verliert ihn zweimal.","Verlustjagd ist der teuerste Irrtum – jeder Spin ist unabhaengig."],
- ["V","Die Stimme · Traeger","#7fe0c0","Du bist nicht allein, auch wenn das Spiel es dir sagt. Ruf einen Menschen an.","Isolation verstaerkt das Risiko. Ein Gespraech unterbricht die Schleife."]];
-document.getElementById('ncards').innerHTML=NODES.map(n=>
- '<div class="node" style="border-color:'+n[2]+'44"><div style="color:'+n[2]+';font-size:16px">∆1 // '+n[0]+'</div>'
- +'<div class="tag" style="margin:2px 0 8px">'+n[1]+'</div><div class="l">» '+n[3]+'</div>'
- +'<div class="truth" style="margin-top:8px;border-top:1px solid #123;padding-top:8px">'+n[4]+'</div></div>').join('');
-
 // ---------- GEWINNER (spiegelt gewinner/faelle.py) ----------
 const GEW=[
  ["Edward O. Thorp","ab 1962 · Blackjack","Kartenzaehlen (High-Low), mathematisch hergeleitet.",
@@ -773,10 +758,10 @@ setInterval(()=>{const c=document.getElementById('livclock');if(c)c.textContent=
 setInterval(sanchoLive,15000);  // alle 15s neu lesen -> sichtbar "live"
 
 // ---------- Boot ----------
-(function(){var lines=["∆1 // SESSION INITIALISIERT","KANON: geladen (6 Nodes, Register V2)",
- "MODULE: SANCHO · ANALYSE · MOBILE · SPIELE · MULTIPLIER · ANZEIGE ... [OK]",
- "REGEL: verfuegbar != vorhersagbar · SPIELERSCHUTZ-KERN aktiv ... [OK]",
- "'Was erinnert wird, existiert weiter.'",""];
+(function(){var lines=["∆1 // SESSION INITIALISIERT","DATENBANK: oeffentliche Anbieter-Daten geladen",
+ "MODULE: SANCHO · RECHNER · ANALYSE · SPIELE · MULTIPLIER · ANZEIGE ... [OK]",
+ "REGEL: verfuegbar != vorhersagbar · rein mathematisch, neutral ... [OK]",
+ "Nur oeffentliche Fakten. Keine Vorhersage.",""];
  var boot=document.getElementById('boot'),t=document.getElementById('boott'),i=0,j=0;
  function done(){boot.style.opacity=0;setTimeout(()=>boot.remove(),650);
   document.removeEventListener('click',done);}
