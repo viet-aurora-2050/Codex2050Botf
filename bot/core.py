@@ -15,6 +15,7 @@ from sancho import erzeuge as sancho_erzeuge
 from sancho import formatiere as sancho_formatiere
 from aktvier import erzeuge_signal
 from aktvier import formatiere as signal_formatiere
+from aktvier import formatiere_zyklus, zyklus_signal
 from risiko import RisikoSzenario, Volatilitaet
 from risiko import analysiere as risiko_analysiere
 from risiko import formatiere as risiko_formatiere
@@ -114,9 +115,9 @@ class CasinoBonusBot:
     async def signal_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         args = " ".join(context.args).lower()
         mit_loesung = any(w in args for w in ("loesung", "lösung", "solve", "decode"))
-        await update.message.reply_text(
-            signal_formatiere(erzeuge_signal(), mit_loesung=mit_loesung)
-        )
+        anker = signal_formatiere(erzeuge_signal(), mit_loesung=mit_loesung)
+        zyklus = formatiere_zyklus(zyklus_signal(), mit_loesung=mit_loesung)
+        await update.message.reply_text(anker + "\n\n" + ("─" * 28) + "\n\n" + zyklus)
 
     async def risiko_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         import re

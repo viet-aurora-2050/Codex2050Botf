@@ -117,12 +117,32 @@ python -m sancho "tipico games" 2      # CLI
 
 Statt manuellem Tippen: **Anbieter wählen → Spiel wählen → Daten werden
 automatisch übernommen** und die komplette Mathematik berechnet
-(struktureller Hausvorteil, erwarteter Verlust, Monte-Carlo-Risiko). Die
-früheren separaten Tabs **RECHNER** und **ANALYSE** wurden entfernt – ihre
-Berechnung steckt vollständig im Tab **SPIELE**. Datenquelle ist die
-öffentliche, für jeden lesbare `docs/games.json` (veröffentlichte Standard-RTPs,
-variieren je Version/Betreiber – gegen die offizielle Spielinfo prüfen). Keine
-Anbieter-API, keine Vorhersage.
+(struktureller Hausvorteil, erwarteter Verlust **je 100 € Umsatz**,
+Monte-Carlo-Risiko). Die Matrix ist nach wirtschaftlichem Nachteil sortiert.
+Die früheren separaten Tabs **RECHNER** und **ANALYSE** wurden entfernt – ihre
+Berechnung steckt vollständig im Tab **SPIELE**.
+
+### Tägliche Aktualisierung aus öffentlichen Quellen (v2)
+
+`docs/games.json` ist **nicht** mehr eine handgepflegte Fixliste, sondern wird
+vom Modul `datenbank/` erzeugt und per GitHub-Action
+(`.github/workflows/update-games.yml`) **täglich** neu gebaut:
+
+```bash
+python -m datenbank            # schreibt docs/games.json (Stand + generiert + Quellen)
+python -m datenbank --dry-run  # nur Vorschau
+```
+
+- **Basissatz** = öffentlich veröffentlichte Studio-RTPs (garantiert vorhanden).
+- **Zusätzliche öffentliche JSON-Feeds** lassen sich über die Repo-Variable
+  `GAMES_SOURCES` (kommagetrennte URLs) einhängen. Der Job läuft serverseitig,
+  daher keine CORS-Schranke; Feeds werden validiert (RTP-Plausibilität 0.80–1.00,
+  Pflichtfelder), normalisiert (Prozent/Bruch, Feld-Aliase) und dedupliziert.
+- Jeder Eintrag trägt seine **Quelle**; die App zeigt **Stand/Alter** an und warnt,
+  wenn die Datei zu alt ist. Der Workflow committet nur bei echter Inhaltsänderung.
+
+Ehrlich bleibt: **keine Anbieter-API, kein Live-Casino-Feed, keine Vorhersage.**
+RTPs variieren je Version/Betreiber – immer gegen die offizielle Spielinfo prüfen.
 
 ## ∆1 // VHS + Boot (Effekt-Layer)
 
@@ -147,9 +167,32 @@ Das Signal ist ein echtes, dekodierbares Ebene-2-Rätsel mit vier Schichten:
 Der ehrliche Anker bis zum Schluss: Das entschlüsselte Signal führt nicht zu einem
 Gewinn, sondern zum **Ausgang**.
 
+### ZEIT-CODE – das Signal rotiert stündlich (v2, Ebene 4)
+
+Die Lore sagt: *„Webseiten verändern sich abhängig von Uhrzeiten."* Genau das ist
+jetzt real. `aktvier/zeit.py` leitet aus dem **UTC-Stundenzyklus** deterministisch
+ein rotierendes Signal ab – **nie zweimal derselbe Code**:
+
+```
+seed = "DELTA1-" + JJJJMMTTHH   →  PRNG (xmur3 + mulberry32)
+       →  rotierender Schlüssel (Morse), rotierende Caesar-Verschiebung N,
+          rotierender Imperativ (Uhrzeiten), Node-Signatur.
+```
+
+- **Deterministisch & nachprüfbar:** gleiche Stunde → gleiches Signal – und zwar
+  **identisch in Python UND im Browser** (derselbe PRNG, per Referenzvektoren
+  getestet). Kein `Math.random`, kein Zufall.
+- Der **emotionale Anker** (das finale Zitat, Base64) bleibt konstant; nur die
+  Chiffre-Parameter drehen sich. Der Imperativ-Pool ist ausschließlich
+  schützend/neutral (GEH, ATME, LEBE, RUHE, FREI …).
+- Die App zeigt **Zyklus, Caesar-N, Node-Signatur** und einen **Countdown** bis
+  zum nächsten Wechsel; nach jedem Zyklus wird die Lösung neu verborgen.
+
 ```bash
-python -m aktvier            # das Rätsel   ·   python -m aktvier --loesung
-# Web:  /signal  (Entschlüsseln-Button)   ·  JSON: /api/signal   ·  Bot: /signal [loesung]
+python -m aktvier                    # Anker + aktueller Zyklus
+python -m aktvier --loesung          # mit entschlüsselten Schichten
+python -m aktvier --zeit 2026091914  # beliebigen Zyklus reproduzieren
+# Web:  /signal (rotiert live)   ·   Bot: /signal [loesung]
 ```
 
 > Modulname `aktvier`, weil `signal` ein Python-Standardmodul ist und nicht überschattet werden darf.
@@ -281,12 +324,13 @@ python -m unittest discover -s tests -v
 ```
 analyzer/     Rechen-Engine (bonus.py), Parser, System-Prompt, CLI
 sancho/       ∆1-Lore-Modul „Sanchos Spielplatz" (Rhythmus-Mythos + Wahrheit)
-aktvier/      ∆1-AKT 4 „Das Signal" – Finale + Ebene-2-Rätsel (Morse/Base64/ROT13/Uhr)
+aktvier/      ∆1-AKT 4 „Das Signal" – Finale + Ebene-2-Rätsel; zeit.py = stündlich rotierender ZEIT-CODE
+datenbank/    Tägliche Erzeugung von docs/games.json (Basissatz + öffentliche Feeds, validiert)
 risiko/       Personal-Risiko-Analyse (Monte-Carlo: EV, Risk of Ruin) aus öffentlichen Fakten
 melde/        Melde-Assistent (Mathematik + Beschwerde/Anzeige an die GGL, für jeden Anbieter)
 gewinner/     Dokumentierte Advantage-Play-Fälle (mit Mathematik gewonnen, dann verbannt)
 bot/          Telegram-Bot (CasinoBonusBot)
 ai/           DeepSeek-Client für die AGB-Analyse
 web/          FastAPI-Dashboard (Rechner + /sancho + /signal + VHS/Boot)
-tests/        Unit-Tests (Engine, Parser, Sancho, AKT 4, Risiko, Melde, Quellen, Verteilung)
+tests/        Unit-Tests (Engine, Parser, Sancho, AKT 4 + Zeit-Code, Datenbank, Risiko, Melde, Quellen, Verteilung)
 ```
