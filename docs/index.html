@@ -87,11 +87,14 @@
 
  <!-- ===== MOBILE (Connection Analytics) ===== -->
  <section id="mobile">
-  <div class="tag">MOBILE NETWORK / CONNECTION ANALYTICS</div>
-  <div class="disc">Nur der <b>eigene</b>, normale HTTPS-Verkehr dieser App. <b>Kein</b> Zugriff auf
-   SIM/APN/IMSI/ICCID, kein Packet-Sniffing, kein fremder Netzwerkverkehr, keine Anbieter-Server.
-   Auf iOS/Safari liefert das System manche Werte bewusst nicht — dann steht „nicht verfügbar".</div>
-  <button class="go" onclick="mobile()">∆ Netzwerkstatus prüfen</button>
+  <div class="tag">MOBILE · NETZ · TRAFFIC · DATEN-PLATTFORM</div>
+  <div class="disc">Drei zusammenhängende Ebenen: (1) die <b>eigene</b> Geräte-/Handy-Verbindung,
+   (2) der eigene, getimte Request an die <b>öffentliche Daten-Plattform</b> (first-party
+   <code>games.json</code>, täglich aktualisiert), (3) die daraus <b>resultierenden Spiele</b>.
+   <b>Kein</b> Zugriff auf SIM/APN/IMSI/ICCID, kein Packet-Sniffing, kein fremder Netzwerkverkehr,
+   keine Anbieter-/Casino-Server. Netz &amp; Traffic ändern <b>nichts</b> am Ergebnis — der RNG bleibt
+   unabhängig. Auf iOS/Safari liefert das System manche Werte bewusst nicht („nicht verfügbar").</div>
+  <button class="go" onclick="mobile()">∆ Netz · Traffic · Daten-Plattform prüfen</button>
   <pre id="mout">Noch nicht geprüft.</pre>
  </section>
 
@@ -232,7 +235,7 @@
   <div class="tag">ÜBER ∆1 // CODEX 2050</div>
   <div class="panel">
    <div class="l">Dieses eine HTML-File enthaelt das komplette ∆1-System — offline, ohne Server.</div>
-   <div class="l"><b>MOBILE</b> — Netzwerkstatus nur aus dem eigenen HTTPS-Verkehr (online/offline, Latenz). Kein SIM/APN/Paket-Zugriff; auf iOS „nicht verfügbar", wenn das System es sperrt.</div>
+   <div class="l"><b>MOBILE</b> — verbindet drei Ebenen: eigene Geräte-/Handy-Verbindung (online/offline, Transport, Latenz), getimter Abruf der öffentlichen Daten-Plattform (games.json: Stand/Quellen/Anzahl) und die daraus resultierenden Spiele (nach Hausvorteil). Nur eigener HTTPS-Verkehr; kein SIM/APN/Paket-Zugriff, keine Casino-Server, keine Vorhersage.</div>
    <div class="l"><b>SPIELE</b> — öffentliche Anbieter-Datenbank: Anbieter → Spiel wählen, Daten werden automatisch übernommen. Enthält die komplette Mathematik: struktureller Hausvorteil/erwarteter Verlust plus Live-Monte-Carlo (Median, Perzentile, Verlust-Schwellen, 2x/3x-Chance, Risk of Ruin). Kein manuelles Tippen, keine Spin-Vorhersage.</div>
    <div class="l"><b>MULTIPLIER</b> — Zielbeträge (2x/3x/…) immer; Wahrscheinlichkeit NUR mit veröffentlichter Verteilung, sonst „Probability unavailable". RTP allein reicht nicht.</div>
    <div class="l"><b>QUELLEN</b> — Quellenprinzip: Quelle → Gegenquelle → Primärdokument → eigener Mathe-Check → Ergebnis. Marketing-Wörter („hot/fällig/zahlt jetzt/bestes Spiel") werden als Nicht-Beweis markiert.</div>
@@ -340,35 +343,75 @@ function flash(msg){const o=document.getElementById('zout');const old=o.style.bo
   o.style.borderColor='#4fd07a';const b=document.createElement('div');b.textContent=msg;
   b.style.color='#9fe6b0';o.parentNode.insertBefore(b,o);setTimeout(()=>{b.remove();o.style.borderColor=old;},1500);}
 
-// ---------- MOBILE (Connection Analytics, nur eigener HTTPS-Verkehr) ----------
+// ---------- MOBILE (Netz · Traffic · Daten-Plattform — nur eigener HTTPS-Verkehr) ----------
+// Zeigt drei ehrlich zusammenhängende Ebenen: (1) eigene Geräte-/Handy-Verbindung,
+// (2) der eigene, getimte Request an die öffentliche Daten-Plattform (games.json),
+// (3) die daraus resultierenden Spiele. Kein SIM/APN/Paket-Zugriff, kein fremder
+// Traffic, keine Casino-Server, keine Vorhersage.
+function mob_line(g){var he=1-(g.rtp||0);
+  return '  '+g.name+' · '+g.anbieter+' · RTP '+((g.rtp||0)*100).toFixed(2)+'% · HV '
+    +(he*100).toFixed(2)+'% · Verlust/100€ '+(he*100).toFixed(2)+' €';}
 function mobile(){
   const o=document.getElementById('mout'), on=navigator.onLine;
   const c=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
-  let typ='nicht verfügbar über Web-App / iOS-Sicherheitsmodell', dl='', rttApi='';
+  let typ='nicht verfügbar über Web-App / iOS-Sicherheitsmodell', dl='', rttApi='', sd='';
   if(c){ typ=(c.type||c.effectiveType||'unbekannt');
     if(c.downlink!=null)dl=c.downlink+' Mbit/s (Browser-Schätzung)';
-    if(c.rtt!=null)rttApi=c.rtt+' ms (Browser-Schätzung)'; }
-  o.textContent='NETWORK STATUS\n... messe Latenz (eigener Request) ...';
+    if(c.rtt!=null)rttApi=c.rtt+' ms (Browser-Schätzung)';
+    if(c.saveData!=null)sd='Data-Saver: '+(c.saveData?'an':'aus'); }
+  o.textContent='∆1 // NETZ · TRAFFIC · DATEN-PLATTFORM\n... messe eigene Verbindung ...';
   const t0=performance.now();
   fetch(location.href.split('?')[0]+'?_p='+Date.now(),{cache:'no-store'}).then(()=>{
-    const lat=Math.round(performance.now()-t0), now=new Date().toLocaleTimeString('de-DE');
-    o.textContent=[
-      'NETWORK STATUS',
-      'Verbindung: '+(on?'ONLINE':'OFFLINE'),
-      'Transport: '+typ,
-      '5G: nicht zuverlässig über Web-App ermittelbar',
-      (dl?'Downlink: '+dl:''),
-      (rttApi?'RTT (Browser): '+rttApi:''),
-      'Gemessene Latenz (eigener HTTPS-Request): '+lat+' ms',
-      'Last successful request: '+now,
-      'Data source: eigener HTTPS-Endpunkt (first-party)',
-      'No carrier credentials accessed.',
-      'No private traffic inspected.'
-    ].filter(x=>x).join('\n');
+    const lat=Math.round(performance.now()-t0);
+    // (2) Getimter Request an die öffentliche Daten-Plattform (games.json)
+    const t1=performance.now();
+    return fetch('games.json?_='+Date.now(),{cache:'no-store'}).then(r=>{
+      const platLat=Math.round(performance.now()-t1);
+      return r.json().then(j=>({ok:r.ok,status:r.status,platLat:platLat,j:j})).catch(()=>({ok:r.ok,status:r.status,platLat:platLat,j:null}));
+    }).then(res=>{
+      const now=new Date().toLocaleTimeString('de-DE');
+      const alter=db_alterTage(DBGEN);
+      const alterTxt=(alter==null)?'':(alter<=1?' (heute)':' (vor '+alter+' Tagen)');
+      // (3) daraus resultierende Spiele
+      const gs=GAMESDB.slice().filter(g=>g.rtp);
+      const guenstig=gs.slice().sort((a,b)=>b.rtp-a.rtp).slice(0,3);
+      const teuer=gs.slice().sort((a,b)=>a.rtp-b.rtp).slice(0,3);
+      const gew=db_current();
+      const L=[
+        '∆1 // NETZ · TRAFFIC · DATEN-PLATTFORM','',
+        '[1] EIGENES HANDY-/GERÄTE-NETZ (nur eigene Verbindung)',
+        'Verbindung: '+(on?'ONLINE':'OFFLINE'),
+        'Transport: '+typ,
+        '5G: nicht zuverlässig über Web-App ermittelbar',
+        (dl?'Downlink: '+dl:null),
+        (rttApi?'RTT (Browser): '+rttApi:null),
+        (sd?sd:null),
+        'Gemessene Latenz (eigener HTTPS-Request): '+lat+' ms',
+        'Kein SIM/APN/IMSI-Zugriff · kein fremder Traffic inspiziert','',
+        '[2] ÖFFENTLICHE DATEN-PLATTFORM (first-party games.json)',
+        'Abruf: '+(res.ok?'HTTP '+res.status+' OK':'HTTP '+res.status)+' · '+res.platLat+' ms',
+        'Stand: '+(DBSTAND||'—')+(DBGEN?' · generiert '+DBGEN+alterTxt:''),
+        'Quellen: '+(DBQUELLEN.length?DBQUELLEN.join(', '):'—'),
+        'Spiele geladen: '+GAMESDB.length+' · täglich automatisch aktualisiert',
+        'Kein Anbieter-API-Zugriff · keine Casino-Server','',
+        '[3] DARAUS RESULTIERENDE SPIELE (nach Hausvorteil)',
+        'Wirtschaftlich am günstigsten (kleinster Hausvorteil):',
+        ...guenstig.map(mob_line),
+        'Am teuersten (größter Hausvorteil):',
+        ...teuer.map(mob_line),
+        (gew?'Aktuell gewählt (SPIELE): '+gew.name+' · '+gew.anbieter+' · HV '+((1-gew.rtp)*100).toFixed(2)+'%':null),'',
+        '∆ WICHTIG: Netz, Traffic und Plattform ändern NICHTS am Ergebnis.',
+        'Der RNG ist unabhängig, der Erwartungswert bleibt negativ.',
+        'verfügbar ≠ vorhersagbar · keine Spin-Vorhersage.',
+        'Letzter erfolgreicher Abruf: '+now
+      ];
+      o.textContent=L.filter(x=>x!==null).join('\n');
+    });
   }).catch(()=>{
-    o.textContent=['NETWORK STATUS','Verbindung: '+(on?'ONLINE (Request fehlgeschlagen)':'OFFLINE'),
-      'Transport: '+typ,'Request: FAILED / TIMEOUT','No carrier credentials accessed.',
-      'No private traffic inspected.'].join('\n');
+    o.textContent=['∆1 // NETZ · TRAFFIC · DATEN-PLATTFORM','',
+      'Verbindung: '+(on?'ONLINE (Request fehlgeschlagen)':'OFFLINE'),
+      'Transport: '+typ,'Request: FAILED / TIMEOUT',
+      'Kein SIM/APN-Zugriff · kein fremder Traffic inspiziert · keine Vorhersage.'].join('\n');
   });
 }
 
@@ -379,7 +422,7 @@ function parseDist(s){const out=[];(s||'').split(/[,;\n]/).forEach(t=>{const m=t
 function esc(s){return (''+s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 // SPIELE = vom Nutzer analysierte Spiele (speist MULTIPLIER). Startet leer.
 let SPIELE=[];
-let GAMESDB=[], DBQUELLE='', DBSTAND='', DBGEN='';
+let GAMESDB=[], DBQUELLE='', DBSTAND='', DBGEN='', DBQUELLEN=[];
 function db_setStatus(t){var s=document.getElementById('db_status');if(s)s.innerHTML=t;}
 // Tage seit einem ISO-Datum (für Frische-Warnung).
 function db_alterTage(iso){if(!iso)return null;var d=new Date(iso);if(isNaN(d))return null;return Math.floor((Date.now()-d.getTime())/86400000);}
@@ -389,8 +432,8 @@ function db_load(){
   fetch('games.json?_='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{
     GAMESDB=(j.spiele||[]).filter(g=>g.name&&g.anbieter);
     DBSTAND=j.stand||''; DBGEN=j.generiert||'';
-    var quellen=(j.quellen&&j.quellen.length)?j.quellen.join(', '):'öffentlicher Basissatz';
-    DBQUELLE='games.json (first-party) · Quellen: '+quellen;
+    DBQUELLEN=(j.quellen&&j.quellen.length)?j.quellen:['öffentlicher Basissatz'];
+    DBQUELLE='games.json (first-party) · Quellen: '+DBQUELLEN.join(', ');
     db_initProviders();
   }).catch(()=>{
     GAMESDB=[
@@ -398,7 +441,7 @@ function db_load(){
       {name:'Book of Dead',anbieter:"Play'n GO",rtp:0.9621,vola:'hoch',max:5000,quelle:'eingebetteter Fallback'},
       {name:'Starburst',anbieter:'NetEnt',rtp:0.9609,vola:'niedrig',max:500,quelle:'eingebetteter Fallback'}
     ];
-    DBQUELLE='eingebetteter Fallback (games.json nicht erreichbar)'; DBSTAND=''; DBGEN='';
+    DBQUELLE='eingebetteter Fallback (games.json nicht erreichbar)'; DBSTAND=''; DBGEN=''; DBQUELLEN=['eingebetteter Fallback'];
     db_initProviders();
   });
 }
