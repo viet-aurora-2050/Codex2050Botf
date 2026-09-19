@@ -195,6 +195,13 @@ python -m aktvier --zeit 2026091914  # beliebigen Zyklus reproduzieren
 # Web:  /signal (rotiert live)   ·   Bot: /signal [loesung]
 ```
 
+Die separate Seite **`docs/akt4-decoder.html`** (Game-Riddle Decoder) ist an
+denselben Zyklus gekoppelt: sie nimmt automatisch den **aktuellen** Schlüssel
+(Morse) und Imperativ (Uhrzeiten) und sucht die passenden öffentlichen
+Spieltitel dazu — mit Anti-Zufall-Validierung. Eine Checkbox schaltet auf das
+feste Original-Rätsel (`07:07 → ALEXANDRA`) um. Bit-genau derselbe PRNG wie App
+und Python.
+
 > Modulname `aktvier`, weil `signal` ein Python-Standardmodul ist und nicht überschattet werden darf.
 
 ## Gewinner (`gewinner/`) – mit Mathematik gewonnen, dann verbannt
