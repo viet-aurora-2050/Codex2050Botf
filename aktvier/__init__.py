@@ -20,6 +20,17 @@ from .signal import (
     uhr_decode,
     uhr_encode,
 )
+from .zeit import (
+    IMPS,
+    KEYS,
+    ZyklusSignal,
+    caesar,
+    formatiere_zyklus,
+    make_rng,
+    seed_string,
+    zyklus_id,
+    zyklus_signal,
+)
 
 __all__ = [
     "FINALE_ZITAT",
@@ -36,4 +47,14 @@ __all__ = [
     "rot13",
     "uhr_decode",
     "uhr_encode",
+    # Zeit-Code (rotierendes Signal)
+    "IMPS",
+    "KEYS",
+    "ZyklusSignal",
+    "caesar",
+    "formatiere_zyklus",
+    "make_rng",
+    "seed_string",
+    "zyklus_id",
+    "zyklus_signal",
 ]

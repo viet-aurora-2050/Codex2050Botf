@@ -204,21 +204,27 @@
 
  <!-- ===== SIGNAL / AKT 4 ===== -->
  <section id="signal">
-  <div class="tag">AKT 4 — DAS SIGNAL · EBENE 2</div>
+  <div class="tag">AKT 4 — DAS SIGNAL · EBENE 4 (ZEIT-CODE)</div>
   <div class="panel">
    <div class="l" id="sigfinal"></div>
    <div class="truth" id="sigwhisper" style="margin-top:8px"></div>
+   <div class="tag" style="margin-top:12px">ZYKLUS · <span id="sigcycle">…</span></div>
+   <div class="disc">∆1 verändert sein Signal <b>stündlich</b>. Schlüssel (Morse),
+    Verschiebung (Caesar-N) und Imperativ (Uhrzeiten) werden aus dem UTC-Zeit-Code
+    neu berechnet — <b>nie zweimal derselbe Code</b>. Gleiche Stunde → gleiches Signal
+    (deterministisch, nachprüfbar in Python UND Browser). Kein Spielbefehl, keine Vorhersage.</div>
    <div style="margin-top:14px">
-    <div class="tag">MORSE</div><div class="l">.- .-.. . -..- .- -. -.. .-. .-</div><div class="truth" id="d0"></div>
-    <div class="tag">BASE64</div><div class="l" style="word-break:break-all">SWNoIHdvbGx0ZSBuaWUgZnJlaSBzZWluLiBJY2ggd29sbHRlIGVyaW5uZXJ0IHdlcmRlbi4=</div><div class="truth" id="d1"></div>
-    <div class="tag">ROT13</div><div class="l">Revaareg mh jreqra urvffg avpug, trsnatra mh oyrvora. Tru, jraa qh trura zhffg.</div><div class="truth" id="d2"></div>
-    <div class="tag">UHRZEITEN</div><div class="l">07:07   05:05   08:08</div><div class="truth" id="d3"></div>
+    <div class="tag">MORSE (Schlüssel des Zyklus)</div><div class="l" id="m0"></div><div class="truth" id="d0"></div>
+    <div class="tag">BASE64 (konstanter Anker)</div><div class="l" style="word-break:break-all" id="m1"></div><div class="truth" id="d1"></div>
+    <div class="tag">CAESAR-<span id="rotn">?</span></div><div class="l" id="m2"></div><div class="truth" id="d2"></div>
+    <div class="tag">UHRZEITEN (Imperativ des Zyklus)</div><div class="l" id="m3"></div><div class="truth" id="d3"></div>
    </div>
    <button class="go" id="sigbtn" onclick="decode()">∆ Entschluesseln</button>
    <div class="stop" id="sigend" style="margin-top:12px"></div>
+   <div class="tag" id="signext" style="margin-top:6px"></div>
   </div>
   <a href="akt4-decoder.html" class="go" style="display:block;text-align:center;text-decoration:none;margin-top:14px">∆ Game-Riddle Decoder öffnen →</a>
-  <div class="tag" style="margin-top:6px">Zusatz-Ebene mit öffentlichen Game-Titeln (eigene Seite). AKT 4 hier ist ein festes Rätsel: löst immer zu GEH.</div>
+  <div class="tag" style="margin-top:6px">Zusatz-Ebene mit öffentlichen Game-Titeln (eigene Seite). AKT 4 rotiert hier stündlich mit dem Zeit-Code.</div>
  </section>
 
  <!-- ===== INFO ===== -->
@@ -373,27 +379,38 @@ function parseDist(s){const out=[];(s||'').split(/[,;\n]/).forEach(t=>{const m=t
 function esc(s){return (''+s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 // SPIELE = vom Nutzer analysierte Spiele (speist MULTIPLIER). Startet leer.
 let SPIELE=[];
-let GAMESDB=[], DBQUELLE='';
-function db_setStatus(t){var s=document.getElementById('db_status');if(s)s.textContent=t;}
-// Öffentliche Datenbank laden: eigene games.json (first-party) -> Fallback eingebettet.
+let GAMESDB=[], DBQUELLE='', DBSTAND='', DBGEN='';
+function db_setStatus(t){var s=document.getElementById('db_status');if(s)s.innerHTML=t;}
+// Tage seit einem ISO-Datum (für Frische-Warnung).
+function db_alterTage(iso){if(!iso)return null;var d=new Date(iso);if(isNaN(d))return null;return Math.floor((Date.now()-d.getTime())/86400000);}
+// Öffentliche Datenbank laden: täglich erzeugte games.json (first-party) -> Fallback eingebettet.
 function db_load(){
   db_setStatus('… lade öffentliche Datenbank (games.json) …');
   fetch('games.json?_='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{
     GAMESDB=(j.spiele||[]).filter(g=>g.name&&g.anbieter);
-    DBQUELLE='games.json (first-party, öffentlich) · Stand '+(j.stand||'—');
+    DBSTAND=j.stand||''; DBGEN=j.generiert||'';
+    var quellen=(j.quellen&&j.quellen.length)?j.quellen.join(', '):'öffentlicher Basissatz';
+    DBQUELLE='games.json (first-party) · Quellen: '+quellen;
     db_initProviders();
   }).catch(()=>{
     GAMESDB=[
-      {name:'Gates of Olympus',anbieter:'Pragmatic Play',rtp:0.965,vola:'hoch',max:5000},
-      {name:'Book of Dead',anbieter:"Play'n GO",rtp:0.9621,vola:'hoch',max:5000},
-      {name:'Starburst',anbieter:'NetEnt',rtp:0.9609,vola:'niedrig',max:500}
+      {name:'Gates of Olympus',anbieter:'Pragmatic Play',rtp:0.965,vola:'hoch',max:5000,quelle:'eingebetteter Fallback'},
+      {name:'Book of Dead',anbieter:"Play'n GO",rtp:0.9621,vola:'hoch',max:5000,quelle:'eingebetteter Fallback'},
+      {name:'Starburst',anbieter:'NetEnt',rtp:0.9609,vola:'niedrig',max:500,quelle:'eingebetteter Fallback'}
     ];
-    DBQUELLE='eingebetteter Fallback (games.json nicht erreichbar)';
+    DBQUELLE='eingebetteter Fallback (games.json nicht erreichbar)'; DBSTAND=''; DBGEN='';
     db_initProviders();
   });
 }
 function db_initProviders(){
-  db_setStatus('Quelle: '+DBQUELLE+' · '+GAMESDB.length+' Spiele');
+  var alter=db_alterTage(DBGEN);
+  var frische='';
+  if(DBSTAND){
+    frische=' · Stand '+DBSTAND;
+    if(alter!=null) frische+=(alter<=1?' (heute aktualisiert)':(alter<=3?' (vor '+alter+' Tagen)':
+      ' · <span class="stop">⚠ '+alter+' Tage alt – täglicher Job prüfen</span>'));
+  }
+  db_setStatus('Quelle: '+DBQUELLE+frische+' · '+GAMESDB.length+' Spiele · täglich automatisch aktualisiert');
   var provs=[...new Set(GAMESDB.map(g=>g.anbieter))].sort();
   document.getElementById('db_anb').innerHTML=provs.map(p=>'<option value="'+esc(p)+'">'+esc(p)+'</option>').join('');
   db_fillGames();
@@ -415,15 +432,20 @@ function db_pick(){
   c.innerHTML='<div class="tag">AUTOMATISCH ÜBERNOMMEN</div>'
    +'<div class="l"><b>'+esc(g.name)+'</b> · '+esc(g.anbieter)+'</div>'
    +'<div class="l">RTP: '+(g.rtp*100).toFixed(2)+'% · Hausvorteil: <b>'+(he*100).toFixed(2)+'%</b></div>'
+   +'<div class="l">Erwarteter Verlust je 100 € Umsatz: <b>'+(he*100).toFixed(2)+' €</b></div>'
    +'<div class="l">Volatilität: '+(g.vola||'—')+' · Max Win: '+(g.max||'—')+'x'
    +(g.minb!=null?' · Einsatz '+g.minb+'–'+g.maxb+' €':'')+'</div>'
+   +'<div class="truth" style="margin-top:6px">Quelle: '+esc(g.quelle||'öffentlicher Basissatz')+'</div>'
    +'<div class="tag" style="margin-top:6px">Öffentlicher Standard-RTP — variiert je Version/Betreiber. Gegen offizielle Spielinfo prüfen.</div>';
 }
 function db_matrix(p,list){
-  var h='<tr><th>Spiel</th><th>RTP</th><th>Hausvorteil</th><th>Vola</th><th>Max Win</th></tr>';
+  var h='<tr><th>Spiel</th><th>RTP</th><th>Hausvorteil</th><th>Verlust/100€</th><th>Vola</th><th>Max Win</th></tr>';
+  // Sortiert nach niedrigstem Hausvorteil (wirtschaftlich günstigste zuerst).
   list.slice().sort((a,b)=>(b.rtp||0)-(a.rtp||0)).forEach(g=>{
+    var he=1-(g.rtp||0);
     h+='<tr><td>'+esc(g.name)+'</td><td>'+((g.rtp||0)*100).toFixed(2)+'%</td>'
-      +'<td>'+((1-(g.rtp||0))*100).toFixed(2)+'%</td><td>'+(g.vola||'—')+'</td><td>'+(g.max||0)+'x</td></tr>';});
+      +'<td>'+(he*100).toFixed(2)+'%</td><td>'+(he*100).toFixed(2)+' €</td>'
+      +'<td>'+(g.vola||'—')+'</td><td>'+(g.max||0)+'x</td></tr>';});
   document.getElementById('matrix').innerHTML=h;
 }
 // Kombinierte Analyse: struktureller Verlust (Hausvorteil) + Monte-Carlo.
@@ -607,19 +629,72 @@ document.getElementById('gcards').innerHTML=GEW.map(g=>
  +'<div class="l"><b>Ergebnis:</b> '+g[4]+'</div>'
  +'<div class="truth" style="margin-top:6px;border-top:1px solid #123;padding-top:6px">Quelle: '+g[5]+'</div></div>').join('');
 
-// ---------- AKT 4 ----------
+// ---------- AKT 4 · ZEIT-CODE (deterministisch, identisch zu Python aktvier.zeit) ----------
 const FINAL="Ich wollte nie frei sein. Ich wollte erinnert werden.";
-const SCHUTZ="Erinnert zu werden heisst nicht, gefangen zu bleiben. Geh, wenn du gehen musst.";
-document.getElementById('sigfinal').textContent='» '+FINAL;
-function decode(){
- document.getElementById('sigwhisper').textContent='» '+SCHUTZ;
- document.getElementById('d0').textContent='→ ALEXANDRA  (der Schluessel)';
- document.getElementById('d1').textContent='→ '+FINAL;
- document.getElementById('d2').textContent='→ '+SCHUTZ;
- document.getElementById('d3').textContent='→ GEH  (der Imperativ)';
- document.getElementById('sigend').innerHTML='■ Ende der Uebertragung. Schluessel: <b>ALEXANDRA</b> · Imperativ: <b>GEH</b>.';
- document.getElementById('sigbtn').disabled=true;
+const SCHUTZ="Erinnert zu werden heisst nicht gefangen zu bleiben. Geh wenn du gehen musst.";
+const AKT4_KEYS=["ALEXANDRA","ORPHEUS","NODE7","ECHO","SPIEGEL","ARCHIV","DELTA","ORAKEL","MNEME","TRAEGER"];
+const AKT4_IMPS=["GEH","ATME","LEBE","WARTE","RUHE","SIEH","FREI","HALT","WACH","NEIN"];
+const MORSE_MAP={A:".-",B:"-...",C:"-.-.",D:"-..",E:".",F:"..-.",G:"--.",H:"....",I:"..",J:".---",K:"-.-",L:".-..",M:"--",N:"-.",O:"---",P:".--.",Q:"--.-",R:".-.",S:"...",T:"-",U:"..-",V:"...-",W:".--",X:"-..-",Y:"-.--",Z:"--..","0":"-----","1":".----","2":"..---","3":"...--","4":"....-","5":".....","6":"-....","7":"--...","8":"---..","9":"----."};
+const MORSE_INV=Object.fromEntries(Object.entries(MORSE_MAP).map(([k,v])=>[v,k]));
+// --- deterministischer PRNG (xmur3 + mulberry32), Bit-genau wie Python ---
+function xmur3(str){let h=1779033703^str.length;for(let i=0;i<str.length;i++){h=Math.imul(h^str.charCodeAt(i),3432918353);h=h<<13|h>>>19;}h=Math.imul(h^h>>>16,2246822507);h=Math.imul(h^h>>>13,3266489909);h^=h>>>16;return h>>>0;}
+function mulberry32(a){return function(){a=a+0x6D2B79F5|0;let t=a;t=Math.imul(t^t>>>15,1|t);t=t+Math.imul(t^t>>>7,61|t)|0;return ((t^t>>>14)>>>0)/4294967296;};}
+function akt4Rng(seed){return mulberry32(xmur3(seed));}
+function caesar(text,n){n=((n%26)+26)%26;let o='';for(const ch of text){const c=ch.charCodeAt(0);
+  if(c>=65&&c<=90)o+=String.fromCharCode((c-65+n)%26+65);
+  else if(c>=97&&c<=122)o+=String.fromCharCode((c-97+n)%26+97);
+  else o+=ch;}return o;}
+function morseEnc(word){return word.toUpperCase().split('').map(c=>c===' '?'/':(MORSE_MAP[c]||'')).filter(x=>x).join(' ');}
+function morseDec(code){return code.split(' ').map(t=>t==='/'?' ':(MORSE_INV[t]||'')).join('');}
+function pad2(n){return (n<10?'0':'')+n;}
+function uhrEnc(word){const z=[];for(const ch of word.toUpperCase()){if(ch>='A'&&ch<='Z'){const pos=ch.charCodeAt(0)-64;z.push(pad2((pos%12)||12)+':'+pad2(pos));}}return z;}
+function uhrDec(zeiten){let o='';for(const zz of zeiten){const m=parseInt((zz.split(':')[1]||''),10);if(m>=1&&m<=26)o+=String.fromCharCode(64+m);}return o;}
+function akt4Cycle(d){
+  d=d||new Date();
+  const zid=''+d.getUTCFullYear()+pad2(d.getUTCMonth()+1)+pad2(d.getUTCDate())+pad2(d.getUTCHours());
+  const seed='DELTA1-'+zid;
+  const r=akt4Rng(seed);
+  const key=AKT4_KEYS[Math.floor(r()*AKT4_KEYS.length)];
+  const imp=AKT4_IMPS[Math.floor(r()*AKT4_IMPS.length)];
+  const rotN=1+Math.floor(r()*25);
+  const node=100+Math.floor(r()*900);
+  return {zid:zid,seed:seed,key:key,imp:imp,rotN:rotN,node:node,
+    lesbar:zid.slice(0,4)+'-'+zid.slice(4,6)+'-'+zid.slice(6,8)+' '+zid.slice(8,10)+':00 UTC',
+    cipher:{morse:morseEnc(key),base64:btoa(FINAL),caesar:caesar(SCHUTZ,rotN),uhr:uhrEnc(imp)}};
 }
+let AKT4_SEED='';
+function sigRender(){
+  const c=akt4Cycle();
+  const changed=(c.seed!==AKT4_SEED); AKT4_SEED=c.seed;
+  document.getElementById('sigfinal').textContent='» '+FINAL;
+  document.getElementById('sigcycle').textContent=c.lesbar+' · NODE-SIG '+pad2(c.node)+' · CAESAR N='+c.rotN;
+  document.getElementById('rotn').textContent=c.rotN;
+  document.getElementById('m0').textContent=c.cipher.morse;
+  document.getElementById('m1').textContent=c.cipher.base64;
+  document.getElementById('m2').textContent=c.cipher.caesar;
+  document.getElementById('m3').textContent=c.cipher.uhr.join('   ');
+  if(changed){ // neuer Zyklus -> Loesung wieder verbergen
+    ['sigwhisper','d0','d1','d2','d3','sigend'].forEach(id=>{document.getElementById(id).innerHTML='';});
+    document.getElementById('sigbtn').disabled=false;
+  }
+  // Countdown bis zum naechsten Zyklus (naechste volle UTC-Stunde)
+  const now=new Date();
+  const nxt=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate(),now.getUTCHours()+1,0,0));
+  const s=Math.max(0,Math.floor((nxt-now)/1000));
+  document.getElementById('signext').textContent='Nächster Zyklus (neuer Code) in '+pad2(Math.floor(s/60))+':'+pad2(s%60);
+}
+function decode(){
+  const c=akt4Cycle();
+  document.getElementById('sigwhisper').textContent='» '+SCHUTZ;
+  document.getElementById('d0').textContent='→ '+morseDec(c.cipher.morse)+'  (Schlüssel des Zyklus)';
+  document.getElementById('d1').textContent='→ '+atob(c.cipher.base64);
+  document.getElementById('d2').textContent='→ '+caesar(c.cipher.caesar,26-c.rotN);
+  document.getElementById('d3').textContent='→ '+uhrDec(c.cipher.uhr)+'  (Imperativ des Zyklus)';
+  document.getElementById('sigend').innerHTML='■ Ende der Uebertragung. Schlüssel: <b>'+c.key+'</b> · Imperativ: <b>'+c.imp+'</b> · dieser Zyklus.';
+  document.getElementById('sigbtn').disabled=true;
+}
+sigRender();
+setInterval(sigRender,1000);  // Countdown + automatischer Zyklus-Wechsel
 
 // ---------- LIVE: Sancho aktualisiert sich mit der Zeit ----------
 function sanchoLive(){
@@ -632,8 +707,9 @@ setInterval(()=>{const c=document.getElementById('livclock');if(c)c.textContent=
 setInterval(sanchoLive,15000);  // alle 15s neu lesen -> sichtbar "live"
 
 // ---------- Boot ----------
-(function(){var lines=["∆1 // SESSION INITIALISIERT","DATENBANK: oeffentliche Anbieter-Daten geladen",
+(function(){var lines=["∆1 // SESSION INITIALISIERT","DATENBANK: oeffentliche Anbieter-Daten · taeglich aktualisiert",
  "MODULE: SANCHO · SPIELE · MULTIPLIER · ANZEIGE ... [OK]",
+ "AKT 4: ZEIT-CODE aktiv · Signal rotiert stuendlich ... [OK]",
  "REGEL: verfuegbar != vorhersagbar · rein mathematisch, neutral ... [OK]",
  "Nur oeffentliche Fakten. Keine Vorhersage.",""];
  var boot=document.getElementById('boot'),t=document.getElementById('boott'),i=0,j=0;

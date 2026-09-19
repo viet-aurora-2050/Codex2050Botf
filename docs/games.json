@@ -1,28 +1,251 @@
 {
-  "_hinweis": "Oeffentlich veroeffentlichte Standard-RTPs der jeweiligen Studios. RTP variiert je Version/Betreiber - immer gegen die offizielle Spielinfo pruefen. Keine Anbieter-API, keine Vorhersage. Quelle: veroeffentlichte Spielinformationen der Studios.",
-  "stand": "2026-09",
+  "_hinweis": "Automatisch taeglich erzeugt aus dem oeffentlichen Basissatz + optionalen oeffentlichen JSON-Feeds (GAMES_SOURCES). Oeffentlich veroeffentlichte Standard-RTPs - variieren je Version/Betreiber, immer gegen die offizielle Spielinfo pruefen. Keine Anbieter-API, keine Vorhersage.",
+  "stand": "2026-09-19",
+  "generiert": "2026-09-19T04:16:23Z",
+  "quellen": [
+    "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+  ],
+  "anzahl": 24,
   "spiele": [
-    {"name": "Gates of Olympus", "anbieter": "Pragmatic Play", "rtp": 0.9650, "vola": "hoch", "max": 5000, "minb": 0.20, "maxb": 100},
-    {"name": "Sweet Bonanza", "anbieter": "Pragmatic Play", "rtp": 0.9651, "vola": "hoch", "max": 21100, "minb": 0.20, "maxb": 100},
-    {"name": "Big Bass Bonanza", "anbieter": "Pragmatic Play", "rtp": 0.9671, "vola": "mittel", "max": 2100, "minb": 0.10, "maxb": 250},
-    {"name": "The Dog House", "anbieter": "Pragmatic Play", "rtp": 0.9651, "vola": "hoch", "max": 6750, "minb": 0.20, "maxb": 100},
-    {"name": "Wolf Gold", "anbieter": "Pragmatic Play", "rtp": 0.9601, "vola": "mittel", "max": 2500, "minb": 0.25, "maxb": 125},
-    {"name": "Starburst", "anbieter": "NetEnt", "rtp": 0.9609, "vola": "niedrig", "max": 500, "minb": 0.10, "maxb": 100},
-    {"name": "Gonzo's Quest", "anbieter": "NetEnt", "rtp": 0.9597, "vola": "mittel", "max": 2500, "minb": 0.20, "maxb": 50},
-    {"name": "Dead or Alive 2", "anbieter": "NetEnt", "rtp": 0.9680, "vola": "hoch", "max": 100000, "minb": 0.09, "maxb": 9},
-    {"name": "Book of Dead", "anbieter": "Play'n GO", "rtp": 0.9621, "vola": "hoch", "max": 5000, "minb": 0.10, "maxb": 100},
-    {"name": "Legacy of Dead", "anbieter": "Play'n GO", "rtp": 0.9658, "vola": "hoch", "max": 5000, "minb": 0.10, "maxb": 100},
-    {"name": "Reactoonz", "anbieter": "Play'n GO", "rtp": 0.9651, "vola": "hoch", "max": 4570, "minb": 0.20, "maxb": 100},
-    {"name": "Fire Joker", "anbieter": "Play'n GO", "rtp": 0.9615, "vola": "mittel", "max": 800, "minb": 0.05, "maxb": 100},
-    {"name": "Rise of Olympus", "anbieter": "Play'n GO", "rtp": 0.9650, "vola": "hoch", "max": 5000, "minb": 0.20, "maxb": 100},
-    {"name": "Bonanza", "anbieter": "Big Time Gaming", "rtp": 0.9600, "vola": "hoch", "max": 12000, "minb": 0.20, "maxb": 20},
-    {"name": "Extra Chilli", "anbieter": "Big Time Gaming", "rtp": 0.9682, "vola": "hoch", "max": 20000, "minb": 0.10, "maxb": 40},
-    {"name": "Eye of Horus", "anbieter": "Merkur / Reel Time Gaming", "rtp": 0.9631, "vola": "mittel", "max": 5000, "minb": 0.10, "maxb": 20},
-    {"name": "El Torero", "anbieter": "Merkur", "rtp": 0.9613, "vola": "mittel", "max": 5000, "minb": 0.10, "maxb": 20},
-    {"name": "Book of Ra Deluxe", "anbieter": "Novomatic", "rtp": 0.9510, "vola": "hoch", "max": 5000, "minb": 0.04, "maxb": 100},
-    {"name": "Lucky Lady's Charm Deluxe", "anbieter": "Novomatic", "rtp": 0.9513, "vola": "hoch", "max": 4500, "minb": 0.04, "maxb": 100},
-    {"name": "Holla die Waldfee", "anbieter": "Bally Wulff", "rtp": 0.9550, "vola": "mittel", "max": 2000, "minb": 0.10, "maxb": 20},
-    {"name": "Money Train 2", "anbieter": "Relax Gaming", "rtp": 0.9640, "vola": "hoch", "max": 50000, "minb": 0.10, "maxb": 20},
-    {"name": "Money Train 3", "anbieter": "Relax Gaming", "rtp": 0.9600, "vola": "hoch", "max": 100000, "minb": 0.10, "maxb": 20}
+    {
+      "name": "Holla die Waldfee",
+      "anbieter": "Bally Wulff",
+      "rtp": 0.955,
+      "vola": "mittel",
+      "max": 2000,
+      "minb": 0.1,
+      "maxb": 20,
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+    },
+    {
+      "name": "Bonanza",
+      "anbieter": "Big Time Gaming",
+      "rtp": 0.96,
+      "vola": "hoch",
+      "max": 12000,
+      "minb": 0.2,
+      "maxb": 20,
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+    },
+    {
+      "name": "Extra Chilli",
+      "anbieter": "Big Time Gaming",
+      "rtp": 0.9682,
+      "vola": "hoch",
+      "max": 20000,
+      "minb": 0.1,
+      "maxb": 40,
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+    },
+    {
+      "name": "El Torero",
+      "anbieter": "Merkur",
+      "rtp": 0.9613,
+      "vola": "mittel",
+      "max": 5000,
+      "minb": 0.1,
+      "maxb": 20,
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+    },
+    {
+      "name": "Eye of Horus",
+      "anbieter": "Merkur / Reel Time Gaming",
+      "rtp": 0.9631,
+      "vola": "mittel",
+      "max": 5000,
+      "minb": 0.1,
+      "maxb": 20,
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+    },
+    {
+      "name": "Blood Suckers",
+      "anbieter": "NetEnt",
+      "rtp": 0.98,
+      "vola": "niedrig",
+      "max": 1000,
+      "minb": 0.25,
+      "maxb": 50,
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+    },
+    {
+      "name": "Dead or Alive 2",
+      "anbieter": "NetEnt",
+      "rtp": 0.968,
+      "vola": "hoch",
+      "max": 100000,
+      "minb": 0.09,
+      "maxb": 9,
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+    },
+    {
+      "name": "Gonzo's Quest",
+      "anbieter": "NetEnt",
+      "rtp": 0.9597,
+      "vola": "mittel",
+      "max": 2500,
+      "minb": 0.2,
+      "maxb": 50,
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+    },
+    {
+      "name": "Starburst",
+      "anbieter": "NetEnt",
+      "rtp": 0.9609,
+      "vola": "niedrig",
+      "max": 500,
+      "minb": 0.1,
+      "maxb": 100,
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+    },
+    {
+      "name": "Book of Ra Deluxe",
+      "anbieter": "Novomatic",
+      "rtp": 0.951,
+      "vola": "hoch",
+      "max": 5000,
+      "minb": 0.04,
+      "maxb": 100,
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+    },
+    {
+      "name": "Lucky Lady's Charm Deluxe",
+      "anbieter": "Novomatic",
+      "rtp": 0.9513,
+      "vola": "hoch",
+      "max": 4500,
+      "minb": 0.04,
+      "maxb": 100,
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+    },
+    {
+      "name": "Book of Dead",
+      "anbieter": "Play'n GO",
+      "rtp": 0.9621,
+      "vola": "hoch",
+      "max": 5000,
+      "minb": 0.1,
+      "maxb": 100,
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+    },
+    {
+      "name": "Fire Joker",
+      "anbieter": "Play'n GO",
+      "rtp": 0.9615,
+      "vola": "mittel",
+      "max": 800,
+      "minb": 0.05,
+      "maxb": 100,
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+    },
+    {
+      "name": "Legacy of Dead",
+      "anbieter": "Play'n GO",
+      "rtp": 0.9658,
+      "vola": "hoch",
+      "max": 5000,
+      "minb": 0.1,
+      "maxb": 100,
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+    },
+    {
+      "name": "Reactoonz",
+      "anbieter": "Play'n GO",
+      "rtp": 0.9651,
+      "vola": "hoch",
+      "max": 4570,
+      "minb": 0.2,
+      "maxb": 100,
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+    },
+    {
+      "name": "Rise of Olympus",
+      "anbieter": "Play'n GO",
+      "rtp": 0.965,
+      "vola": "hoch",
+      "max": 5000,
+      "minb": 0.2,
+      "maxb": 100,
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+    },
+    {
+      "name": "Big Bass Bonanza",
+      "anbieter": "Pragmatic Play",
+      "rtp": 0.9671,
+      "vola": "mittel",
+      "max": 2100,
+      "minb": 0.1,
+      "maxb": 250,
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+    },
+    {
+      "name": "Gates of Olympus",
+      "anbieter": "Pragmatic Play",
+      "rtp": 0.965,
+      "vola": "hoch",
+      "max": 5000,
+      "minb": 0.2,
+      "maxb": 100,
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+    },
+    {
+      "name": "Sugar Rush",
+      "anbieter": "Pragmatic Play",
+      "rtp": 0.965,
+      "vola": "hoch",
+      "max": 5000,
+      "minb": 0.2,
+      "maxb": 100,
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+    },
+    {
+      "name": "Sweet Bonanza",
+      "anbieter": "Pragmatic Play",
+      "rtp": 0.9651,
+      "vola": "hoch",
+      "max": 21100,
+      "minb": 0.2,
+      "maxb": 100,
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+    },
+    {
+      "name": "The Dog House",
+      "anbieter": "Pragmatic Play",
+      "rtp": 0.9651,
+      "vola": "hoch",
+      "max": 6750,
+      "minb": 0.2,
+      "maxb": 100,
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+    },
+    {
+      "name": "Wolf Gold",
+      "anbieter": "Pragmatic Play",
+      "rtp": 0.9601,
+      "vola": "mittel",
+      "max": 2500,
+      "minb": 0.25,
+      "maxb": 125,
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+    },
+    {
+      "name": "Money Train 2",
+      "anbieter": "Relax Gaming",
+      "rtp": 0.964,
+      "vola": "hoch",
+      "max": 50000,
+      "minb": 0.1,
+      "maxb": 20,
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+    },
+    {
+      "name": "Money Train 3",
+      "anbieter": "Relax Gaming",
+      "rtp": 0.96,
+      "vola": "hoch",
+      "max": 100000,
+      "minb": 0.1,
+      "maxb": 20,
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+    }
   ]
 }
