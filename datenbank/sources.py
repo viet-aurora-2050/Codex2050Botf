@@ -1,14 +1,20 @@
-"""Quellen-Adapter für die öffentliche Spiele-Datenbank.
+"""Quellen-Adapter für den öffentlichen Spiele-Katalog (v3).
 
-Prinzip (ehrlich):
+Pipeline:
+    öffentliche Quellen → Source-Adapter → Validation → Normalization
+    → Deduplication → Katalog (+ Source-Health)
+
+Prinzip (ehrlich, unverändert):
   * KEINE Anbieter-API, kein Live-Casino-Feed, keine Vorhersage.
   * Der garantierte Basissatz sind öffentlich veröffentlichte Studio-RTPs.
-  * Zusätzliche öffentliche JSON-Feeds können per Umgebungsvariable
-    GAMES_SOURCES (kommagetrennte URLs) eingehängt werden. Der Tages-Job
-    (GitHub Actions) läuft serverseitig -> keine CORS-Schranke -> er darf
-    öffentliche Feeds abrufen und zusammenführen.
-  * Jeder Eintrag trägt seine Quelle (`quelle`). RTPs variieren je
-    Version/Betreiber – immer gegen die offizielle Spielinfo prüfen.
+  * Zusätzliche öffentliche JSON-Feeds werden ausdrücklich über die
+    Umgebungsvariable GAMES_SOURCES (kommagetrennte URLs) konfiguriert.
+    Der Tages-Job läuft serverseitig (GitHub Actions) → keine CORS-Schranke.
+  * Jeder Datensatz behält seine Herkunft (Provenance). RTP ist eine
+    langfristige theoretische Kennzahl und variiert je Version/Betreiber.
+  * Der Ausfall einer Quelle zerstört den Katalog NICHT (Fallback bleibt).
+  * `reported_recent_win` ist eine von der Quelle gemeldete Beobachtung –
+    ausdrücklich KEIN Beweis und KEINE Next-Spin-Vorhersage.
 """
 
 from __future__ import annotations
@@ -16,13 +22,14 @@ from __future__ import annotations
 import json
 import os
 import urllib.request
-from typing import Dict, List, Optional
+from datetime import datetime, timezone
+from typing import Dict, List, Optional, Tuple
 
 BASIS_QUELLE = "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
-
 VOLA_OK = {"niedrig", "mittel", "hoch"}
+_VOLA_ALIAS = {"low": "niedrig", "medium": "mittel", "mid": "mittel", "high": "hoch"}
 
-# Öffentlich veröffentlichte Standard-RTPs bekannter Titel (Basissatz, garantiert).
+# --- Basissatz (garantierter Fallback) · öffentlich veröffentlichte Studio-RTPs ---
 _ROH = [
     ("Gates of Olympus", "Pragmatic Play", 0.9650, "hoch", 5000, 0.20, 100),
     ("Sweet Bonanza", "Pragmatic Play", 0.9651, "hoch", 21100, 0.20, 100),
@@ -51,89 +58,172 @@ _ROH = [
 ]
 
 SEED_GAMES: List[Dict] = [
-    {"name": n, "anbieter": a, "rtp": r, "vola": v, "max": mx,
-     "minb": mnb, "maxb": mxb, "quelle": BASIS_QUELLE}
+    {"name": n, "anbieter": a, "rtp": r, "vola": v, "max": mx, "minb": mnb, "maxb": mxb,
+     "quelle": BASIS_QUELLE, "source_type": "seed", "status": "verified-seed"}
     for (n, a, r, v, mx, mnb, mxb) in _ROH
 ]
 
 
-def _to_rtp(val) -> Optional[float]:
-    """Akzeptiert 0.965 oder 96.5 (Prozent) -> Bruch. Sonst None."""
+def _now() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _pick(item: Dict, *keys):
+    """Erstes nicht-leeres Feld aus einer Reihe von Alias-Namen."""
+    for k in keys:
+        if item.get(k) not in (None, ""):
+            return item[k]
+    return None
+
+
+def _to_float(val) -> Optional[float]:
     try:
-        f = float(str(val).replace("%", "").replace(",", ".").strip())
+        return float(str(val).replace("%", "").replace(",", ".").strip())
     except (TypeError, ValueError):
+        return None
+
+
+def _to_rtp(val) -> Optional[float]:
+    """Akzeptiert 0.965, 96.5 oder '96.5%' -> Bruch. Unplausibel -> None."""
+    f = _to_float(val)
+    if f is None:
         return None
     if f > 1.5:
         f /= 100.0
-    return f
+    return round(f, 4) if 0.80 <= f <= 1.00 else None
 
 
 def normalisiere(item: Dict, quelle: str) -> Optional[Dict]:
-    """Bringt einen Rohdatensatz auf das interne Schema oder verwirft ihn."""
-    name = (item.get("name") or item.get("title") or "").strip()
-    anb = (item.get("anbieter") or item.get("provider") or item.get("studio") or "").strip()
-    rtp = _to_rtp(item.get("rtp") if "rtp" in item else item.get("return"))
-    if not name or not anb or rtp is None:
+    """Rohdatensatz einer öffentlichen Quelle auf das interne Schema bringen.
+
+    Pflichtfelder: name + anbieter. RTP darf fehlen (None) – es wird NICHTS
+    erfunden. Herkunft (Provenance) bleibt erhalten.
+    """
+    name = str(_pick(item, "name", "title", "game_name") or "").strip()
+    anb = str(_pick(item, "anbieter", "provider", "studio", "vendor") or "").strip()
+    if not name or not anb:
         return None
-    if not (0.80 <= rtp <= 1.00):     # Plausibilität für Slot-RTPs
-        return None
-    vola = str(item.get("vola") or item.get("volatility") or "mittel").lower().strip()
+
+    vola = str(_pick(item, "vola", "volatility", "variance") or "mittel").lower().strip()
+    vola = _VOLA_ALIAS.get(vola, vola)
     if vola not in VOLA_OK:
         vola = "mittel"
-    try:
-        mx = float(item.get("max") if item.get("max") is not None else item.get("maxwin") or 0)
-    except (TypeError, ValueError):
-        mx = 0.0
-    out = {"name": name, "anbieter": anb, "rtp": round(rtp, 4), "vola": vola,
-           "max": round(mx, 2), "quelle": quelle}
-    for k_out, k_ins in (("minb", ("minb", "min_bet")), ("maxb", ("maxb", "max_bet"))):
-        for k in k_ins:
-            if item.get(k) is not None:
-                try:
-                    out[k_out] = float(item[k])
-                except (TypeError, ValueError):
-                    pass
-                break
+
+    out: Dict = {
+        "name": name,
+        "anbieter": anb,
+        "rtp": _to_rtp(_pick(item, "rtp", "return", "return_to_player")),
+        "vola": vola,
+        "quelle": quelle,
+        "source_type": "public-feed",
+        "status": "online",
+        "last_seen": _now(),
+    }
+    # Numerische Zusatzfelder (nur wenn vorhanden).
+    for dst, aliases in (
+        ("max", ("max", "maxwin", "max_win", "max_multiplier")),
+        ("minb", ("minb", "min_bet", "minimum_bet")),
+        ("maxb", ("maxb", "max_bet", "maximum_bet")),
+    ):
+        f = _to_float(_pick(item, *aliases))
+        if f is not None:
+            out[dst] = round(f, 4)
+    # Provenance / Varianten (nur wenn die Quelle sie liefert).
+    for dst, aliases in (
+        ("game_id", ("game_id", "id", "slug")),
+        ("variant", ("variant", "rtp_version", "version")),
+        ("source_url", ("source_url", "url", "link")),
+    ):
+        v = _pick(item, *aliases)
+        if v not in (None, ""):
+            out[dst] = str(v).strip()
+    # Öffentlich gemeldeter Recent-Win (Beobachtung, KEINE Vorhersage).
+    rw = _pick(item, "reported_recent_win", "recent_win", "last_win")
+    if rw not in (None, ""):
+        out["reported_recent_win"] = rw
+        out["reported_recent_win_note"] = (
+            "von der Quelle gemeldete Beobachtung – kein Beweis, keine Vorhersage"
+        )
+        ts = _pick(item, "recent_win_at", "win_timestamp", "timestamp")
+        if ts not in (None, ""):
+            out["reported_recent_win_at"] = str(ts).strip()
     return out
 
 
-def http_json_source(url: str, timeout: int = 20) -> List[Dict]:
-    """Lädt einen öffentlichen JSON-Feed und normalisiert ihn. Fehler -> []."""
+def _items(raw) -> List[Dict]:
+    """Extrahiert die Datensatz-Liste aus verschiedenen Container-Formaten."""
+    if isinstance(raw, list):
+        return [x for x in raw if isinstance(x, dict)]
+    if isinstance(raw, dict):
+        for key in ("spiele", "games", "items", "results", "data"):
+            if isinstance(raw.get(key), list):
+                return [x for x in raw[key] if isinstance(x, dict)]
+    return []
+
+
+def http_json_source(url: str, timeout: int = 15, max_items: int = 10000) -> Tuple[List[Dict], Dict]:
+    """Lädt einen öffentlichen JSON-Feed. Rückgabe: (Spiele, Health-Meta).
+
+    Robust: Timeout, Datensatz-Deckel, Content-Type-Prüfung, saubere
+    Exception-Behandlung. Ein Fehler liefert ([], meta{status:offline}).
+    """
+    meta: Dict = {"url": url, "status": "offline", "fetched_at": _now(), "records_received": 0}
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "codex2050-datenbank/2.0"})
+        req = urllib.request.Request(
+            url, headers={"User-Agent": "Codex2050Games/3.0", "Accept": "application/json"}
+        )
         with urllib.request.urlopen(req, timeout=timeout) as resp:
+            ctype = (resp.headers.get("Content-Type") or "").lower()
+            if "json" not in ctype:
+                raise ValueError(f"unerwarteter Content-Type: {ctype or 'unbekannt'}")
             raw = json.loads(resp.read().decode("utf-8"))
-    except Exception as exc:  # noqa: BLE001  – Feed darf ausfallen, Basissatz bleibt
-        print(f"[warnung] Quelle nicht erreichbar: {url} ({exc})")
-        return []
-    items = raw.get("spiele") if isinstance(raw, dict) else raw
-    if not isinstance(items, list):
-        return []
-    out = []
-    for it in items:
-        if isinstance(it, dict):
-            n = normalisiere(it, quelle=url)
-            if n:
-                out.append(n)
-    return out
+        games = []
+        for it in _items(raw)[:max_items]:
+            g = normalisiere(it, quelle=url)
+            if g:
+                games.append(g)
+        meta.update(status="online", records_received=len(games))
+        return games, meta
+    except Exception as exc:  # noqa: BLE001 – Quelle darf ausfallen, Katalog bleibt
+        meta["error"] = f"{type(exc).__name__}: {exc}"
+        print(f"[warnung] Quelle offline: {url} ({meta['error']})")
+        return [], meta
 
 
-def sammle(urls: Optional[List[str]] = None) -> List[Dict]:
-    """Basissatz + optionale öffentliche Feeds, zusammengeführt und dedupliziert.
+def _dedupe_key(g: Dict) -> Tuple:
+    """Logischer Schlüssel: game_id falls vorhanden, sonst Provider+Name+Variante.
 
-    Dedupe-Schlüssel: (name, anbieter) case-insensitiv. Externe Feeds haben
-    Vorrang vor dem Basissatz (aktuellere Zahl gewinnt).
+    Unterschiedliche RTP-Versionen (variant) werden NICHT fälschlich vereint.
+    """
+    gid = g.get("game_id")
+    if gid:
+        return ("id", str(gid).casefold())
+    return ("nm", g["anbieter"].casefold(), g["name"].casefold(), str(g.get("variant", "")).casefold())
+
+
+def sammle(urls: Optional[List[str]] = None,
+           timeout: Optional[int] = None,
+           max_items: Optional[int] = None) -> Tuple[List[Dict], List[Dict]]:
+    """Basissatz + konfigurierte öffentliche Feeds → (Katalog, Source-Status).
+
+    Feeds überschreiben den Basissatz beim selben logischen Schlüssel (frischer).
+    Ein Quellen-Ausfall wird dokumentiert; der Basissatz bleibt erhalten.
     """
     if urls is None:
-        env = os.environ.get("GAMES_SOURCES", "").strip()
-        urls = [u.strip() for u in env.split(",") if u.strip()] if env else []
+        env = os.getenv("GAMES_SOURCES", "").strip()
+        urls = [u.strip() for u in env.split(",") if u.strip()]
+    if timeout is None:
+        timeout = int(os.getenv("GAMES_TIMEOUT", "15"))
+    if max_items is None:
+        max_items = int(os.getenv("GAMES_MAX_ITEMS", "10000"))
 
-    merged: Dict[tuple, Dict] = {}
-    for g in SEED_GAMES:
-        merged[(g["name"].lower(), g["anbieter"].lower())] = dict(g)
+    merged: Dict[Tuple, Dict] = {_dedupe_key(g): dict(g) for g in SEED_GAMES}
+    states: List[Dict] = []
     for url in urls:
-        for g in http_json_source(url):
-            merged[(g["name"].lower(), g["anbieter"].lower())] = g  # Feed überschreibt
+        games, meta = http_json_source(url, timeout=timeout, max_items=max_items)
+        states.append(meta)
+        for g in games:
+            merged[_dedupe_key(g)] = g
 
-    spiele = sorted(merged.values(), key=lambda g: (g["anbieter"].lower(), g["name"].lower()))
-    return spiele
+    katalog = sorted(merged.values(), key=lambda g: (g["anbieter"].casefold(), g["name"].casefold()))
+    return katalog, states
