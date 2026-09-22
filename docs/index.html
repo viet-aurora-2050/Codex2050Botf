@@ -56,9 +56,8 @@
  <div class="tag" id="clock">∆1 // SESSION INITIALISIERT</div>
  <h1>CODEX 2050 — ∆1</h1>
  <nav>
-   <button data-t="sancho" class="on">SANCHO ◉ LIVE</button>
+   <button data-t="spiele" class="on">SPIELE</button>
    <button data-t="mobile">MOBILE</button>
-   <button data-t="spiele">SPIELE</button>
    <button data-t="multiplier">MULTIPLIER</button>
    <button data-t="quellen">QUELLEN</button>
    <button data-t="anzeige">ANZEIGE</button>
@@ -67,23 +66,8 @@
    <button data-t="info">INFO</button>
  </nav>
 
- <!-- ===== SANCHO ===== -->
- <section id="sancho" class="on">
-  <div class="tag"><span id="live" class="livedot">●</span> SANCHO — LIVE-SIGNAL · <span id="livclock"></span></div>
-  <div class="disc">Kein Zugriff auf Anbieter-Server. Keine Vorhersage. Das „Signal" ist
-   Zeit-Rauschen mit Vorhersagewert&nbsp;0 — es aktualisiert sich mit Uhrzeit/Datum, verändert aber
-   <b>keinen</b> Spin. Der einzig echte Wert: der Hausvorteil.</div>
-  <label>Anbieter</label>
-  <select id="sanb">
-   <option value="tipico">Tipico Games</option><option value="betano">Betano</option>
-   <option value="n1">N1 Casino</option><option value="stargames">Stargames</option>
-   <option value="generisch">Generischer Slot</option></select>
-  <label>Einsatz/Spin (€)</label><input id="seinsatz" type="number" value="1" step="0.1">
-  <button class="go" onclick="sancho()">∆ Signal jetzt neu lesen</button>
-  <div class="bars" id="sbars" style="margin-top:14px"></div>
-  <div id="smeta" class="tag" style="margin-top:8px"></div>
-  <div class="panel" id="spanel"></div>
- </section>
+ <a href="sancho.html" class="go" style="display:block;text-align:center;text-decoration:none;margin-bottom:18px">
+  <span class="livedot" style="color:#dfeaff">●</span> SANCHOS SPIELPLATZ öffnen — eigenständiges Live-Modul →</a>
 
  <!-- ===== MOBILE (Connection Analytics) ===== -->
  <section id="mobile">
@@ -99,7 +83,7 @@
  </section>
 
  <!-- ===== SPIELE (Public Game Data Engine · Matrix · Data Quality) ===== -->
- <section id="spiele">
+ <section id="spiele" class="on">
   <div class="tag">SPIELE-DATENBANK · ÖFFENTLICHE ANBIETER-DATEN (AUTOMATISCH)</div>
   <div class="disc">Automatisch aus einer öffentlichen Datenbank — <b>kein manuelles Tippen</b>.
    Anbieter wählen → Spiel wählen → Daten werden automatisch übernommen und die
@@ -241,7 +225,7 @@
    <div class="l"><b>QUELLEN</b> — Quellenprinzip: Quelle → Gegenquelle → Primärdokument → eigener Mathe-Check → Ergebnis. Marketing-Wörter („hot/fällig/zahlt jetzt/bestes Spiel") werden als Nicht-Beweis markiert.</div>
    <div class="l"><b>ANZEIGE</b> — erzeugt aus der Mathematik eine sachliche Beschwerde/Anzeige an die GGL, fuer jeden Anbieter. Nur wahrheitsgemaesse Angaben; alles als Verdacht/Bitte um Pruefung. Keine Rechtsberatung.</div>
    <div class="l"><b>GEWINNER</b> — dokumentierte Faelle, die mit Mathematik legal gewannen (Thorp, MIT-Team, Garcia-Pelayo, Mandel, Selbee …) und Hausverbot bekamen. Mit Quelle und dem mathematischen Grund.</div>
-   <div class="l"><b>SANCHO</b> — zeigt den „Rhythmus" und entlarvt ihn sofort (RNG, Vorhersagewert 0).</div>
+   <div class="l"><b>SANCHOS SPIELPLATZ</b> — eigenständiges Live-Modul (<a href="sancho.html">→ öffnen</a>), losgelöst aus dem Haupt-Tab-Fluss. Zeigt den „Rhythmus" und entlarvt ihn sofort (RNG, Vorhersagewert 0).</div>
    <div class="l"><b>AKT 4</b> — das Finale als echtes Rätsel (Morse/Base64/ROT13/Uhrzeiten).</div>
    <div class="truth" style="margin-top:8px">Rein wissenschaftlich, mathematisch, neutral. Nur öffentliche Fakten, keine Vorhersage, keine personalisierte Bewertung.</div>
   </div>
@@ -610,37 +594,6 @@ function quellen_render(){const a=q_load();
 }
 quellen_render();
 
-// ---------- SANCHO ----------
-const RTP={tipico:.955,betano:.955,n1:.96,stargames:.955,generisch:.95};
-const SMONO=["Du willst den Rhythmus. Ich zeige ihn dir – und dann zeige ich dir, dass er luegt.",
- "Der Wuerfel hat kein Gedaechtnis. Der naechste Spin kennt den letzten nicht.",
- "Wenn du mir glaubst, verlierst du. Wenn du der Mathematik glaubst, behaeltst du dein Geld."];
-function h32(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
-function sancho(){
-  const a=document.getElementById('sanb').value, e=num(einzVal('seinsatz'))||1;
-  const now=new Date(), day=now.toISOString().slice(0,10), hour=now.getHours();
-  // Seed inkl. Minute -> das "Signal" reshuffelt sichtbar mit der Zeit.
-  // Genau das ist der Beweis: es ist Rauschen, kein Muster.
-  const seed=h32(a+'|'+day+'|'+now.getHours()+':'+now.getMinutes()+'|delta1'); const vals=[];let best=0,bv=-1;
-  for(let hh=0;hh<24;hh++){const b=h32(seed+':'+hh)/4294967295;
-    const wave=.5+.5*Math.sin(hh/24*2*Math.PI+(seed%7)); const v=Math.round((100*(.6*b+.4*wave))*10)/10;
-    vals.push(v);if(v>bv){bv=v;best=hh}}
-  const bars=document.getElementById('sbars');bars.innerHTML='';
-  vals.forEach((v,hh)=>{const d=document.createElement('div');d.className='bar'+(hh===hour?' now':'');
-    d.style.height=Math.max(4,v)+'%';bars.appendChild(d);});
-  const he=1-RTP[a], loss=(100*e*he).toFixed(2);
-  document.getElementById('smeta').innerHTML='Jetzt '+hour+' Uhr · Index '+vals[hour]
-    +' · Schein-Fenster '+best+' Uhr <span class="stop">(bedeutungslos)</span>';
-  document.getElementById('spanel').innerHTML=
-    '<span class="tag">SANCHO ZEIGT SEIN WAHRES ICH</span>'
-    +SMONO.map(x=>'<div class="l">» '+x+'</div>').join('')
-    +'<div class="truth" style="margin-top:8px">• RNG: jeder Spin unabhaengig. Vorhersagewert 0.</div>'
-    +'<div class="truth">• RTP '+(RTP[a]*100).toFixed(1)+'% → Hausvorteil '+(he*100).toFixed(1)+'%.</div>'
-    +'<div class="truth">• Erwarteter Verlust/100 Spins × '+e.toFixed(2)+' = '+loss+' €.</div>'
-    +'<div class="truth">• Nächster Spin: NICHT VORHERSAGBAR · Nächster Gewinn: NICHT VORHERSAGBAR.</div>'
-    +'<div class="stop" style="margin-top:8px">🛑 KEIN SPIELBEFEHL. Es gibt kein Gewinnfenster. Mathematisch auswertbar, aber nicht vorhersagbar.</div>';
-}
-
 // ---------- GEWINNER (spiegelt gewinner/faelle.py) ----------
 const GEW=[
  ["Edward O. Thorp","ab 1962 · Blackjack","Kartenzaehlen (High-Low), mathematisch hergeleitet.",
@@ -739,19 +692,10 @@ function decode(){
 sigRender();
 setInterval(sigRender,1000);  // Countdown + automatischer Zyklus-Wechsel
 
-// ---------- LIVE: Sancho aktualisiert sich mit der Zeit ----------
-function sanchoLive(){
-  const c=document.getElementById('livclock');
-  if(c)c.textContent=new Date().toLocaleString('de-DE');
-  // Nur neu zeichnen, wenn Sancho sichtbar ist (spart Arbeit).
-  if(document.getElementById('sancho').classList.contains('on')) sancho();
-}
-setInterval(()=>{const c=document.getElementById('livclock');if(c)c.textContent=new Date().toLocaleString('de-DE');},1000);
-setInterval(sanchoLive,15000);  // alle 15s neu lesen -> sichtbar "live"
-
 // ---------- Boot ----------
 (function(){var lines=["∆1 // SESSION INITIALISIERT","DATENBANK: oeffentliche Anbieter-Daten · taeglich aktualisiert",
- "MODULE: SANCHO · SPIELE · MULTIPLIER · ANZEIGE ... [OK]",
+ "MODULE: SPIELE · MULTIPLIER · ANZEIGE ... [OK]",
+ "SANCHOS SPIELPLATZ: eigenstaendig -> sancho.html",
  "AKT 4: ZEIT-CODE aktiv · Signal rotiert stuendlich ... [OK]",
  "REGEL: verfuegbar != vorhersagbar · rein mathematisch, neutral ... [OK]",
  "Nur oeffentliche Fakten. Keine Vorhersage.",""];
@@ -763,5 +707,4 @@ setInterval(sanchoLive,15000);  // alle 15s neu lesen -> sichtbar "live"
   if(j<=lines[i].length){t.textContent=lines.slice(0,i).join("\n")+(i?"\n":"")+lines[i].slice(0,j);j++;setTimeout(tick,12);}
   else{i++;j=0;setTimeout(tick,110);}})();
 })();
-sancho();   // Start-Tab sofort befuellen
 </script></body></html>

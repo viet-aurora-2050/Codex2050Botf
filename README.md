@@ -96,6 +96,11 @@ Ein ARG-Modul im Dunkelblau-2050-Modus. „Sancho" ist der Agent, der hier
 Aus Anbieter (Tipico/Betano/N1/Stargames) + aktuellem Datum/Uhrzeit erzeugt er
 ein atmosphärisches „∆1-Signal" (einen Rhythmus) und **entlarvt es sofort selbst**.
 
+**Eigenständiges Modul:** Sancho lebt nicht mehr als Untertab in der
+Haupt-App, sondern auf einer eigenen Seite — **`docs/sancho.html`**
+(verlinkt prominent oben in `index.html` und aus dem INFO-Tab). Mehr Raum,
+mehr Lore-Text, dieselbe Ehrlichkeit: die Selbst-Entlarvung bleibt Kern.
+
 > **Warum es keinen echten Predictor gibt:** Regulierte Online-Slots laufen auf
 > zertifizierten RNGs. Jeder Spin ist statistisch **unabhängig** – es gibt kein
 > zeit-, datums- oder lastabhängiges „Gewinnfenster". Das Signal hat
@@ -105,7 +110,8 @@ ein atmosphärisches „∆1-Signal" (einen Rhythmus) und **entlarvt es sofort s
 
 ```bash
 python -m sancho "tipico games" 2      # CLI
-# Web:  /sancho   (Dunkelblau-Interface)   ·  JSON: /api/sancho?anbieter=betano
+# Statische App (GitHub Pages):  docs/sancho.html  (eigenständige Seite)
+# FastAPI-Dashboard:  /sancho  (Dunkelblau-Interface)  ·  JSON: /api/sancho?anbieter=betano
 # Bot:  /sancho betano
 ```
 

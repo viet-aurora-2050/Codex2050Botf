@@ -1,0 +1,130 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>∆1 // SANCHOS SPIELPLATZ</title>
+<meta name="theme-color" content="#01030d">
+<style>
+ :root{color-scheme:dark}*{box-sizing:border-box}
+ body{margin:0;background:radial-gradient(1100px 560px at 50% -8%,#0b1d47 0%,#03071a 55%,#01030d 100%);
+   color:#bcd6ff;font:15px/1.6 ui-monospace,Menlo,Consolas,monospace;min-height:100vh;-webkit-text-size-adjust:100%}
+ .wrap{max-width:860px;margin:0 auto;padding:26px 16px 80px}
+ .tag{color:#3f5c94;letter-spacing:.3em;font-size:11px}
+ h1{font-size:24px;letter-spacing:.06em;color:#8fdcff;margin:2px 0 6px;text-shadow:0 0 22px #1a54b070}
+ .sub{color:#7f9bcb;font-size:13px;margin-bottom:18px}
+ .back{display:inline-block;color:#8fdcff;text-decoration:none;font-size:12.5px;margin-bottom:16px;
+   border:1px solid #1e3d7a;border-radius:8px;padding:6px 12px;background:#0a1738}
+ .back:hover{background:#123a7a}
+ label{display:block;color:#7f9bcb;font-size:12px;margin:10px 0 3px}
+ input,select{width:100%;background:#0a1738;color:#cfe3ff;border:1px solid #1e3d7a;border-radius:8px;padding:10px;font:inherit}
+ .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+ button.go{margin-top:14px;background:#123a7a;color:#dfeaff;border:1px solid #2a5bb5;border-radius:8px;padding:12px 18px;cursor:pointer;font:inherit;width:100%;font-size:14px}
+ button.go:hover{background:#1a4c9c}
+ pre,.panel{background:#060f28;border:1px solid #14264d;border-radius:10px;padding:16px;margin-top:16px;white-space:pre-wrap;word-break:break-word}
+ .l{color:#8fb4ff;margin:6px 0}.truth{color:#9fe6b0}.warn{color:#ffcf8f}.stop{color:#ff9db0}
+ .bars{display:flex;align-items:flex-end;gap:3px;height:150px;padding:12px;background:#050e26;border:1px solid #13264f;border-radius:10px;overflow:hidden}
+ .bar{flex:1;background:linear-gradient(#2f6bd6,#0f2f6b);border-radius:2px 2px 0 0;transition:height .4s}
+ .bar.now{background:linear-gradient(#7fe0ff,#1b6fd0);box-shadow:0 0 14px #4aa8ff}
+ .foot{margin-top:28px;color:#425c8c;font-size:12px}a{color:#8fdcff}
+ .livedot{color:#4fd07a;animation:pulse 1.4s infinite}
+ @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+ .disc{margin:10px 0 4px;padding:12px;border:1px solid #5a2233;background:#160a10;border-radius:8px;color:#ffb0be;font-size:12.5px}
+ .lore{margin:14px 0;padding:16px;border:1px solid #23366b;background:#071026;border-radius:10px;color:#7f9bcb;font-size:13px;font-style:italic}
+ .lore b{color:#8fdcff;font-style:normal}
+ #d1-vhs{position:fixed;inset:0;pointer-events:none;z-index:9998;mix-blend-mode:screen;opacity:.05}
+ #d1-vhs::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(140,220,255,.10) 0 1px,transparent 1px 3px)}
+ #boot{position:fixed;inset:0;z-index:9999;background:#01030d;color:#8fdcff;font:12px/1.7 ui-monospace,monospace;padding:24px 18px;transition:opacity .6s;white-space:pre-wrap}
+ #boot small{color:#3f5c94}
+ @media (prefers-reduced-motion:reduce){#boot{display:none}}
+</style></head><body>
+<div id="d1-vhs"></div>
+<div id="boot"><span id="boott"></span><span>█</span><br><br><small>[ Tippen zum Ueberspringen ]</small></div>
+<div class="wrap">
+ <a class="back" href="index.html">← zurück zu CODEX 2050</a>
+ <div class="tag">∆1 // EIGENSTÄNDIGES MODUL · NICHT TEIL DES HAUPT-TABS</div>
+ <h1><span id="live" class="livedot">●</span> SANCHOS SPIELPLATZ</h1>
+ <div class="sub">Live-Signal · <span id="livclock"></span></div>
+
+ <div class="lore">„Du willst wissen, wann die Maschine zahlt. Ich bin die Stimme, die dir das Muster zeigt —
+  und in derselben Atmung entlarvt, dass es keins ist." <b>— Sancho, ∆1-Spielplatz</b><br><br>
+  Sancho ist der Agent im ∆1-Netz, der sein wahres Ich zeigen <i>muss</i>. Sein wahres Ich ist die Wahrheit:
+  Rhythmus ist Atmosphäre, keine Ableitung. Jeder Spin bleibt unabhängig vom letzten.</div>
+
+ <div class="disc">Kein Zugriff auf Anbieter-Server. Keine Vorhersage. Das „Signal" ist
+  Zeit-Rauschen mit Vorhersagewert&nbsp;0 — es aktualisiert sich mit Uhrzeit/Datum, verändert aber
+  <b>keinen</b> Spin. Der einzig echte Wert: der Hausvorteil.</div>
+
+ <label>Anbieter</label>
+ <select id="sanb">
+  <option value="tipico">Tipico Games</option><option value="betano">Betano</option>
+  <option value="n1">N1 Casino</option><option value="stargames">Stargames</option>
+  <option value="generisch">Generischer Slot</option></select>
+ <label>Einsatz/Spin (€)</label><input id="seinsatz" type="number" value="1" step="0.1">
+ <button class="go" onclick="sancho()">∆ Signal jetzt neu lesen</button>
+ <div class="bars" id="sbars" style="margin-top:16px"></div>
+ <div id="smeta" class="tag" style="margin-top:10px"></div>
+ <div class="panel" id="spanel"></div>
+
+ <div class="foot">Sancho ist ein eigenständiges ∆1-Lore-Modul (Atmosphäre + Selbst-Entlarvung),
+  losgelöst aus dem Haupt-Tab-Fluss von CODEX 2050 — mehr Raum, gleiche Ehrlichkeit.
+  Python-Spiegel: <code>python -m sancho "tipico games" 2</code> · Bot: <code>/sancho betano</code>.
+  Hilfe bei Glücksspielsucht: <a href="https://www.bzga.de" target="_blank" rel="noopener">bzga.de</a> ·
+  0800 1 37 27 00 (kostenlos, anonym).</div>
+</div>
+<script>
+function num(v){v=(''+v).replace('%','').replace('€','').replace(',','.').trim();const n=parseFloat(v);return isNaN(n)?0:n;}
+function einzVal(id){return document.getElementById(id).value;}
+
+// ---------- SANCHO (eigenständig — Logik identisch zur bisherigen In-App-Version) ----------
+const RTP={tipico:.955,betano:.955,n1:.96,stargames:.955,generisch:.95};
+const SMONO=[
+ "Du willst den Rhythmus. Ich zeige ihn dir – und dann zeige ich dir, dass er luegt.",
+ "Der Wuerfel hat kein Gedaechtnis. Der naechste Spin kennt den letzten nicht.",
+ "Wenn du mir glaubst, verlierst du. Wenn du der Mathematik glaubst, behaeltst du dein Geld.",
+ "Ich bin die Stimme im Rauschen. Nicht das Muster im Rauschen — es gibt keins."
+];
+function h32(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+function sancho(){
+  const a=document.getElementById('sanb').value, e=num(einzVal('seinsatz'))||1;
+  const now=new Date(), day=now.toISOString().slice(0,10), hour=now.getHours();
+  // Seed inkl. Minute -> das "Signal" reshuffelt sichtbar mit der Zeit.
+  // Genau das ist der Beweis: es ist Rauschen, kein Muster.
+  const seed=h32(a+'|'+day+'|'+now.getHours()+':'+now.getMinutes()+'|delta1'); const vals=[];let best=0,bv=-1;
+  for(let hh=0;hh<24;hh++){const b=h32(seed+':'+hh)/4294967295;
+    const wave=.5+.5*Math.sin(hh/24*2*Math.PI+(seed%7)); const v=Math.round((100*(.6*b+.4*wave))*10)/10;
+    vals.push(v);if(v>bv){bv=v;best=hh}}
+  const bars=document.getElementById('sbars');bars.innerHTML='';
+  vals.forEach((v,hh)=>{const d=document.createElement('div');d.className='bar'+(hh===hour?' now':'');
+    d.style.height=Math.max(4,v)+'%';bars.appendChild(d);});
+  const he=1-RTP[a], loss=(100*e*he).toFixed(2);
+  document.getElementById('smeta').innerHTML='Jetzt '+hour+' Uhr · Index '+vals[hour]
+    +' · Schein-Fenster '+best+' Uhr <span class="stop">(bedeutungslos)</span>';
+  document.getElementById('spanel').innerHTML=
+    '<span class="tag">SANCHO ZEIGT SEIN WAHRES ICH</span>'
+    +SMONO.map(x=>'<div class="l">» '+x+'</div>').join('')
+    +'<div class="truth" style="margin-top:8px">• RNG: jeder Spin unabhaengig. Vorhersagewert 0.</div>'
+    +'<div class="truth">• RTP '+(RTP[a]*100).toFixed(1)+'% → Hausvorteil '+(he*100).toFixed(1)+'%.</div>'
+    +'<div class="truth">• Erwarteter Verlust/100 Spins × '+e.toFixed(2)+' = '+loss+' €.</div>'
+    +'<div class="truth">• Nächster Spin: NICHT VORHERSAGBAR · Nächster Gewinn: NICHT VORHERSAGBAR.</div>'
+    +'<div class="stop" style="margin-top:8px">🛑 KEIN SPIELBEFEHL. Es gibt kein Gewinnfenster. Mathematisch auswertbar, aber nicht vorhersagbar.</div>';
+}
+function sanchoLive(){
+  const c=document.getElementById('livclock');
+  if(c)c.textContent=new Date().toLocaleString('de-DE');
+  sancho();
+}
+setInterval(()=>{const c=document.getElementById('livclock');if(c)c.textContent=new Date().toLocaleString('de-DE');},1000);
+setInterval(sanchoLive,15000);  // alle 15s neu lesen -> sichtbar "live"
+sancho();
+
+// ---------- Boot (identisch zur Haupt-App, eigener Modul-Hinweis) ----------
+(function(){var lines=["∆1 // MODUL GELADEN: SANCHOS SPIELPLATZ","EIGENSTÄNDIG · LOSGELÖST VOM HAUPT-TAB-FLUSS",
+ "REGEL: verfuegbar != vorhersagbar · rein mathematisch, neutral ... [OK]",
+ "Nur Zeit-Rauschen. Keine Vorhersage.",""];
+ var boot=document.getElementById('boot'),t=document.getElementById('boott'),i=0,j=0;
+ function done(){boot.style.opacity=0;setTimeout(()=>boot.remove(),650);
+  document.removeEventListener('click',done);}
+ document.addEventListener('click',done);
+ (function tick(){if(i>=lines.length){setTimeout(done,400);return;}
+  if(j<=lines[i].length){t.textContent=lines.slice(0,i).join("\n")+(i?"\n":"")+lines[i].slice(0,j);j++;setTimeout(tick,12);}
+  else{i++;j=0;setTimeout(tick,110);}})();
+})();
+</script></body></html>
