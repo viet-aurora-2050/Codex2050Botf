@@ -48,9 +48,10 @@
 
  <div id="out"></div>
 
- <div class="foot">Prioritätskette der Datenquelle: eigene öffentliche URL → lokaler SPIELE-Datensatz
-  (falls in der Hauptapp gepflegt) → kuratierter öffentlicher Fallback. Keine versteckten Requests,
-  keine Login-Daten, keine geschützten APIs. Kein Rat zum Glücksspiel.</div>
+ <div class="foot">Prioritätskette der Datenquelle: eigene öffentliche URL → <b>first-party <code>games.json</code></b>
+  (täglicher öffentlicher Katalog, gleiche Origin) → lokaler SPIELE-Datensatz → kuratierter Fallback.
+  Standardmäßig laufen die realen Katalog-Titel (inkl. RTP) automatisch in die Rätsel-Kette. Keine
+  versteckten Requests, keine Login-Daten, keine geschützten APIs. Kein Rat zum Glücksspiel.</div>
 </div>
 
 <script>
@@ -137,21 +138,36 @@ var Akt4GameRiddleDecoder = (function(){
       :"schwach – Einzeltreffer, keine unabhängige Bestätigung";
     return {treffer:treffer,total:total,quote:quote,beweiskraft:bk};}
 
-  // --- Game-Quelle laden (Priorität: URL → SPIELE-localStorage → Fallback) ---
+  // Rohdaten (Array oder {spiele|games:[…]}) -> interne Game-Objekte (inkl. RTP).
+  function mapGames(arr,source){
+    return (arr||[]).map(function(x){return {title:(''+(x.title||x.name||"")).trim(),
+      provider:(x.provider||x.anbieter||""),
+      rtp:(typeof x.rtp==='number'?x.rtp:null),
+      source:source,verified:!!(x.title||x.name)};})
+      .filter(function(g){return g.title;});
+  }
+  // --- Game-Quelle laden (Priorität: eigene URL → first-party games.json → SPIELE-localStorage → Fallback) ---
   function verifyGameSource(url){
     return new Promise(function(resolve){
       var now=new Date().toLocaleString('de-DE');
       if(url && /^https:\/\//i.test(url)){
         fetch(url,{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){
-          var arr=Array.isArray(j)?j:(j.games||[]);
-          var games=arr.map(function(x){return {title:(x.title||x.name||"").trim(),
-            provider:x.provider||"",source:"externe oeffentliche Primaerquelle",verified:!!(x.title||x.name)};})
-            .filter(function(g){return g.title;});
+          var games=mapGames(Array.isArray(j)?j:(j.spiele||j.games||[]),"externe oeffentliche Primaerquelle");
           if(games.length)resolve({games:games,source:"externe oeffentliche Primaerquelle: "+url,fetchedAt:now,quality:"B (extern, öffentlich)"});
-          else resolve(localOrFallback(now));
-        }).catch(function(){resolve(localOrFallback(now,"externe Quelle nicht erreichbar"));});
-      } else { resolve(localOrFallback(now)); }
+          else firstParty(now).then(resolve);
+        }).catch(function(){firstParty(now,"externe Quelle nicht erreichbar").then(resolve);});
+      } else { firstParty(now).then(resolve); }
     });
+  }
+  // First-party: der täglich erzeugte öffentliche Katalog (docs/games.json, gleiche Origin).
+  function firstParty(now,note){
+    return fetch('games.json?_='+Date.now(),{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){
+      var games=mapGames(Array.isArray(j)?j:(j.spiele||j.games||[]),"first-party games.json");
+      if(games.length)return {games:games,
+        source:"first-party games.json (täglicher Katalog"+(j.stand?", Stand "+j.stand:"")+")"+(note?" · "+note:""),
+        fetchedAt:now,quality:"A (first-party, öffentlicher Katalog)"};
+      return localOrFallback(now,note);
+    }).catch(function(){return localOrFallback(now,note||"games.json nicht erreichbar");});
   }
   function localOrFallback(now,note){
     // Read-only Zugriff auf den SPIELE-Datensatz der Hauptapp (gleiche Origin) — verändert ihn nicht.
@@ -267,6 +283,7 @@ var Akt4GameRiddleDecoder = (function(){
         c.matches.forEach(function(g){
           h+='<div class="l" style="font-size:12px">✓ '+esc(g.title)
             +(g.provider?' <span class="tag">'+esc(g.provider)+'</span>':'')
+            +(typeof g.rtp==='number'?' <span class="tag">RTP '+(g.rtp*100).toFixed(2)+'%</span>':'')
             +'<br><span class="tag">Reason: Titel beginnt mit '+(c.letter||"?")+' · Source: '+esc(g.source)+'</span></div>';});
         if(c.matches.length>1)h+='<div class="warn" style="font-size:12px">Mehrere Kandidaten — keine Auto-Auswahl, kein „definitiv richtig".</div>';
       } else { h+='<div class="stop" style="font-size:12px">NO VERIFIED MATCH — kein Titel erfunden.</div>'; }
