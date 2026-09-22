@@ -1,11 +1,20 @@
 {
-  "_hinweis": "Automatisch taeglich erzeugt aus dem oeffentlichen Basissatz + optionalen oeffentlichen JSON-Feeds (GAMES_SOURCES). Oeffentlich veroeffentlichte Standard-RTPs - variieren je Version/Betreiber, immer gegen die offizielle Spielinfo pruefen. Keine Anbieter-API, keine Vorhersage.",
-  "stand": "2026-09-19",
-  "generiert": "2026-09-19T04:16:23Z",
+  "schema_version": "3.0",
+  "_hinweis": "Oeffentlicher Spiele-Katalog (generierter Snapshot). RTP ist eine langfristige theoretische Kennzahl und variiert je Operator/Jurisdiktion/Version. Quelle je Datensatz erhalten. Keine Anbieter-API, keine Vorhersage. `reported_recent_win` ist eine von der Quelle gemeldete Beobachtung – kein Beweis, keine Next-Spin-Aussage.",
+  "stand": "2026-09-22",
+  "generiert": "2026-09-22T03:40:30Z",
   "quellen": [
     "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
   ],
+  "source_status": [],
   "anzahl": 24,
+  "statistik": {
+    "anbieter": 9,
+    "rtp_bekannt": 24,
+    "rtp_min": 0.951,
+    "rtp_max": 0.98,
+    "rtp_schnitt": 0.9629
+  },
   "spiele": [
     {
       "name": "Holla die Waldfee",
@@ -15,7 +24,9 @@
       "max": 2000,
       "minb": 0.1,
       "maxb": 20,
-      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)",
+      "source_type": "seed",
+      "status": "verified-seed"
     },
     {
       "name": "Bonanza",
@@ -25,7 +36,9 @@
       "max": 12000,
       "minb": 0.2,
       "maxb": 20,
-      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)",
+      "source_type": "seed",
+      "status": "verified-seed"
     },
     {
       "name": "Extra Chilli",
@@ -35,7 +48,9 @@
       "max": 20000,
       "minb": 0.1,
       "maxb": 40,
-      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)",
+      "source_type": "seed",
+      "status": "verified-seed"
     },
     {
       "name": "El Torero",
@@ -45,7 +60,9 @@
       "max": 5000,
       "minb": 0.1,
       "maxb": 20,
-      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)",
+      "source_type": "seed",
+      "status": "verified-seed"
     },
     {
       "name": "Eye of Horus",
@@ -55,7 +72,9 @@
       "max": 5000,
       "minb": 0.1,
       "maxb": 20,
-      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)",
+      "source_type": "seed",
+      "status": "verified-seed"
     },
     {
       "name": "Blood Suckers",
@@ -65,7 +84,9 @@
       "max": 1000,
       "minb": 0.25,
       "maxb": 50,
-      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)",
+      "source_type": "seed",
+      "status": "verified-seed"
     },
     {
       "name": "Dead or Alive 2",
@@ -75,7 +96,9 @@
       "max": 100000,
       "minb": 0.09,
       "maxb": 9,
-      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)",
+      "source_type": "seed",
+      "status": "verified-seed"
     },
     {
       "name": "Gonzo's Quest",
@@ -85,7 +108,9 @@
       "max": 2500,
       "minb": 0.2,
       "maxb": 50,
-      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)",
+      "source_type": "seed",
+      "status": "verified-seed"
     },
     {
       "name": "Starburst",
@@ -95,7 +120,9 @@
       "max": 500,
       "minb": 0.1,
       "maxb": 100,
-      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)",
+      "source_type": "seed",
+      "status": "verified-seed"
     },
     {
       "name": "Book of Ra Deluxe",
@@ -105,7 +132,9 @@
       "max": 5000,
       "minb": 0.04,
       "maxb": 100,
-      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)",
+      "source_type": "seed",
+      "status": "verified-seed"
     },
     {
       "name": "Lucky Lady's Charm Deluxe",
@@ -115,7 +144,9 @@
       "max": 4500,
       "minb": 0.04,
       "maxb": 100,
-      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)",
+      "source_type": "seed",
+      "status": "verified-seed"
     },
     {
       "name": "Book of Dead",
@@ -125,7 +156,9 @@
       "max": 5000,
       "minb": 0.1,
       "maxb": 100,
-      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)",
+      "source_type": "seed",
+      "status": "verified-seed"
     },
     {
       "name": "Fire Joker",
@@ -135,7 +168,9 @@
       "max": 800,
       "minb": 0.05,
       "maxb": 100,
-      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)",
+      "source_type": "seed",
+      "status": "verified-seed"
     },
     {
       "name": "Legacy of Dead",
@@ -145,7 +180,9 @@
       "max": 5000,
       "minb": 0.1,
       "maxb": 100,
-      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)",
+      "source_type": "seed",
+      "status": "verified-seed"
     },
     {
       "name": "Reactoonz",
@@ -155,7 +192,9 @@
       "max": 4570,
       "minb": 0.2,
       "maxb": 100,
-      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)",
+      "source_type": "seed",
+      "status": "verified-seed"
     },
     {
       "name": "Rise of Olympus",
@@ -165,7 +204,9 @@
       "max": 5000,
       "minb": 0.2,
       "maxb": 100,
-      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)",
+      "source_type": "seed",
+      "status": "verified-seed"
     },
     {
       "name": "Big Bass Bonanza",
@@ -175,7 +216,9 @@
       "max": 2100,
       "minb": 0.1,
       "maxb": 250,
-      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)",
+      "source_type": "seed",
+      "status": "verified-seed"
     },
     {
       "name": "Gates of Olympus",
@@ -185,7 +228,9 @@
       "max": 5000,
       "minb": 0.2,
       "maxb": 100,
-      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)",
+      "source_type": "seed",
+      "status": "verified-seed"
     },
     {
       "name": "Sugar Rush",
@@ -195,7 +240,9 @@
       "max": 5000,
       "minb": 0.2,
       "maxb": 100,
-      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)",
+      "source_type": "seed",
+      "status": "verified-seed"
     },
     {
       "name": "Sweet Bonanza",
@@ -205,7 +252,9 @@
       "max": 21100,
       "minb": 0.2,
       "maxb": 100,
-      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)",
+      "source_type": "seed",
+      "status": "verified-seed"
     },
     {
       "name": "The Dog House",
@@ -215,7 +264,9 @@
       "max": 6750,
       "minb": 0.2,
       "maxb": 100,
-      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)",
+      "source_type": "seed",
+      "status": "verified-seed"
     },
     {
       "name": "Wolf Gold",
@@ -225,7 +276,9 @@
       "max": 2500,
       "minb": 0.25,
       "maxb": 125,
-      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)",
+      "source_type": "seed",
+      "status": "verified-seed"
     },
     {
       "name": "Money Train 2",
@@ -235,7 +288,9 @@
       "max": 50000,
       "minb": 0.1,
       "maxb": 20,
-      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)",
+      "source_type": "seed",
+      "status": "verified-seed"
     },
     {
       "name": "Money Train 3",
@@ -245,7 +300,9 @@
       "max": 100000,
       "minb": 0.1,
       "maxb": 20,
-      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)"
+      "quelle": "kuratierter oeffentlicher Basissatz (veroeffentlichte Studio-RTPs)",
+      "source_type": "seed",
+      "status": "verified-seed"
     }
   ]
 }

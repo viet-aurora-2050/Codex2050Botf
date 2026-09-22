@@ -122,27 +122,50 @@ Monte-Carlo-Risiko). Die Matrix ist nach wirtschaftlichem Nachteil sortiert.
 Die früheren separaten Tabs **RECHNER** und **ANALYSE** wurden entfernt – ihre
 Berechnung steckt vollständig im Tab **SPIELE**.
 
-### Tägliche Aktualisierung aus öffentlichen Quellen (v2)
+### Öffentlicher Spiele-Katalog (v3, Aggregator)
 
-`docs/games.json` ist **nicht** mehr eine handgepflegte Fixliste, sondern wird
-vom Modul `datenbank/` erzeugt und per GitHub-Action
-(`.github/workflows/update-games.yml`) **täglich** neu gebaut:
+`docs/games.json` ist ein **generierter Snapshot/Cache** eines öffentlichen
+Katalogs. Das Modul `datenbank/` bildet eine skalierbare Pipeline
+(→ [`datenbank/README.md`](datenbank/README.md)):
 
-```bash
-python -m datenbank            # schreibt docs/games.json (Stand + generiert + Quellen)
-python -m datenbank --dry-run  # nur Vorschau
+```
+öffentliche Quellen → Source-Adapter → Validation → Normalization
+→ Deduplication → Katalog → Freshness/Source-Health → docs/games.json → Frontend
 ```
 
-- **Basissatz** = öffentlich veröffentlichte Studio-RTPs (garantiert vorhanden).
-- **Zusätzliche öffentliche JSON-Feeds** lassen sich über die Repo-Variable
-  `GAMES_SOURCES` (kommagetrennte URLs) einhängen. Der Job läuft serverseitig,
-  daher keine CORS-Schranke; Feeds werden validiert (RTP-Plausibilität 0.80–1.00,
-  Pflichtfelder), normalisiert (Prozent/Bruch, Feld-Aliase) und dedupliziert.
-- Jeder Eintrag trägt seine **Quelle**; die App zeigt **Stand/Alter** an und warnt,
-  wenn die Datei zu alt ist. Der Workflow committet nur bei echter Inhaltsänderung.
+```bash
+python -m datenbank                       # schreibt docs/games.json (Schema 3.0)
+python -m datenbank --dry-run             # nur Vorschau
+python -m datenbank --alternativen "Name" # ähnliche Spiele (Metadaten)
+```
+
+- **Basissatz** = öffentlich veröffentlichte Studio-RTPs (garantierter Fallback).
+- **Mehrere öffentliche JSON-Feeds** via Repo-Variable `GAMES_SOURCES`
+  (kommagetrennte URLs; `GAMES_TIMEOUT`, `GAMES_MAX_ITEMS` als Regler). Der Job
+  läuft serverseitig → keine CORS-Schranke. Feeds werden **validiert**
+  (RTP-Plausibilität 0.80–1.00; RTP als `0.965`/`96.5`/`"96.5%"`), **normalisiert**
+  (Feld-Aliase `title/provider/volatility/max_win/…`) und **dedupliziert**
+  (`game_id`, sonst Anbieter+Name+`variant` — RTP-Versionen bleiben getrennt).
+- **Source-Health:** jede Quelle bekommt in `source_status` einen Zustand
+  (`online`/`offline`, `fetched_at`, `records_received`, `error`). Ein Ausfall
+  zerstört den Katalog **nicht** — der Basissatz bleibt. App und MOBILE-Tab zeigen
+  die Quellen-Health.
+- **Provenance:** jeder externe Datensatz behält `quelle`, `source_type`,
+  `status`, `last_seen` (und `source_url`/`variant`/`game_id`, wenn geliefert).
+- **`reported_recent_win`** (falls eine Quelle öffentlich gemeldete Wins liefert)
+  ist als **Beobachtung** gekennzeichnet — kein Beweis, **keine** Next-Spin-Aussage.
+- **Ähnliche Spiele** (Phase 11): transparente Metadaten-Suche (Provider, RTP-Bereich,
+  Vola, Einsätze) als On-Demand-Abfrage (`datenbank/alternativen.py` + im Frontend),
+  **nicht** als vorberechneter N×N-Block — so skaliert der Katalog auf tausende Spiele.
+- **Workflow:** testet zuerst, validiert das JSON, committet **nur** bei echter
+  Datenänderung (Zeitstempel/Source-Health allein → kein Commit),
+  Least-Privilege (`contents: write`), Timeout.
 
 Ehrlich bleibt: **keine Anbieter-API, kein Live-Casino-Feed, keine Vorhersage.**
-RTPs variieren je Version/Betreiber – immer gegen die offizielle Spielinfo prüfen.
+RTP ist eine langfristige theoretische Kennzahl und variiert je
+Operator/Jurisdiktion/Version – immer gegen die offizielle Spielinfo prüfen.
+Fehlt eine vertrauenswürdige öffentliche Quelle, wird **keine erfunden** — nur
+das Adapter-Interface dokumentiert (`prompts/AI_SOURCE_EXPANSION_PROMPT.md`).
 
 ## ∆1 // VHS + Boot (Effekt-Layer)
 
@@ -332,7 +355,7 @@ python -m unittest discover -s tests -v
 analyzer/     Rechen-Engine (bonus.py), Parser, System-Prompt, CLI
 sancho/       ∆1-Lore-Modul „Sanchos Spielplatz" (Rhythmus-Mythos + Wahrheit)
 aktvier/      ∆1-AKT 4 „Das Signal" – Finale + Ebene-2-Rätsel; zeit.py = stündlich rotierender ZEIT-CODE
-datenbank/    Tägliche Erzeugung von docs/games.json (Basissatz + öffentliche Feeds, validiert)
+datenbank/    Öffentlicher Spiele-Katalog v3: Adapter/Validation/Dedup/Source-Health + alternativen.py (siehe datenbank/README.md)
 risiko/       Personal-Risiko-Analyse (Monte-Carlo: EV, Risk of Ruin) aus öffentlichen Fakten
 melde/        Melde-Assistent (Mathematik + Beschwerde/Anzeige an die GGL, für jeden Anbieter)
 gewinner/     Dokumentierte Advantage-Play-Fälle (mit Mathematik gewonnen, dann verbannt)

@@ -392,6 +392,9 @@ function mobile(){
         'Abruf: '+(res.ok?'HTTP '+res.status+' OK':'HTTP '+res.status)+' · '+res.platLat+' ms',
         'Stand: '+(DBSTAND||'—')+(DBGEN?' · generiert '+DBGEN+alterTxt:''),
         'Quellen: '+(DBQUELLEN.length?DBQUELLEN.join(', '):'—'),
+        (DBSCHEMA?'Schema: '+DBSCHEMA:null),
+        (DBSTATUS.length?'Externe Quellen-Health: '+DBSTATUS.filter(s=>s.status==='online').length+'/'+DBSTATUS.length+' online':'Externe Feeds: keine konfiguriert (nur Basissatz)'),
+        ...DBSTATUS.map(s=>'  '+(s.status==='online'?'✓ online':'⚠ '+(s.status||'offline'))+' · '+(s.records_received||0)+' Datensätze · '+(s.url||'')),
         'Spiele geladen: '+GAMESDB.length+' · täglich automatisch aktualisiert',
         'Kein Anbieter-API-Zugriff · keine Casino-Server','',
         '[3] DARAUS RESULTIERENDE SPIELE (nach Hausvorteil)',
@@ -422,7 +425,7 @@ function parseDist(s){const out=[];(s||'').split(/[,;\n]/).forEach(t=>{const m=t
 function esc(s){return (''+s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 // SPIELE = vom Nutzer analysierte Spiele (speist MULTIPLIER). Startet leer.
 let SPIELE=[];
-let GAMESDB=[], DBQUELLE='', DBSTAND='', DBGEN='', DBQUELLEN=[];
+let GAMESDB=[], DBQUELLE='', DBSTAND='', DBGEN='', DBQUELLEN=[], DBSTATUS=[], DBSCHEMA='';
 function db_setStatus(t){var s=document.getElementById('db_status');if(s)s.innerHTML=t;}
 // Tage seit einem ISO-Datum (für Frische-Warnung).
 function db_alterTage(iso){if(!iso)return null;var d=new Date(iso);if(isNaN(d))return null;return Math.floor((Date.now()-d.getTime())/86400000);}
@@ -431,17 +434,18 @@ function db_load(){
   db_setStatus('… lade öffentliche Datenbank (games.json) …');
   fetch('games.json?_='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{
     GAMESDB=(j.spiele||[]).filter(g=>g.name&&g.anbieter);
-    DBSTAND=j.stand||''; DBGEN=j.generiert||'';
+    DBSTAND=j.stand||''; DBGEN=j.generiert||''; DBSCHEMA=j.schema_version||'';
+    DBSTATUS=Array.isArray(j.source_status)?j.source_status:[];
     DBQUELLEN=(j.quellen&&j.quellen.length)?j.quellen:['öffentlicher Basissatz'];
-    DBQUELLE='games.json (first-party) · Quellen: '+DBQUELLEN.join(', ');
+    DBQUELLE='games.json (first-party'+(DBSCHEMA?' · Schema '+DBSCHEMA:'')+') · Quellen: '+DBQUELLEN.join(', ');
     db_initProviders();
   }).catch(()=>{
     GAMESDB=[
-      {name:'Gates of Olympus',anbieter:'Pragmatic Play',rtp:0.965,vola:'hoch',max:5000,quelle:'eingebetteter Fallback'},
-      {name:'Book of Dead',anbieter:"Play'n GO",rtp:0.9621,vola:'hoch',max:5000,quelle:'eingebetteter Fallback'},
-      {name:'Starburst',anbieter:'NetEnt',rtp:0.9609,vola:'niedrig',max:500,quelle:'eingebetteter Fallback'}
+      {name:'Gates of Olympus',anbieter:'Pragmatic Play',rtp:0.965,vola:'hoch',max:5000,quelle:'eingebetteter Fallback',source_type:'seed'},
+      {name:'Book of Dead',anbieter:"Play'n GO",rtp:0.9621,vola:'hoch',max:5000,quelle:'eingebetteter Fallback',source_type:'seed'},
+      {name:'Starburst',anbieter:'NetEnt',rtp:0.9609,vola:'niedrig',max:500,quelle:'eingebetteter Fallback',source_type:'seed'}
     ];
-    DBQUELLE='eingebetteter Fallback (games.json nicht erreichbar)'; DBSTAND=''; DBGEN=''; DBQUELLEN=['eingebetteter Fallback'];
+    DBQUELLE='eingebetteter Fallback (games.json nicht erreichbar)'; DBSTAND=''; DBGEN=''; DBQUELLEN=['eingebetteter Fallback']; DBSTATUS=[]; DBSCHEMA='';
     db_initProviders();
   });
 }
@@ -453,7 +457,14 @@ function db_initProviders(){
     if(alter!=null) frische+=(alter<=1?' (heute aktualisiert)':(alter<=3?' (vor '+alter+' Tagen)':
       ' · <span class="stop">⚠ '+alter+' Tage alt – täglicher Job prüfen</span>'));
   }
-  db_setStatus('Quelle: '+DBQUELLE+frische+' · '+GAMESDB.length+' Spiele · täglich automatisch aktualisiert');
+  var sh='';
+  if(DBSTATUS.length){
+    var on=DBSTATUS.filter(s=>s.status==='online').length;
+    sh=' · <b>Quellen-Health:</b> '+on+'/'+DBSTATUS.length+' online'
+      +DBSTATUS.map(s=>' · '+(s.status==='online'?'✓':'⚠')+' '+esc((s.url||'').replace(/^https?:\/\//,'').slice(0,40))
+        +' ('+(s.records_received||0)+')').join('');
+  }
+  db_setStatus('Quelle: '+DBQUELLE+frische+' · '+GAMESDB.length+' Spiele · täglich automatisch aktualisiert'+sh);
   var provs=[...new Set(GAMESDB.map(g=>g.anbieter))].sort();
   document.getElementById('db_anb').innerHTML=provs.map(p=>'<option value="'+esc(p)+'">'+esc(p)+'</option>').join('');
   db_fillGames();
@@ -468,32 +479,63 @@ function db_current(){
   var p=document.getElementById('db_anb').value, n=document.getElementById('db_spiel').value;
   return GAMESDB.find(g=>g.anbieter===p&&g.name===n)||null;
 }
+// Ähnlichkeit über öffentliche Metadaten (spiegelt datenbank/alternativen.py).
+// Reine Metadaten-Suche — KEINE Aussage, welches Spiel gewinnt.
+function db_aehnlich(a,b){
+  var s=0;
+  if(a.anbieter&&a.anbieter===b.anbieter)s+=2;
+  if(a.vola&&a.vola===b.vola)s+=3;
+  if(typeof a.rtp==='number'&&typeof b.rtp==='number')s+=Math.max(0,2-Math.abs(a.rtp-b.rtp)*100);
+  ['minb','maxb','max'].forEach(function(f){
+    if(typeof a[f]==='number'&&typeof b[f]==='number'){var hi=Math.max(Math.abs(a[f]),Math.abs(b[f]),1);s+=Math.max(0,1-Math.abs(a[f]-b[f])/hi);}});
+  return s;
+}
+function db_alternativen(g,limit){
+  return GAMESDB.filter(x=>!(x.name===g.name&&x.anbieter===g.anbieter))
+    .map(x=>({g:x,s:db_aehnlich(g,x)})).sort((p,q)=>q.s-p.s||(''+p.g.name).localeCompare(q.g.name))
+    .slice(0,limit||4).map(o=>o.g);
+}
 function db_pick(){
   var g=db_current(); var c=document.getElementById('db_card');
   if(!g){c.textContent='Anbieter und Spiel wählen …';return;}
-  var he=1-g.rtp;
+  var hasRtp=(typeof g.rtp==='number'), he=hasRtp?1-g.rtp:null;
+  var prov=[]; if(g.source_type)prov.push('Typ '+esc(g.source_type));
+  if(g.status)prov.push('Status '+esc(g.status)); if(g.variant)prov.push('Variante '+esc(g.variant));
+  if(g.last_seen)prov.push('zuletzt gesehen '+esc((''+g.last_seen).slice(0,10)));
+  var alt=db_alternativen(g,4);
   c.innerHTML='<div class="tag">AUTOMATISCH ÜBERNOMMEN</div>'
    +'<div class="l"><b>'+esc(g.name)+'</b> · '+esc(g.anbieter)+'</div>'
-   +'<div class="l">RTP: '+(g.rtp*100).toFixed(2)+'% · Hausvorteil: <b>'+(he*100).toFixed(2)+'%</b></div>'
-   +'<div class="l">Erwarteter Verlust je 100 € Umsatz: <b>'+(he*100).toFixed(2)+' €</b></div>'
+   +(hasRtp
+      ?'<div class="l">RTP: '+(g.rtp*100).toFixed(2)+'% · Hausvorteil: <b>'+(he*100).toFixed(2)+'%</b></div>'
+        +'<div class="l">Erwarteter Verlust je 100 € Umsatz: <b>'+(he*100).toFixed(2)+' €</b></div>'
+      :'<div class="l"><span class="stop">RTP nicht verfügbar</span> — Quelle liefert keinen RTP. Keine Verlust-/Risiko-Rechnung möglich.</div>')
    +'<div class="l">Volatilität: '+(g.vola||'—')+' · Max Win: '+(g.max||'—')+'x'
    +(g.minb!=null?' · Einsatz '+g.minb+'–'+g.maxb+' €':'')+'</div>'
-   +'<div class="truth" style="margin-top:6px">Quelle: '+esc(g.quelle||'öffentlicher Basissatz')+'</div>'
+   +(g.reported_recent_win!=null
+      ?'<div class="truth" style="margin-top:6px">Gemeldeter Recent-Win (Quelle): '+esc(''+g.reported_recent_win)
+        +(g.reported_recent_win_at?' · '+esc(''+g.reported_recent_win_at):'')
+        +' — <b>Beobachtung, kein Beweis, keine Vorhersage.</b></div>':'')
+   +'<div class="truth" style="margin-top:6px">Quelle: '+esc(g.quelle||'öffentlicher Basissatz')
+     +(prov.length?' · '+prov.join(' · '):'')+'</div>'
+   +(alt.length?'<div class="tag" style="margin-top:6px">ÄHNLICHE SPIELE (Metadaten, keine Vorhersage)</div>'
+     +alt.map(function(a){return '<div class="l" style="font-size:12px">• '+esc(a.name)+' · '+esc(a.anbieter)
+        +(typeof a.rtp==='number'?' · RTP '+(a.rtp*100).toFixed(2)+'%':'')+' · '+(a.vola||'—')+'</div>';}).join(''):'')
    +'<div class="tag" style="margin-top:6px">Öffentlicher Standard-RTP — variiert je Version/Betreiber. Gegen offizielle Spielinfo prüfen.</div>';
 }
 function db_matrix(p,list){
   var h='<tr><th>Spiel</th><th>RTP</th><th>Hausvorteil</th><th>Verlust/100€</th><th>Vola</th><th>Max Win</th></tr>';
   // Sortiert nach niedrigstem Hausvorteil (wirtschaftlich günstigste zuerst).
   list.slice().sort((a,b)=>(b.rtp||0)-(a.rtp||0)).forEach(g=>{
-    var he=1-(g.rtp||0);
-    h+='<tr><td>'+esc(g.name)+'</td><td>'+((g.rtp||0)*100).toFixed(2)+'%</td>'
-      +'<td>'+(he*100).toFixed(2)+'%</td><td>'+(he*100).toFixed(2)+' €</td>'
+    var hasR=(typeof g.rtp==='number'), he=hasR?1-g.rtp:null;
+    h+='<tr><td>'+esc(g.name)+'</td><td>'+(hasR?(g.rtp*100).toFixed(2)+'%':'—')+'</td>'
+      +'<td>'+(hasR?(he*100).toFixed(2)+'%':'—')+'</td><td>'+(hasR?(he*100).toFixed(2)+' €':'—')+'</td>'
       +'<td>'+(g.vola||'—')+'</td><td>'+(g.max||0)+'x</td></tr>';});
   document.getElementById('matrix').innerHTML=h;
 }
 // Kombinierte Analyse: struktureller Verlust (Hausvorteil) + Monte-Carlo.
 function db_analyse(){
   var g=db_current(); if(!g){document.getElementById('db_out').textContent='Bitte zuerst ein Spiel wählen.';return;}
+  if(typeof g.rtp!=='number'){document.getElementById('db_out').innerHTML='<span class="stop">Für „'+esc(g.name)+'" liefert die Quelle keinen RTP — keine seriöse Verlust-/Monte-Carlo-Rechnung möglich. Wähle ein Spiel mit veröffentlichtem RTP.</span>';return;}
   var BR=num(einzVal('db_budget')), B=num(einzVal('db_einsatz'))||1, K=Math.max(1,Math.round(num(einzVal('db_spins'))||1));
   var runs=Math.min(20000,Math.max(200,Math.round(num(einzVal('db_runs'))||3000)));
   var rtp=g.rtp, he=1-rtp, h=HIT[g.vola]||.18, mean=rtp/h;
