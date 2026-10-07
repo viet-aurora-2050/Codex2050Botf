@@ -32,6 +32,7 @@ ANBIETER_RTP: Dict[str, float] = {
     "betano": 0.955,
     "n1": 0.960,
     "stargames": 0.955,
+    "jackpotpirat": 0.955,   # Platzhalter (generisch), KEIN echter Betreiberwert
     "generisch": 0.950,
 }
 

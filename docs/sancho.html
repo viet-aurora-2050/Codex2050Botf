@@ -56,12 +56,14 @@
  <select id="sanb">
   <option value="tipico">Tipico Games</option><option value="betano">Betano</option>
   <option value="n1">N1 Casino</option><option value="stargames">Stargames</option>
+  <option value="jackpotpirat">Jackpotpirat</option>
   <option value="generisch">Generischer Slot</option></select>
  <label>Einsatz/Spin (€)</label><input id="seinsatz" type="number" value="1" step="0.1">
  <button class="go" onclick="sancho()">∆ Signal jetzt neu lesen</button>
  <div class="bars" id="sbars" style="margin-top:16px"></div>
  <div id="smeta" class="tag" style="margin-top:10px"></div>
  <div class="panel" id="spanel"></div>
+ <div class="lore" id="anbnote"></div>
 
  <div class="foot">Sancho ist ein eigenständiges ∆1-Lore-Modul (Atmosphäre + Selbst-Entlarvung),
   losgelöst aus dem Haupt-Tab-Fluss von CODEX 2050 — mehr Raum, gleiche Ehrlichkeit.
@@ -74,7 +76,7 @@ function num(v){v=(''+v).replace('%','').replace('€','').replace(',','.').trim
 function einzVal(id){return document.getElementById(id).value;}
 
 // ---------- SANCHO (eigenständig — Logik identisch zur bisherigen In-App-Version) ----------
-const RTP={tipico:.955,betano:.955,n1:.96,stargames:.955,generisch:.95};
+const RTP={tipico:.955,betano:.955,n1:.96,stargames:.955,jackpotpirat:.955,generisch:.95};
 const SMONO=[
  "Du willst den Rhythmus. Ich zeige ihn dir – und dann zeige ich dir, dass er luegt.",
  "Der Wuerfel hat kein Gedaechtnis. Der naechste Spin kennt den letzten nicht.",
@@ -95,6 +97,12 @@ function sancho(){
   vals.forEach((v,hh)=>{const d=document.createElement('div');d.className='bar'+(hh===hour?' now':'');
     d.style.height=Math.max(4,v)+'%';bars.appendChild(d);});
   const he=1-RTP[a], loss=(100*e*he).toFixed(2);
+  const nm=document.getElementById('sanb').selectedOptions[0].textContent;
+  document.getElementById('anbnote').innerHTML='<b>Anbieter-Check · '+nm+'</b><br>'
+    +'• Der RTP hier ist ein <b>Platzhalter</b> (generische Annahme), kein veröffentlichter Betreiberwert. '
+    +'Echte RTPs stehen je Spiel in der Spielinfo — im Tab SPIELE der Haupt-App prüfbar.<br>'
+    +'• Lizenz selbst prüfen: Anbieter in der GGL-Whitelist (<a href="https://www.gluecksspiel-behoerde.de" target="_blank" rel="noopener">gluecksspiel-behoerde.de</a>) suchen — ohne Eintrag ist das Angebot in Deutschland nicht erlaubt.<br>'
+    +'• Bonusbedingungen vorab rechnen: ANZEIGE/SPIELE in CODEX 2050. Keine Vorhersage.';
   document.getElementById('smeta').innerHTML='Jetzt '+hour+' Uhr · Index '+vals[hour]
     +' · Schein-Fenster '+best+' Uhr <span class="stop">(bedeutungslos)</span>';
   document.getElementById('spanel').innerHTML=
