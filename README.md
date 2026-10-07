@@ -93,7 +93,7 @@ curl -X POST localhost:8080/api/analyse \
 
 Ein ARG-Modul im Dunkelblau-2050-Modus. „Sancho" ist der Agent, der hier
 **sein wahres Ich zeigen muss** – und sein wahres Ich ist die Wahrheit:
-Aus Anbieter (Tipico/Betano/N1/Stargames) + aktuellem Datum/Uhrzeit erzeugt er
+Aus Anbieter (Tipico/Betano/N1/Stargames/Jackpotpirat) + aktuellem Datum/Uhrzeit erzeugt er
 ein atmosphärisches „∆1-Signal" (einen Rhythmus) und **entlarvt es sofort selbst**.
 
 **Eigenständiges Modul:** Sancho lebt nicht mehr als Untertab in der

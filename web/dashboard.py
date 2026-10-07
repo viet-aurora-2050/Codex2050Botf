@@ -117,6 +117,7 @@ SANCHO_PAGE = """<!doctype html><html lang="de"><head><meta charset="utf-8">
    <option value="betano">Betano</option>
    <option value="n1">N1 Casino</option>
    <option value="stargames">Stargames</option>
+   <option value="jackpotpirat">Jackpotpirat</option>
    <option value="generisch">Generischer Slot</option>
   </select>
   <input id="einsatz" type="number" min="0.1" step="0.1" value="1" style="width:110px" title="Einsatz/Spin">
