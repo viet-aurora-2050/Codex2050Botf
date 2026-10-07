@@ -6,10 +6,12 @@ from telegram.ext import (
     CommandHandler,
     ContextTypes,
     MessageHandler,
+    TypeHandler,
     filters,
 )
 
 from ai.providers import AIManager
+from bot.zugriff import Zugriff
 from analyzer import SYSTEM_PROMPT, analysiere, formatiere, parse
 from sancho import erzeuge as sancho_erzeuge
 from sancho import formatiere as sancho_formatiere
@@ -57,6 +59,7 @@ class CasinoBonusBot:
     def __init__(self, config):
         self.config = config
         self.ai_manager = AIManager(config)
+        self.zugriff = Zugriff.aus_config(config)
 
     # ---- Lifecycle ----------------------------------------------------
     async def _post_init(self, app: Application):
@@ -249,6 +252,8 @@ class CasinoBonusBot:
             .post_shutdown(self._post_shutdown)
             .build()
         )
+        # Gate vor allen Befehlen (Gruppe -1): Allowlist + Rate-Limit.
+        app.add_handler(TypeHandler(Update, self.zugriff.gate), group=-1)
         app.add_handler(CommandHandler("start", self.start_command))
         app.add_handler(CommandHandler("help", self.help_command))
         app.add_handler(CommandHandler("status", self.status_command))
@@ -266,5 +271,8 @@ class CasinoBonusBot:
 
     def run(self):
         app = self.build_application()
+        hinweis = self.zugriff.warnung(self.ai_manager.available)
+        if hinweis:
+            logger.warning(hinweis)
         logger.info("🤖 Bot startet Polling ...")
         app.run_polling(drop_pending_updates=True, allowed_updates=Update.ALL_TYPES)

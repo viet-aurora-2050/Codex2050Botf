@@ -28,7 +28,7 @@ def main() -> int:
 
     from bot.core import CasinoBonusBot
 
-    logger.info("🚀 Starte Casino-Bonus-Analytiker (Token %s...)", config.TELEGRAM_TOKEN[:8])
+    logger.info("🚀 Starte Casino-Bonus-Analytiker")
     bot = CasinoBonusBot(config)
     bot.run()
     return 0
