@@ -98,11 +98,7 @@ function sancho(){
     d.style.height=Math.max(4,v)+'%';bars.appendChild(d);});
   const he=1-RTP[a], loss=(100*e*he).toFixed(2);
   const nm=document.getElementById('sanb').selectedOptions[0].textContent;
-  document.getElementById('anbnote').innerHTML='<b>Anbieter-Check · '+nm+'</b><br>'
-    +'• Der RTP hier ist ein <b>Platzhalter</b> (generische Annahme), kein veröffentlichter Betreiberwert. '
-    +'Echte RTPs stehen je Spiel in der Spielinfo — im Tab SPIELE der Haupt-App prüfbar.<br>'
-    +'• Lizenz selbst prüfen: Anbieter in der GGL-Whitelist (<a href="https://www.gluecksspiel-behoerde.de" target="_blank" rel="noopener">gluecksspiel-behoerde.de</a>) suchen — ohne Eintrag ist das Angebot in Deutschland nicht erlaubt.<br>'
-    +'• Bonusbedingungen vorab rechnen: ANZEIGE/SPIELE in CODEX 2050. Keine Vorhersage.';
+  document.getElementById('anbnote').innerHTML=anbieterBlock(a,nm);
   document.getElementById('smeta').innerHTML='Jetzt '+hour+' Uhr · Index '+vals[hour]
     +' · Schein-Fenster '+best+' Uhr <span class="stop">(bedeutungslos)</span>';
   document.getElementById('spanel').innerHTML=
@@ -114,6 +110,49 @@ function sancho(){
     +'<div class="truth">• Nächster Spin: NICHT VORHERSAGBAR · Nächster Gewinn: NICHT VORHERSAGBAR.</div>'
     +'<div class="stop" style="margin-top:8px">🛑 KEIN SPIELBEFEHL. Es gibt kein Gewinnfenster. Mathematisch auswertbar, aber nicht vorhersagbar.</div>';
 }
+
+// ---------- Anbieter-Profil aus öffentlichen Quellen (docs/anbieter.json + games.json) ----------
+let PROFILE={}, GAMESDB=[], PROFILSTAND='';
+function esc(s){return (''+s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+fetch('anbieter.json?_='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{PROFILE=j.anbieter||{};PROFILSTAND=j.abgerufen||'';sancho();}).catch(()=>{});
+fetch('games.json?_='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{GAMESDB=j.spiele||[];sancho();}).catch(()=>{});
+function anbieterBlock(key,nm){
+  const p=PROFILE[key];
+  if(!p) return '<b>Anbieter-Check · '+esc(nm)+'</b><br>'
+    +'• Der RTP hier ist ein <b>Platzhalter</b> (generische Annahme), kein veröffentlichter Betreiberwert. '
+    +'Echte RTPs stehen je Spiel in der Spielinfo — im Tab SPIELE der Haupt-App prüfbar.<br>'
+    +'• Lizenz selbst prüfen: Anbieter in der <a href="https://www.gluecksspiel-behoerde.de" target="_blank" rel="noopener">GGL-Whitelist</a> suchen — ohne Eintrag ist das Angebot in Deutschland nicht erlaubt.<br>'
+    +'• Keine Vorhersage.';
+  const L=p.limits||{}, lz=p.lizenz||{};
+  const spinsH=L.min_sekunden_pro_spin_durchschnitt?Math.floor(3600/L.min_sekunden_pro_spin_durchschnitt):null;
+  const umsatzH=(spinsH&&L.einsatz_pro_spin_eur)?spinsH*L.einsatz_pro_spin_eur:null;
+  const namen=(p.spiele_genannt||[]).map(x=>x.toLowerCase());
+  const treffer=GAMESDB.filter(g=>typeof g.rtp==='number'&&namen.includes((g.name||'').toLowerCase()));
+  let rechnung='';
+  if(umsatzH&&treffer.length){
+    const hv=treffer.map(g=>1-g.rtp), lo=Math.min(...hv), hi=Math.max(...hv);
+    rechnung='<br><b>Was die Regeln rechnerisch begrenzen</b> (Rechnung, keine Vorhersage):<br>'
+     +'• Max. ca. '+spinsH+' Spins/h (mind. Ø '+L.min_sekunden_pro_spin_durchschnitt+' s pro Spin, kein Autoplay) × '+L.einsatz_pro_spin_eur+' € = höchstens ca. '+umsatzH+' € Umsatz/h.<br>'
+     +'• Erwarteter Verlust/h bei den '+treffer.length+' genannten Spielen mit bekanntem Studio-RTP: ca. <b>'
+     +(umsatzH*lo).toFixed(0)+'–'+(umsatzH*hi).toFixed(0)+' €</b> (Hausvorteil '+(lo*100).toFixed(1)+'–'+(hi*100).toFixed(1)+' %). '
+     +'Betreiber-RTP kann abweichen.';
+  }
+  const studios=Object.entries(p.studios||{}).map(([k,v])=>esc(k)+' '+v).join(' · ');
+  const q=(p.quellen||[]).map(x=>'<a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.titel)+'</a> ['+esc(x.art)+']').join('<br>');
+  return '<b>Anbieter-Profil · '+esc(p.name)+'</b> <span class="tag">aus öffentlichen Quellen · abgerufen '+esc(PROFILSTAND)+'</span><br>'
+   +'• Betreiber: '+esc(p.betreiber)+' · Domain '+esc(p.domain)+'<br>'
+   +'• Erlaubnis: '+esc(lz.art||'')+', erteilt '+esc(lz.erteilt||'')+(lz.whitelist_eintrag?' · <span class="truth">GGL-Whitelist-Eintrag gefunden</span>':'')+'<br>'
+   +(p.betreiber_frueher_berichtet?'• Hinweis: '+esc(p.betreiber_frueher_berichtet)+'<br>':'')
+   +'• Limits laut Betreiberseite: Einsatz grundsätzlich '+L.einsatz_pro_spin_eur+' € pro Spin'
+     +(L.einsatz_erhoeht_eur?' (erhöht '+L.einsatz_erhoeht_eur.join('/')+' € '+esc(L.einsatz_erhoeht_hinweis||'')+')':'')
+     +' · Einzahlung '+L.einzahlung_monat_eur+' €/Monat · Autoplay '+(L.autoplay?'erlaubt':'nicht erlaubt')+'<br>'
+   +'• Studios (Anzahl Slots): '+studios+'<br>'
+   +'• Titel gesamt: '+esc(p.titel_gesamt_angabe||'—')+'<br>'
+   +'• RTP: '+esc(p.rtp_hinweis||'')+'<br>'
+   +'• Genannte Spiele, die im Katalog (SPIELE) stehen: '+(treffer.length?treffer.map(g=>esc(g.name)+' '+(g.rtp*100).toFixed(2)+' %').join(' · '):'—')
+   +rechnung+'<br><br><span class="tag">QUELLEN</span><br>'+q;
+}
+
 function sanchoLive(){
   const c=document.getElementById('livclock');
   if(c)c.textContent=new Date().toLocaleString('de-DE');
