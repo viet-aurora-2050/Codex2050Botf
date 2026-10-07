@@ -119,6 +119,14 @@ gefunden". Nur diese strukturierte Offizialquelle wird automatisch gelesen; Limi
 lädt sie bei Netz-Rückkehr neu. Nicht genutzt: Google-Suche (keine freie API), Review-Blogs
 (Affiliate, widersprüchlich). RTPs werden nicht erfunden.
 
+**Gesetzlicher Rahmen + Studios (automatisch, `python -m datenbank.anbieter_details`):** liest die
+amtlichen GGL-Seiten (Höchsteinsatz 1 € mit Stufen 3/5 € seit 1. Juli 2026, ab 21 Jahren; mind. 5 s pro
+Spiel; kein Autoplay; Pause nach 60 min; 1.000 €/Monat anbieterübergreifend) nach
+`regulatorischer_rahmen` und die Studio-Tabelle von jackpotpiraten.de. Der Rahmen gilt für **alle**
+Erlaubnisinhaber, ist also nicht anbieterspezifisch. Jede Zahl wird per Muster aus dem Originaltext gelesen;
+fehlt ein Muster, bleibt der alte Wert stehen. Die Betreiberseiten von Tipico (Geo-Sperre), Betano und N1
+(HTTP 403) sowie Stargames (reine JavaScript-Seite) sind nicht lesbar – das wird dokumentiert, nicht umgangen.
+
 ```bash
 python -m sancho "tipico games" 2      # CLI
 # Statische App (GitHub Pages):  docs/sancho.html  (eigenständige Seite)

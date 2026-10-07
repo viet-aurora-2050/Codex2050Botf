@@ -113,11 +113,11 @@ function sancho(){
 
 // ---------- Anbieter-Profil aus öffentlichen Quellen (docs/anbieter.json + games.json) ----------
 // anbieter.json wird täglich per GitHub-Action mit der offiziellen GGL-Whitelist abgeglichen.
-let PROFILE={}, GAMESDB=[], PROFILSTAND='', WL_QUELLE='';
+let PROFILE={}, GAMESDB=[], PROFILSTAND='', WL_QUELLE='', RAHMEN=null, BSHINWEIS=null;
 function esc(s){return (''+s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function ladeDaten(){
   fetch('anbieter.json?_='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{
-    PROFILE=j.anbieter||{};PROFILSTAND=j.abgerufen||'';WL_QUELLE=j.whitelist_quelle||'';sancho();}).catch(()=>{});
+    PROFILE=j.anbieter||{};PROFILSTAND=j.abgerufen||'';WL_QUELLE=j.whitelist_quelle||'';RAHMEN=j.regulatorischer_rahmen||null;BSHINWEIS=j.betreiberseiten_hinweis||null;sancho();}).catch(()=>{});
   fetch('games.json?_='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{GAMESDB=j.spiele||[];sancho();}).catch(()=>{});
 }
 ladeDaten();
@@ -173,8 +173,28 @@ function anbieterBlock(key,nm){
        +'• Erwarteter Verlust/h bei den '+treffer.length+' genannten Spielen mit bekanntem Studio-RTP: ca. <b>'
        +(umsatzH*lo).toFixed(0)+'–'+(umsatzH*hi).toFixed(0)+' €</b> (Hausvorteil '+(lo*100).toFixed(1)+'–'+(hi*100).toFixed(1)+' %). Betreiber-RTP kann abweichen.';
     }
-  } else {
-    h+='• Limits/Studios: für diesen Anbieter noch nicht aus der Betreiberseite übernommen (nur Whitelist-Abgleich automatisch).<br>';
+  } else if(BSHINWEIS&&BSHINWEIS[key]) {
+    h+='• Betreiberseite (geprüft '+esc(BSHINWEIS.geprueft||'')+'): '+esc(BSHINWEIS[key])+' '+esc(BSHINWEIS.folge||'')+((w&&w.gefunden)?' Es gilt der gesetzliche Rahmen (unten).':'')+'<br>';
+  }
+  const zugelassen=!!(w&&w.gefunden);
+  if(RAHMEN&&zugelassen){
+    const R=RAHMEN;
+    h+='• <b>Gesetzlicher Rahmen</b> (GGL, gilt für alle Erlaubnisinhaber, nicht anbieterspezifisch): Höchsteinsatz '+R.einsatz_regel_eur+' € je Spiel'
+      +(R.einsatz_stufe1_eur?'; seit '+esc(R.einsatz_erhoeht_seit||'')+' unter Voraussetzungen bis '+R.einsatz_stufe1_eur+' bzw. '+R.einsatz_stufe2_eur+' € (ab '+R.einsatz_erhoeht_ab_alter+' Jahren)':'')
+      +' · mind. '+R.min_sekunden_pro_spiel+' s pro Spiel · '+(R.autoplay_verboten?'kein Autoplay':'')
+      +' · Pause nach '+R.cooldown_nach_min+' min ('+R.cooldown_pause_min+' min) · Einzahlung '+R.einzahlung_monat_eur+' €/Monat anbieterübergreifend<br>';
+    if(!rechnung){
+      const rt=GAMESDB.filter(g=>typeof g.rtp==='number').map(g=>1-g.rtp);
+      if(rt.length&&R.min_sekunden_pro_spiel&&R.einsatz_regel_eur){
+        const sH=Math.floor(3600/R.min_sekunden_pro_spiel), uH=sH*R.einsatz_regel_eur, lo=Math.min(...rt), hi=Math.max(...rt);
+        rechnung='<br><b>Was der Rahmen rechnerisch begrenzt</b> (keine Vorhersage):<br>'
+         +'• Höchstens ca. '+sH+' Spiele/h × '+R.einsatz_regel_eur+' € = ca. '+uH+' € Umsatz/h.<br>'
+         +'• Erwarteter Verlust/h über die '+rt.length+' Katalog-Spiele (Studio-RTP, nicht anbieterspezifisch): ca. <b>'
+         +(uH*lo).toFixed(0)+'–'+(uH*hi).toFixed(0)+' €</b> (Hausvorteil '+(lo*100).toFixed(1)+'–'+(hi*100).toFixed(1)+' %).';
+      }
+    }
+  } else if(RAHMEN&&w&&!w.gefunden){
+    h+='• Der gesetzliche Rahmen (Einsatz-/Tempo-/Einzahlungslimits) gilt für Inhaber einer deutschen Erlaubnis. Ohne Whitelist-Eintrag kann ich dazu für diesen Anbieter keine Aussage belegen.<br>';
   }
   h+='• RTP: '+esc(p.rtp_hinweis||'Platzhalter, kein Betreiberwert.')+rechnung;
   const q=(p.quellen||[]).map(x=>'<a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.titel)+'</a> ['+esc(x.art)+']').join('<br>');

@@ -1,7 +1,8 @@
-name: Anbieter-Profile taeglich mit GGL-Whitelist abgleichen
+name: Anbieter-Profile taeglich aktualisieren (GGL-Whitelist, Rahmen, Studios)
 
 # Ruft die oeffentliche GGL-Whitelist (eine Seite, identifizierbarer User-Agent) ab und
-# aktualisiert NUR den Block "whitelist" je Anbieter in docs/anbieter.json.
+# aktualisiert den Block "whitelist" je Anbieter, den gesetzlichen Rahmen (GGL-Seiten) und die
+# Jackpotpiraten-Studio-Tabelle in docs/anbieter.json. Weitere Betreiberseiten sind nicht lesbar.
 # Faellt der Abruf aus oder aendert sich das Seitenformat, bleibt die Datei unveraendert.
 # Committet nur bei echter inhaltlicher Aenderung (reine Abrufzeit zaehlt nicht).
 
@@ -35,6 +36,9 @@ jobs:
 
       - name: Whitelist abgleichen
         run: python -m datenbank.anbieter_whitelist
+
+      - name: Gesetzlichen Rahmen (GGL) + Jackpotpiraten-Studios lesen
+        run: python -m datenbank.anbieter_details
 
       - name: JSON validieren
         run: python -c "import json; d=json.load(open('docs/anbieter.json')); assert d['anbieter'], 'leer'; print('anbieter.json valide:', sorted(d['anbieter']))"
