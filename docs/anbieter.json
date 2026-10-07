@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "abgerufen": "2026-10-07",
+  "_hinweis": "Anbieter-Profile aus oeffentlich abrufbaren Primaerquellen (GGL-Whitelist, Betreiberseite). Stand = Abrufdatum; Angaben koennen sich aendern - vor Entscheidungen erneut pruefen. Keine Vorhersage, keine Anbieter-API.",
+  "anbieter": {
+    "jackpotpirat": {
+      "name": "JackpotPiraten",
+      "domain": "jackpotpiraten.de",
+      "betreiber": "DGGS Deutsche Gesellschaft für Glücksspiel mbH",
+      "betreiber_frueher_berichtet": "Mernov Betriebsgesellschaft (Gauselmann-Gruppe), so in der Presse zur Erteilung 2022 berichtet; aktuell nennen GGL-Whitelist und Betreiberseite die DGGS.",
+      "lizenz": {
+        "behoerde": "GGL / Whitelist",
+        "art": "virtuelles Automatenspiel (§§ 4 bis 4d i.V.m. 22a GlüStV 2021)",
+        "erteilt": "2022-04-27",
+        "whitelist_eintrag": true
+      },
+      "limits": {
+        "einsatz_pro_spin_eur": 1,
+        "einsatz_erhoeht_eur": [3, 5],
+        "einsatz_erhoeht_hinweis": "unter bestimmten Bedingungen (Betreiberseite: ab 21 Jahren), seit Juli 2026",
+        "einzahlung_monat_eur": 1000,
+        "autoplay": false,
+        "min_sekunden_pro_spin_durchschnitt": 5
+      },
+      "studios": {
+        "Play'n GO": 192,
+        "Novomatic/Greentube": 165,
+        "Merkur": 115,
+        "Gamomat": 72,
+        "Pragmatic Play": 56,
+        "Swintt": 50,
+        "Apparat Gaming": 48,
+        "Amatic": 47,
+        "Hölle Games": 34,
+        "Relax Gaming": 23,
+        "G.Games": 18,
+        "Tornado Games": 18,
+        "Indigo Magic": 13,
+        "Bally Wulff": 10,
+        "Peter & Sons": 1
+      },
+      "titel_gesamt_angabe": "ca. 855 (Betreiberseite; die Studio-Zahlen summieren sich auf 862)",
+      "spiele_genannt": [
+        "Book of Ra", "Book of Ra Deluxe", "Eye of Horus", "Gates of Olympus",
+        "Big Bass Bonanza", "Book of Dead", "Legacy of Dead", "Sweet Bonanza",
+        "Ghost Slider", "Tizona"
+      ],
+      "rtp_hinweis": "Die Betreiberseite nennt keine RTP-Prozente; der RTP muss laut Regeln waehrend des Spiels angezeigt werden. Studio-Standardwerte (docs/games.json) koennen je Betreiber/Version abweichen.",
+      "quellen": [
+        {"titel": "GGL – Whitelist (Eintrag jackpotpiraten.de, DGGS, 27.04.2022)", "url": "https://www.gluecksspiel-behoerde.de/de/whitelist", "art": "primaer"},
+        {"titel": "JackpotPiraten – Startseite (Studios, Limits, Erlaubnis)", "url": "https://www.jackpotpiraten.de/", "art": "betreiber"},
+        {"titel": "JackpotPiraten – Regeln für Online Slots in Deutschland", "url": "https://www.jackpotpiraten.de/wissen/regeln-fuer-online-slots-in-deutschland", "art": "betreiber"},
+        {"titel": "Automatenmarkt – Erste Erlaubnis für virtuelle Automatenspiele (Mernov, 2022)", "url": "https://www.automatenmarkt.de/nachrichten/artikel/tochterunternehmen-der-gauselmann-gruppe-erhaelt-erste-erlaubnis-fuer-virtuelle-automatenspiele/", "art": "presse"}
+      ]
+    }
+  }
+}

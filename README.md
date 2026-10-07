@@ -108,6 +108,11 @@ mehr Lore-Text, dieselbe Ehrlichkeit: die Selbst-Entlarvung bleibt Kern.
 > ist der erwartete Verlust über den Hausvorteil. Das Modul gibt **nie** einen
 > Spielbefehl.
 
+**Anbieter-Profile aus öffentlichen Quellen:** `docs/anbieter.json` enthält für Jackpotpirat
+(Betreiber DGGS, GGL-Whitelist-Eintrag, Erlaubnis vom 27.04.2022, Limits, Studios) belegte Fakten mit
+Quellen und Abrufdatum. Sanchos Seite zeigt sie samt Rechnung (Spins/h × Einsatz × Hausvorteil); RTPs
+werden nicht erfunden.
+
 ```bash
 python -m sancho "tipico games" 2      # CLI
 # Statische App (GitHub Pages):  docs/sancho.html  (eigenständige Seite)
