@@ -112,47 +112,74 @@ function sancho(){
 }
 
 // ---------- Anbieter-Profil aus öffentlichen Quellen (docs/anbieter.json + games.json) ----------
-let PROFILE={}, GAMESDB=[], PROFILSTAND='';
+// anbieter.json wird täglich per GitHub-Action mit der offiziellen GGL-Whitelist abgeglichen.
+let PROFILE={}, GAMESDB=[], PROFILSTAND='', WL_QUELLE='';
 function esc(s){return (''+s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
-fetch('anbieter.json?_='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{PROFILE=j.anbieter||{};PROFILSTAND=j.abgerufen||'';sancho();}).catch(()=>{});
-fetch('games.json?_='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{GAMESDB=j.spiele||[];sancho();}).catch(()=>{});
+function ladeDaten(){
+  fetch('anbieter.json?_='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{
+    PROFILE=j.anbieter||{};PROFILSTAND=j.abgerufen||'';WL_QUELLE=j.whitelist_quelle||'';sancho();}).catch(()=>{});
+  fetch('games.json?_='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{GAMESDB=j.spiele||[];sancho();}).catch(()=>{});
+}
+ladeDaten();
+window.addEventListener('online',ladeDaten);            // Netz wieder da -> Daten neu laden
+setInterval(ladeDaten,30*60*1000);                       // und alle 30 Minuten
+function alterTage(iso){const d=new Date(iso);return isNaN(d)?null:Math.floor((Date.now()-d.getTime())/86400000);}
+function netzText(){
+  const c=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
+  return (navigator.onLine?'online':'OFFLINE')+(c&&c.effectiveType?' · '+c.effectiveType:'');
+}
+function whitelistZeile(w){
+  if(!w) return '• GGL-Whitelist: noch nicht abgeglichen.<br>';
+  if(w.gefunden){
+    return '• GGL-Whitelist: <span class="truth">Eintrag gefunden</span><br>'+w.eintraege.map(e=>
+      '&nbsp;&nbsp;– '+esc(e.betreiber)+' · '+esc((e.erlaubnisarten||[]).join(', '))
+      +' · Domains: '+esc((e.domains||[]).join(', '))
+      +(e.daten&&e.daten.length?' · Daten laut Liste: '+esc(e.daten.join(', ')):'')).join('<br>')+'<br>';
+  }
+  return '• GGL-Whitelist: <span class="stop">kein Eintrag gefunden</span> (Stand Abruf) – keine deutsche Erlaubnis bekannt. '
+    +'Keine juristische Bewertung; selbst in der <a href="https://www.gluecksspiel-behoerde.de/de/fuer-spielende/uebersicht-erlaubter-anbieter-whitelist" target="_blank" rel="noopener">Whitelist</a> prüfen.<br>';
+}
 function anbieterBlock(key,nm){
   const p=PROFILE[key];
   if(!p) return '<b>Anbieter-Check · '+esc(nm)+'</b><br>'
     +'• Der RTP hier ist ein <b>Platzhalter</b> (generische Annahme), kein veröffentlichter Betreiberwert. '
     +'Echte RTPs stehen je Spiel in der Spielinfo — im Tab SPIELE der Haupt-App prüfbar.<br>'
-    +'• Lizenz selbst prüfen: Anbieter in der <a href="https://www.gluecksspiel-behoerde.de" target="_blank" rel="noopener">GGL-Whitelist</a> suchen — ohne Eintrag ist das Angebot in Deutschland nicht erlaubt.<br>'
     +'• Keine Vorhersage.';
-  const L=p.limits||{}, lz=p.lizenz||{};
-  const spinsH=L.min_sekunden_pro_spin_durchschnitt?Math.floor(3600/L.min_sekunden_pro_spin_durchschnitt):null;
-  const umsatzH=(spinsH&&L.einsatz_pro_spin_eur)?spinsH*L.einsatz_pro_spin_eur:null;
-  const namen=(p.spiele_genannt||[]).map(x=>x.toLowerCase());
-  const treffer=GAMESDB.filter(g=>typeof g.rtp==='number'&&namen.includes((g.name||'').toLowerCase()));
+  const w=p.whitelist||null, L=p.limits||null, lz=p.lizenz||null;
+  const alter=alterTage((w&&w.abgerufen)||PROFILSTAND);
+  const alterTxt=alter==null?'':(alter<=1?' (heute/gestern aktualisiert)':(alter<=3?' (vor '+alter+' Tagen)':' <span class="stop">⚠ '+alter+' Tage alt – täglicher Job prüfen</span>'));
+  let h='<b>Anbieter-Profil · '+esc(p.name)+'</b><br>'
+    +'<span class="tag">Netz: '+netzText()+' · Daten-Stand '+esc((w&&w.abgerufen)||PROFILSTAND||'—')+'</span>'+alterTxt+'<br>'
+    +whitelistZeile(w);
+  if(p.betreiber) h+='• Betreiber (Betreiberseite): '+esc(p.betreiber)+(p.domain?' · Domain '+esc(p.domain):'')+'<br>';
+  if(lz) h+='• Erlaubnis: '+esc(lz.art||'')+', erteilt '+esc(lz.erteilt||'')+'<br>';
+  if(p.betreiber_frueher_berichtet) h+='• Hinweis: '+esc(p.betreiber_frueher_berichtet)+'<br>';
   let rechnung='';
-  if(umsatzH&&treffer.length){
-    const hv=treffer.map(g=>1-g.rtp), lo=Math.min(...hv), hi=Math.max(...hv);
-    rechnung='<br><b>Was die Regeln rechnerisch begrenzen</b> (Rechnung, keine Vorhersage):<br>'
-     +'• Max. ca. '+spinsH+' Spins/h (mind. Ø '+L.min_sekunden_pro_spin_durchschnitt+' s pro Spin, kein Autoplay) × '+L.einsatz_pro_spin_eur+' € = höchstens ca. '+umsatzH+' € Umsatz/h.<br>'
-     +'• Erwarteter Verlust/h bei den '+treffer.length+' genannten Spielen mit bekanntem Studio-RTP: ca. <b>'
-     +(umsatzH*lo).toFixed(0)+'–'+(umsatzH*hi).toFixed(0)+' €</b> (Hausvorteil '+(lo*100).toFixed(1)+'–'+(hi*100).toFixed(1)+' %). '
-     +'Betreiber-RTP kann abweichen.';
+  if(L){
+    h+='• Limits laut Betreiberseite: Einsatz grundsätzlich '+L.einsatz_pro_spin_eur+' € pro Spin'
+      +(L.einsatz_erhoeht_eur?' (erhöht '+L.einsatz_erhoeht_eur.join('/')+' € '+esc(L.einsatz_erhoeht_hinweis||'')+')':'')
+      +' · Einzahlung '+L.einzahlung_monat_eur+' €/Monat · Autoplay '+(L.autoplay?'erlaubt':'nicht erlaubt')+'<br>';
+    const spinsH=L.min_sekunden_pro_spin_durchschnitt?Math.floor(3600/L.min_sekunden_pro_spin_durchschnitt):null;
+    const umsatzH=(spinsH&&L.einsatz_pro_spin_eur)?spinsH*L.einsatz_pro_spin_eur:null;
+    const namen=(p.spiele_genannt||[]).map(x=>x.toLowerCase());
+    const treffer=GAMESDB.filter(g=>typeof g.rtp==='number'&&namen.includes((g.name||'').toLowerCase()));
+    if(p.studios) h+='• Studios (Anzahl Slots): '+Object.entries(p.studios).map(([k,v])=>esc(k)+' '+v).join(' · ')+'<br>';
+    if(p.titel_gesamt_angabe) h+='• Titel gesamt: '+esc(p.titel_gesamt_angabe)+'<br>';
+    if(namen.length) h+='• Genannte Spiele im Katalog (SPIELE): '+(treffer.length?treffer.map(g=>esc(g.name)+' '+(g.rtp*100).toFixed(2)+' %').join(' · '):'—')+'<br>';
+    if(umsatzH&&treffer.length){
+      const hv=treffer.map(g=>1-g.rtp), lo=Math.min(...hv), hi=Math.max(...hv);
+      rechnung='<br><b>Was die Regeln rechnerisch begrenzen</b> (Rechnung, keine Vorhersage):<br>'
+       +'• Max. ca. '+spinsH+' Spins/h (mind. Ø '+L.min_sekunden_pro_spin_durchschnitt+' s pro Spin, kein Autoplay) × '+L.einsatz_pro_spin_eur+' € = höchstens ca. '+umsatzH+' € Umsatz/h.<br>'
+       +'• Erwarteter Verlust/h bei den '+treffer.length+' genannten Spielen mit bekanntem Studio-RTP: ca. <b>'
+       +(umsatzH*lo).toFixed(0)+'–'+(umsatzH*hi).toFixed(0)+' €</b> (Hausvorteil '+(lo*100).toFixed(1)+'–'+(hi*100).toFixed(1)+' %). Betreiber-RTP kann abweichen.';
+    }
+  } else {
+    h+='• Limits/Studios: für diesen Anbieter noch nicht aus der Betreiberseite übernommen (nur Whitelist-Abgleich automatisch).<br>';
   }
-  const studios=Object.entries(p.studios||{}).map(([k,v])=>esc(k)+' '+v).join(' · ');
+  h+='• RTP: '+esc(p.rtp_hinweis||'Platzhalter, kein Betreiberwert.')+rechnung;
   const q=(p.quellen||[]).map(x=>'<a href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.titel)+'</a> ['+esc(x.art)+']').join('<br>');
-  return '<b>Anbieter-Profil · '+esc(p.name)+'</b> <span class="tag">aus öffentlichen Quellen · abgerufen '+esc(PROFILSTAND)+'</span><br>'
-   +'• Betreiber: '+esc(p.betreiber)+' · Domain '+esc(p.domain)+'<br>'
-   +'• Erlaubnis: '+esc(lz.art||'')+', erteilt '+esc(lz.erteilt||'')+(lz.whitelist_eintrag?' · <span class="truth">GGL-Whitelist-Eintrag gefunden</span>':'')+'<br>'
-   +(p.betreiber_frueher_berichtet?'• Hinweis: '+esc(p.betreiber_frueher_berichtet)+'<br>':'')
-   +'• Limits laut Betreiberseite: Einsatz grundsätzlich '+L.einsatz_pro_spin_eur+' € pro Spin'
-     +(L.einsatz_erhoeht_eur?' (erhöht '+L.einsatz_erhoeht_eur.join('/')+' € '+esc(L.einsatz_erhoeht_hinweis||'')+')':'')
-     +' · Einzahlung '+L.einzahlung_monat_eur+' €/Monat · Autoplay '+(L.autoplay?'erlaubt':'nicht erlaubt')+'<br>'
-   +'• Studios (Anzahl Slots): '+studios+'<br>'
-   +'• Titel gesamt: '+esc(p.titel_gesamt_angabe||'—')+'<br>'
-   +'• RTP: '+esc(p.rtp_hinweis||'')+'<br>'
-   +'• Genannte Spiele, die im Katalog (SPIELE) stehen: '+(treffer.length?treffer.map(g=>esc(g.name)+' '+(g.rtp*100).toFixed(2)+' %').join(' · '):'—')
-   +rechnung+'<br><br><span class="tag">QUELLEN</span><br>'+q;
+  return h+'<br><br><span class="tag">QUELLEN</span><br>'+q;
 }
-
 function sanchoLive(){
   const c=document.getElementById('livclock');
   if(c)c.textContent=new Date().toLocaleString('de-DE');

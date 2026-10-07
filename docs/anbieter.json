@@ -16,7 +16,10 @@
       },
       "limits": {
         "einsatz_pro_spin_eur": 1,
-        "einsatz_erhoeht_eur": [3, 5],
+        "einsatz_erhoeht_eur": [
+          3,
+          5
+        ],
         "einsatz_erhoeht_hinweis": "unter bestimmten Bedingungen (Betreiberseite: ab 21 Jahren), seit Juli 2026",
         "einzahlung_monat_eur": 1000,
         "autoplay": false,
@@ -41,17 +44,196 @@
       },
       "titel_gesamt_angabe": "ca. 855 (Betreiberseite; die Studio-Zahlen summieren sich auf 862)",
       "spiele_genannt": [
-        "Book of Ra", "Book of Ra Deluxe", "Eye of Horus", "Gates of Olympus",
-        "Big Bass Bonanza", "Book of Dead", "Legacy of Dead", "Sweet Bonanza",
-        "Ghost Slider", "Tizona"
+        "Book of Ra",
+        "Book of Ra Deluxe",
+        "Eye of Horus",
+        "Gates of Olympus",
+        "Big Bass Bonanza",
+        "Book of Dead",
+        "Legacy of Dead",
+        "Sweet Bonanza",
+        "Ghost Slider",
+        "Tizona"
       ],
       "rtp_hinweis": "Die Betreiberseite nennt keine RTP-Prozente; der RTP muss laut Regeln waehrend des Spiels angezeigt werden. Studio-Standardwerte (docs/games.json) koennen je Betreiber/Version abweichen.",
       "quellen": [
-        {"titel": "GGL – Whitelist (Eintrag jackpotpiraten.de, DGGS, 27.04.2022)", "url": "https://www.gluecksspiel-behoerde.de/de/whitelist", "art": "primaer"},
-        {"titel": "JackpotPiraten – Startseite (Studios, Limits, Erlaubnis)", "url": "https://www.jackpotpiraten.de/", "art": "betreiber"},
-        {"titel": "JackpotPiraten – Regeln für Online Slots in Deutschland", "url": "https://www.jackpotpiraten.de/wissen/regeln-fuer-online-slots-in-deutschland", "art": "betreiber"},
-        {"titel": "Automatenmarkt – Erste Erlaubnis für virtuelle Automatenspiele (Mernov, 2022)", "url": "https://www.automatenmarkt.de/nachrichten/artikel/tochterunternehmen-der-gauselmann-gruppe-erhaelt-erste-erlaubnis-fuer-virtuelle-automatenspiele/", "art": "presse"}
-      ]
+        {
+          "titel": "GGL – Whitelist (Eintrag jackpotpiraten.de, DGGS, 27.04.2022)",
+          "url": "https://www.gluecksspiel-behoerde.de/de/whitelist",
+          "art": "primaer"
+        },
+        {
+          "titel": "JackpotPiraten – Startseite (Studios, Limits, Erlaubnis)",
+          "url": "https://www.jackpotpiraten.de/",
+          "art": "betreiber"
+        },
+        {
+          "titel": "JackpotPiraten – Regeln für Online Slots in Deutschland",
+          "url": "https://www.jackpotpiraten.de/wissen/regeln-fuer-online-slots-in-deutschland",
+          "art": "betreiber"
+        },
+        {
+          "titel": "Automatenmarkt – Erste Erlaubnis für virtuelle Automatenspiele (Mernov, 2022)",
+          "url": "https://www.automatenmarkt.de/nachrichten/artikel/tochterunternehmen-der-gauselmann-gruppe-erhaelt-erste-erlaubnis-fuer-virtuelle-automatenspiele/",
+          "art": "presse"
+        }
+      ],
+      "whitelist": {
+        "abgerufen": "2026-10-07T06:28:57Z",
+        "gefunden": true,
+        "eintraege": [
+          {
+            "betreiber": "DGGS Deutsche Gesellschaft für Glücksspiel mbH",
+            "erlaubnisarten": [
+              "Virtuelle Automatenspiele"
+            ],
+            "domains": [
+              "bingbong.de",
+              "jackpotpiraten.de"
+            ],
+            "daten": [
+              "27.04.2022"
+            ]
+          }
+        ],
+        "hinweis": "Eintrag in der GGL-Whitelist gefunden."
+      }
+    },
+    "tipico": {
+      "name": "Tipico Games",
+      "rtp_hinweis": "Kein veroeffentlichter Betreiber-RTP in den verwendeten Quellen. RTP je Spiel in der Spielinfo bzw. im Tab SPIELE (Studio-Standardwerte) pruefen; kann abweichen.",
+      "quellen": [
+        {
+          "titel": "GGL – Whitelist (Übersicht erlaubter Anbieter)",
+          "url": "https://www.gluecksspiel-behoerde.de/de/whitelist",
+          "art": "primaer"
+        }
+      ],
+      "whitelist": {
+        "abgerufen": "2026-10-07T06:28:57Z",
+        "gefunden": true,
+        "eintraege": [
+          {
+            "betreiber": "Tipico Games Limited",
+            "erlaubnisarten": [
+              "Virtuelle Automatenspiele"
+            ],
+            "domains": [
+              "games.tipico.de",
+              "goldrummel.de"
+            ],
+            "daten": [
+              "06.10.2022"
+            ]
+          },
+          {
+            "betreiber": "Tipico Karlsruhe Limited",
+            "erlaubnisarten": [
+              "Online-Casinospiele",
+              "Sportwetten",
+              "Virtuelle Automatenspiele"
+            ],
+            "domains": [
+              "casino.goldrummel.de",
+              "casino.tipico.de",
+              "original-slots.de",
+              "original-wetten.de",
+              "sh-games.tipico.de",
+              "sh-goldrummel.de"
+            ],
+            "daten": [
+              "26.02.2021",
+              "09.12.2022",
+              "31.01.2023",
+              "18.09.2024",
+              "05.11.2024"
+            ]
+          }
+        ],
+        "hinweis": "Eintrag in der GGL-Whitelist gefunden."
+      }
+    },
+    "betano": {
+      "name": "Betano",
+      "rtp_hinweis": "Kein veroeffentlichter Betreiber-RTP in den verwendeten Quellen. RTP je Spiel in der Spielinfo bzw. im Tab SPIELE (Studio-Standardwerte) pruefen; kann abweichen.",
+      "quellen": [
+        {
+          "titel": "GGL – Whitelist (Übersicht erlaubter Anbieter)",
+          "url": "https://www.gluecksspiel-behoerde.de/de/whitelist",
+          "art": "primaer"
+        }
+      ],
+      "whitelist": {
+        "abgerufen": "2026-10-07T06:28:57Z",
+        "gefunden": true,
+        "eintraege": [
+          {
+            "betreiber": "Betkick Sportsbetting Limited",
+            "erlaubnisarten": [
+              "Sportwetten",
+              "Virtuelle Automatenspiele"
+            ],
+            "domains": [
+              "betano.de"
+            ],
+            "daten": [
+              "19.02.2021",
+              "16.12.2022",
+              "31.05.2023"
+            ]
+          }
+        ],
+        "hinweis": "Eintrag in der GGL-Whitelist gefunden."
+      }
+    },
+    "n1": {
+      "name": "N1 Casino",
+      "rtp_hinweis": "Kein veroeffentlichter Betreiber-RTP in den verwendeten Quellen. RTP je Spiel in der Spielinfo bzw. im Tab SPIELE (Studio-Standardwerte) pruefen; kann abweichen.",
+      "quellen": [
+        {
+          "titel": "GGL – Whitelist (Übersicht erlaubter Anbieter)",
+          "url": "https://www.gluecksspiel-behoerde.de/de/whitelist",
+          "art": "primaer"
+        }
+      ],
+      "whitelist": {
+        "abgerufen": "2026-10-07T06:28:57Z",
+        "gefunden": false,
+        "eintraege": [],
+        "hinweis": "Kein Eintrag in der GGL-Whitelist gefunden (Stand Abruf) – keine deutsche Erlaubnis bekannt. Keine juristische Bewertung; selbst pruefen."
+      }
+    },
+    "stargames": {
+      "name": "Stargames",
+      "rtp_hinweis": "Kein veroeffentlichter Betreiber-RTP in den verwendeten Quellen. RTP je Spiel in der Spielinfo bzw. im Tab SPIELE (Studio-Standardwerte) pruefen; kann abweichen.",
+      "quellen": [
+        {
+          "titel": "GGL – Whitelist (Übersicht erlaubter Anbieter)",
+          "url": "https://www.gluecksspiel-behoerde.de/de/whitelist",
+          "art": "primaer"
+        }
+      ],
+      "whitelist": {
+        "abgerufen": "2026-10-07T06:28:57Z",
+        "gefunden": true,
+        "eintraege": [
+          {
+            "betreiber": "Greentube Malta Limited",
+            "erlaubnisarten": [
+              "Virtuelle Automatenspiele"
+            ],
+            "domains": [
+              "stargames.de"
+            ],
+            "daten": [
+              "02.02.2023",
+              "13.02.2025"
+            ]
+          }
+        ],
+        "hinweis": "Eintrag in der GGL-Whitelist gefunden."
+      }
     }
-  }
+  },
+  "whitelist_quelle": "https://www.gluecksspiel-behoerde.de/de/whitelist"
 }
