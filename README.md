@@ -308,6 +308,26 @@ python -m melde anbieter="Name" lizenz=keine einzahlung=300 verlust=300 rtp=0.96
 > Bei fehlender Lizenz können Verträge nichtig sein (§ 134 BGB) und Einzahlungen
 > zurückforderbar (§ 812 BGB) – für den Einzelfall Verbraucherzentrale / Fachanwalt.
 
+### Wissenschaftlicher Anspruch & Grenzen
+
+Die Monte-Carlo-Zahlen (App-Tab SPIELE und Bot-Befehl `/risiko`) sind so gebaut, dass man ihnen
+nachrechnen kann:
+
+- **Unsicherheit wird gezeigt:** Wahrscheinlichkeiten mit 95-%-Wilson-Intervall, Mittelwert mit
+  Normalnäherungs-Intervall (`risiko/statistik.py`, Tests prüfen bekannte Werte und die ≈95-%-Überdeckung).
+- **Theorie vs. Simulation getrennt:** Das „erwartete Endkapital" gilt nur, wenn alle Spins gespielt werden;
+  bei Pleite endet die Session früher, deshalb zeigt die Ausgabe zusätzlich das simulierte Ø-Endkapital.
+- **Modell-Check eingebaut:** Nach dem Optional-Stopping-Satz muss *Ø Verlust = Hausvorteil × Einsatz ×
+  Ø gespielte Spins* gelten. Das prüfen Test **und** App (✓/⚠), unabhängig vom Zufall der Stichprobe.
+- **Zwei unabhängige Implementierungen** (JavaScript/mulberry32, Python/Mersenne-Twister) liefern für dasselbe
+  Szenario innerhalb ihrer Intervalle dasselbe (Wolf Gold, RTP 96,01 %, 20.000 Sessions: Pleite 19,5 % vs. 19,8 %).
+- **Reproduzierbar:** Zufall wird aus den Eingaben abgeleitet; gleiche Eingaben liefern gleiche Ergebnisse.
+- **Grenzen offen genannt:** Trefferquote je Volatilitätsstufe ist eine *Annahme*, Gewinnhöhen sind
+  exponentialverteilt, es gibt kein Max-Win-Limit. Echte Spiele können stärker schwanken. Das Intervall gibt die
+  Unsicherheit der *Simulation* an, nicht die des *Modells*.
+- **Rechenlimits:** höchstens 100.000 Spins und ein Gesamtbudget an simulierten Spins (die Oberfläche bleibt
+  bedienbar, der Bot rechnet im Thread).
+
 ## Personal-Risiko-Analyse (`risiko/`) – aus öffentlichen Fakten
 
 Beantwortet die legitime Frage: *Kann man aus öffentlich verfügbaren Infos
@@ -360,11 +380,12 @@ mit Startbefehl `python main.py` anlegen.
 ```bash
 python -m unittest discover -s tests -v      # Tests (Dashboard/Bot/RPC werden übersprungen, wenn Pakete fehlen)
 pip install ruff==0.15.8 && ruff check .      # Fehler + Sicherheitsfallen (ruff.toml)
-python scripts/check_frontend.py              # JS-Syntax, JSON, lang/viewport/title der Seiten in docs/
+python scripts/check_frontend.py              # JS-Syntax, JSON, lang/viewport/title, Labels, Live-Regionen
+NODE_PATH=$(npm root -g) node scripts/browser_check.js   # echte Seiten in Chromium (Playwright)
 ```
 
 `.github/workflows/ci.yml` führt das bei jedem Pull Request und Push auf `main` aus
-(inkl. `pip-audit`). Hinweis: Eine frühere Bereinigung ließ `web/dashboard.py` unbemerkt auf gelöschte
+(inkl. Browser-Test und `pip-audit`). Hinweis: Eine frühere Bereinigung ließ `web/dashboard.py` unbemerkt auf gelöschte
 Module zeigen – deshalb importieren die Tests Dashboard, Bot und RPC jetzt wirklich.
 
 ## Projektstruktur
@@ -380,6 +401,6 @@ gewinner/     Dokumentierte Advantage-Play-Fälle (mit Mathematik gewonnen, dann
 bot/          Telegram-Bot (CasinoBonusBot) + zugriff.py (Allowlist, Rate-Limit)
 ai/           DeepSeek-Client für die AGB-Analyse
 web/          FastAPI-Dashboard (Rechner + /sancho + /signal + VHS/Boot)
-scripts/      check_frontend.py (JS-/JSON-Prüfung für CI)
+scripts/      check_frontend.py (JS/JSON/Barrierefreiheit) · browser_check.js (Chromium-Test) – laufen in der CI
 tests/        Tests (Engine, Parser, Sancho, AKT 4 + Zeit-Code, Datenbank, Dashboard, Bot, Zugriff, Config, RPC, Risiko, Melde, Quellen, Verteilung)
 ```

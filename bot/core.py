@@ -1,5 +1,7 @@
 """Telegram-Bot: Casino-Bonus- und Umsatz-Analytiker."""
 
+import asyncio
+
 from telegram import Update
 from telegram.ext import (
     Application,
@@ -143,7 +145,7 @@ class CasinoBonusBot:
                     r = float(v.replace(",", ".")); s.rtp = r / 100 if r > 1.5 else r
                 elif k in ("vola", "volatilitaet"):
                     s.volatilitaet = vola.get(v.lower(), s.volatilitaet)
-            except ValueError:
+            except (ValueError, OverflowError):
                 pass
         if not gefunden:
             return await update.message.reply_text(
@@ -154,7 +156,12 @@ class CasinoBonusBot:
                 parse_mode="Markdown",
             )
         msg = await update.message.reply_text("📈 Simuliere ...")
-        await msg.edit_text(risiko_formatiere(risiko_analysiere(s, runs=8000), s))
+        try:
+            # Rechenintensiv: im Thread, damit der Event-Loop (alle anderen Nutzer) frei bleibt.
+            ergebnis = await asyncio.to_thread(risiko_analysiere, s, 8000)
+        except ValueError as exc:
+            return await msg.edit_text(f"❌ {exc}")
+        await msg.edit_text(risiko_formatiere(ergebnis, s))
 
     async def melde_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         import re
