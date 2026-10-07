@@ -48,6 +48,20 @@ jobs:
           node-version: "20"
       - run: python scripts/check_frontend.py
 
+  browser:
+    name: Browser (echte Seiten in Chromium)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Playwright + Chromium
+        run: npm install --no-save playwright@1.56.1 && npx playwright install --with-deps chromium
+      - name: Tabs, Barrierefreiheit, Simulation friert die Oberfläche nicht ein, Sancho, Decoder
+        run: node scripts/browser_check.js
+
   audit:
     name: Abhängigkeiten auf bekannte Schwachstellen prüfen
     runs-on: ubuntu-latest

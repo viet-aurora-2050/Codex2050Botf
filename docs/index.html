@@ -2,12 +2,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>∆1 // CODEX 2050</title>
 <meta name="theme-color" content="#01030d">
+<meta name="description" content="CODEX 2050 – ∆1: öffentliche Spieledaten, Hausvorteil und Risiko-Mathematik. Keine Vorhersage.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'self' https:; base-uri 'none'; form-action 'none'">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2301030d'/%3E%3Cpath d='M32 12 54 52H10Z' fill='none' stroke='%238fdcff' stroke-width='5' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
  :root{color-scheme:dark}*{box-sizing:border-box}
  body{margin:0;background:radial-gradient(1100px 560px at 50% -8%,#0b1d47 0%,#03071a 55%,#01030d 100%);
    color:#bcd6ff;font:15px/1.6 ui-monospace,Menlo,Consolas,monospace;min-height:100vh;-webkit-text-size-adjust:100%}
  .wrap{max-width:820px;margin:0 auto;padding:22px 16px 70px}
- .tag{color:#3f5c94;letter-spacing:.3em;font-size:11px}
+ .tag{color:#6c89c1;letter-spacing:.3em;font-size:11px}
  h1{font-size:20px;letter-spacing:.06em;color:#8fdcff;margin:2px 0 14px;text-shadow:0 0 18px #1a54b060}
  nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px;position:sticky;top:0;
    background:linear-gradient(#01030d,#01030dcc 70%,transparent);padding:8px 0;z-index:50}
@@ -31,7 +34,7 @@
  .meter{height:12px;border-radius:6px;background:#0a1738;border:1px solid #1e3d7a;overflow:hidden;margin-top:14px}
  .meter>i{display:block;height:100%;width:0;transition:width .5s,background .5s}
  .node{background:#060f28;border:1px solid #14264d;border-radius:10px;padding:14px;margin-top:12px}
- .foot{margin-top:24px;color:#425c8c;font-size:12px}a{color:#8fdcff}
+ .foot{margin-top:24px;color:#6c89c1;font-size:12px}a{color:#8fdcff}
  .rec{font-size:16px;margin-top:6px}
  .livedot{color:#4fd07a;animation:pulse 1.4s infinite}
  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
@@ -48,29 +51,33 @@
  #d1-vhs::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(140,220,255,.10) 0 1px,transparent 1px 3px)}
  #boot{position:fixed;inset:0;z-index:9999;background:#01030d;color:#8fdcff;font:12px/1.7 ui-monospace,monospace;padding:24px 18px;transition:opacity .6s;white-space:pre-wrap}
  #boot small{color:#3f5c94}
- @media (prefers-reduced-motion:reduce){#boot{display:none}}
+ :focus-visible{outline:2px solid #8fdcff;outline-offset:2px}
+ button:disabled{opacity:.55;cursor:progress}
+ .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+ @media (prefers-reduced-motion:reduce){#boot{display:none}section.on{animation:none}.livedot{animation:none}.bar{transition:none}}
 </style></head><body>
-<div id="d1-vhs"></div>
+<noscript><div class="disc" style="margin:16px">Diese App rechnet im Browser und braucht JavaScript. Ohne JavaScript steht nichts zur Verfügung.</div></noscript>
+<div id="d1-vhs" aria-hidden="true"></div>
 <div id="boot"><span id="boott"></span><span>█</span><br><br><small>[ Tippen zum Ueberspringen ]</small></div>
 <div class="wrap">
  <div class="tag" id="clock">∆1 // SESSION INITIALISIERT</div>
  <h1>CODEX 2050 — ∆1</h1>
- <nav>
-   <button data-t="spiele" class="on">SPIELE</button>
-   <button data-t="mobile">MOBILE</button>
-   <button data-t="multiplier">MULTIPLIER</button>
-   <button data-t="quellen">QUELLEN</button>
-   <button data-t="anzeige">ANZEIGE</button>
-   <button data-t="gewinner">GEWINNER</button>
-   <button data-t="signal">AKT 4</button>
-   <button data-t="info">INFO</button>
+ <nav role="tablist" aria-label="Bereiche">
+   <button role="tab" id="tab_spiele" aria-controls="spiele" aria-selected="true" data-t="spiele" class="on">SPIELE</button>
+   <button role="tab" id="tab_mobile" aria-controls="mobile" aria-selected="false" data-t="mobile">MOBILE</button>
+   <button role="tab" id="tab_multiplier" aria-controls="multiplier" aria-selected="false" data-t="multiplier">MULTIPLIER</button>
+   <button role="tab" id="tab_quellen" aria-controls="quellen" aria-selected="false" data-t="quellen">QUELLEN</button>
+   <button role="tab" id="tab_anzeige" aria-controls="anzeige" aria-selected="false" data-t="anzeige">ANZEIGE</button>
+   <button role="tab" id="tab_gewinner" aria-controls="gewinner" aria-selected="false" data-t="gewinner">GEWINNER</button>
+   <button role="tab" id="tab_signal" aria-controls="signal" aria-selected="false" data-t="signal">AKT 4</button>
+   <button role="tab" id="tab_info" aria-controls="info" aria-selected="false" data-t="info">INFO</button>
  </nav>
 
  <a href="sancho.html" class="go" style="display:block;text-align:center;text-decoration:none;margin-bottom:18px">
   <span class="livedot" style="color:#dfeaff">●</span> SANCHOS SPIELPLATZ öffnen — eigenständiges Live-Modul →</a>
 
  <!-- ===== MOBILE (Connection Analytics) ===== -->
- <section id="mobile">
+ <section id="mobile" role="tabpanel" aria-labelledby="tab_mobile">
   <div class="tag">MOBILE · NETZ · TRAFFIC · DATEN-PLATTFORM</div>
   <div class="disc">Drei zusammenhängende Ebenen: (1) die <b>eigene</b> Geräte-/Handy-Verbindung,
    (2) der eigene, getimte Request an die <b>öffentliche Daten-Plattform</b> (first-party
@@ -79,32 +86,32 @@
    keine Anbieter-/Casino-Server. Netz &amp; Traffic ändern <b>nichts</b> am Ergebnis — der RNG bleibt
    unabhängig. Auf iOS/Safari liefert das System manche Werte bewusst nicht („nicht verfügbar").</div>
   <button class="go" onclick="mobile()">∆ Netz · Traffic · Daten-Plattform prüfen</button>
-  <pre id="mout">Noch nicht geprüft.</pre>
+  <pre id="mout" role="status" aria-live="polite">Noch nicht geprüft.</pre>
  </section>
 
  <!-- ===== SPIELE (Public Game Data Engine · Matrix · Data Quality) ===== -->
- <section id="spiele" class="on">
+ <section id="spiele" role="tabpanel" aria-labelledby="tab_spiele" class="on">
   <div class="tag">SPIELE-DATENBANK · ÖFFENTLICHE ANBIETER-DATEN (AUTOMATISCH)</div>
   <div class="disc">Automatisch aus einer öffentlichen Datenbank — <b>kein manuelles Tippen</b>.
    Anbieter wählen → Spiel wählen → Daten werden automatisch übernommen und die
    <b>komplette Mathematik</b> berechnet (struktureller Hausvorteil + Live-Monte-Carlo).
    Öffentlich veröffentlichte Standard-RTPs (variieren je
    Version/Betreiber) — gegen die offizielle Spielinfo prüfen. Keine Anbieter-API, keine Vorhersage.</div>
-  <div id="db_status" class="tag" style="margin:6px 0"></div>
+  <div id="db_status" role="status" aria-live="polite" class="tag" style="margin:6px 0"></div>
   <div class="grid">
-   <div><label>Anbieter / Studio</label><select id="db_anb" onchange="db_fillGames()"></select></div>
-   <div><label>Spiel</label><select id="db_spiel" onchange="db_pick()"></select></div>
+   <div><label for="db_anb">Anbieter / Studio</label><select id="db_anb" onchange="db_fillGames()"></select></div>
+   <div><label for="db_spiel">Spiel</label><select id="db_spiel" onchange="db_pick()"></select></div>
   </div>
   <div class="panel" id="db_card">Anbieter und Spiel wählen …</div>
   <div class="grid">
-   <div><label>Budget (€)</label><input id="db_budget" type="number" value="100" step="10"></div>
-   <div><label>Einsatz/Spin (€)</label><input id="db_einsatz" type="number" value="1" step="0.1"></div>
-   <div><label>Anzahl Spins</label><input id="db_spins" type="number" value="500"></div>
-   <div><label>Simulationen</label><input id="db_runs" type="number" value="3000"></div>
+   <div><label for="db_budget">Budget (€)</label><input id="db_budget" type="number" value="100" step="10"></div>
+   <div><label for="db_einsatz">Einsatz/Spin (€)</label><input id="db_einsatz" type="number" value="1" step="0.1"></div>
+   <div><label for="db_spins">Anzahl Spins</label><input id="db_spins" type="number" value="500" min="1" max="100000" step="1"></div>
+   <div><label for="db_runs">Simulationen</label><input id="db_runs" type="number" value="3000" min="200" max="20000" step="100"></div>
   </div>
-  <button class="go" onclick="db_analyse()">∆ Spiel analysieren (Hausvorteil + Monte-Carlo)</button>
+  <button class="go" id="db_go" onclick="db_analyse()">∆ Spiel analysieren (Hausvorteil + Monte-Carlo)</button>
   <div class="bars" id="db_hist" style="margin-top:14px"></div>
-  <pre id="db_out"></pre>
+  <pre id="db_out" role="status" aria-live="polite"></pre>
   <div class="tag" style="margin-top:16px">DATENBANK · SPIELE DES ANBIETERS</div>
   <div class="tblwrap"><table id="matrix"></table></div>
   <div class="foot">Anzeige nach Fakten (RTP/Hausvorteil/Volatilität/Max Win) — <b>nie</b> „bestes Spiel um
@@ -112,72 +119,72 @@
  </section>
 
  <!-- ===== MULTIPLIER (Return Multiplier Analysis) ===== -->
- <section id="multiplier">
+ <section id="multiplier" role="tabpanel" aria-labelledby="tab_multiplier">
   <div class="tag">RETURN MULTIPLIER ANALYSIS</div>
   <div class="disc"><b>RTP allein bestimmt keine 2x/3x/10x-Wahrscheinlichkeit.</b> Ohne veröffentlichte
    Verteilung: „Probability unavailable". Es wird <b>kein</b> Spin vorhergesagt — nur die Verteilung
    eines Einsatzes beschrieben.</div>
   <div class="grid">
-   <div><label>Einsatz (€)</label><input id="ml_einsatz" type="number" value="5" step="0.5"></div>
-   <div><label>Quelle Verteilung</label><select id="ml_src" onchange="ml_fill()">
+   <div><label for="ml_einsatz">Einsatz (€)</label><input id="ml_einsatz" type="number" value="5" step="0.5"></div>
+   <div><label for="ml_src">Quelle Verteilung</label><select id="ml_src" onchange="ml_fill()">
      <option value="manual">manuell eingeben</option></select></div>
   </div>
-  <label>Verteilung (mult:P, …) — leer = keine Wahrscheinlichkeit</label>
+  <label for="ml_dist">Verteilung (mult:P, …) — leer = keine Wahrscheinlichkeit</label>
   <input id="ml_dist" placeholder="z. B. 0:0.7, 2:0.2, 5:0.1">
   <button class="go" onclick="multiplier()">∆ Multiplikatoren berechnen</button>
-  <pre id="mlout"></pre>
+  <pre id="mlout" role="status" aria-live="polite"></pre>
  </section>
 
  <!-- ===== QUELLEN (Quellenprinzip) ===== -->
- <section id="quellen">
+ <section id="quellen" role="tabpanel" aria-labelledby="tab_quellen">
   <div class="tag">QUELLENPRINZIP · QUELLE → GEGENQUELLE → PRIMÄRDOKUMENT → MATHE-CHECK</div>
   <div class="disc">Jede externe Angabe muss die Prüfkette durchlaufen. Reizwörter wie
    „hot/fällig/zahlt jetzt/bestes Spiel" sind <b>kein</b> Beweis. Nur lokal gespeichert.</div>
-  <label>Behauptung (z. B. aus einem Forum/Video)</label>
+  <label for="q_beh">Behauptung (z. B. aus einem Forum/Video)</label>
   <input id="q_beh" placeholder='z. B. "Slot XY ist heiß und zahlt jetzt"'>
   <div id="q_flag" class="disc" hidden></div>
-  <label>1) Quelle</label><input id="q_q" placeholder="wer sagt es? (Link/Name)">
-  <label>2) Gegenquelle</label><input id="q_g" placeholder="unabhängige zweite Quelle">
-  <label>3) Primärdokument</label><input id="q_p" placeholder="offizielle Spielinfo / Regulierer">
-  <label>4) Eigener Mathe-Check</label><input id="q_m" placeholder="z. B. 1 − RTP = Hausvorteil; passt es?">
-  <label>Ergebnis</label>
+  <label for="q_q">1) Quelle</label><input id="q_q" placeholder="wer sagt es? (Link/Name)">
+  <label for="q_g">2) Gegenquelle</label><input id="q_g" placeholder="unabhängige zweite Quelle">
+  <label for="q_p">3) Primärdokument</label><input id="q_p" placeholder="offizielle Spielinfo / Regulierer">
+  <label for="q_m">4) Eigener Mathe-Check</label><input id="q_m" placeholder="z. B. 1 − RTP = Hausvorteil; passt es?">
+  <label for="q_e">Ergebnis</label>
   <select id="q_e"><option value="offen">offen</option>
    <option value="bestaetigt">bestätigt</option><option value="widerlegt">widerlegt</option></select>
   <button class="go" onclick="quellen_pruefe()">∆ Kette prüfen</button>
   <button class="go" onclick="quellen_save()" style="background:#0a2a4a">＋ In Register speichern</button>
-  <pre id="q_out"></pre>
+  <pre id="q_out" role="status" aria-live="polite"></pre>
   <div class="tag" style="margin-top:12px">REGISTER (lokal)</div>
   <div id="q_list"></div>
  </section>
 
  <!-- ===== ANZEIGE / MELDEN ===== -->
- <section id="anzeige">
+ <section id="anzeige" role="tabpanel" aria-labelledby="tab_anzeige">
   <div class="tag">MELDEN · MATHEMATIK + BESCHWERDE AN DIE GGL</div>
   <div class="disc">Erzeugt aus dem mathematischen Prinzip eine <b>sachliche</b> Beschwerde/Anzeige
    an die Aufsicht — für <b>jeden</b> Anbieter. <b>Nur wahrheitsgemäße Angaben:</b> eine wissentlich
    falsche Anzeige ist selbst strafbar (§&nbsp;164 StGB). Prüfe den Anbieter zuerst in der
    GGL-Whitelist (<a href="https://www.ggl.de">ggl.de</a>). Keine Rechtsberatung.</div>
   <div class="grid">
-   <div><label>Anbieter</label><input id="zanb" placeholder="z. B. Beispiel Casino"></div>
-   <div><label>Lizenzstatus</label><select id="zliz">
+   <div><label for="zanb">Anbieter</label><input id="zanb" placeholder="z. B. Beispiel Casino"></div>
+   <div><label for="zliz">Lizenzstatus</label><select id="zliz">
      <option value="unbekannt" selected>unbekannt (noch nicht geprüft)</option>
      <option value="keine">keine dt. Lizenz gefunden</option>
      <option value="gueltig">gültig (in Whitelist)</option></select></div>
-   <div><label>Einzahlung gesamt (€)</label><input id="zein" type="number" value="300" step="10"></div>
-   <div><label>Verlust (€)</label><input id="zverl" type="number" value="300" step="10"></div>
-   <div><label>RTP</label><input id="zrtp" type="number" value="0.96" step="0.005"></div>
-   <div><label>Zeitraum von</label><input id="zvon" type="date"></div>
-   <div><label>Zeitraum bis</label><input id="zbis" type="date"></div>
-   <div><label>Dein Name</label><input id="znam" placeholder="[Name]"></div>
-   <div><label>Dein Ort</label><input id="zort" placeholder="[Ort]"></div>
+   <div><label for="zein">Einzahlung gesamt (€)</label><input id="zein" type="number" value="300" step="10"></div>
+   <div><label for="zverl">Verlust (€)</label><input id="zverl" type="number" value="300" step="10"></div>
+   <div><label for="zrtp">RTP</label><input id="zrtp" type="number" value="0.96" step="0.005"></div>
+   <div><label for="zvon">Zeitraum von</label><input id="zvon" type="date"></div>
+   <div><label for="zbis">Zeitraum bis</label><input id="zbis" type="date"></div>
+   <div><label for="znam">Dein Name</label><input id="znam" placeholder="[Name]"></div>
+   <div><label for="zort">Dein Ort</label><input id="zort" placeholder="[Ort]"></div>
   </div>
   <button class="go" onclick="anzeige()">∆ Beschwerde erzeugen</button>
   <button class="go" onclick="kopieren()" style="background:#0a2a4a">⧉ Kopieren</button>
-  <pre id="zout"></pre>
+  <pre id="zout" role="status" aria-live="polite"></pre>
  </section>
 
  <!-- ===== GEWINNER (Advantage Play, dokumentiert) ===== -->
- <section id="gewinner">
+ <section id="gewinner" role="tabpanel" aria-labelledby="tab_gewinner">
   <div class="tag">MIT MATHEMATIK GEWONNEN — UND VERBANNT</div>
   <div class="panel truth" style="border-color:#2b4a2f;background:#08160c">
    Alle echten Gewinner nutzten einen <b>realen strukturellen Riss</b>: abhängige Karten (Blackjack),
@@ -190,7 +197,7 @@
  </section>
 
  <!-- ===== SIGNAL / AKT 4 ===== -->
- <section id="signal">
+ <section id="signal" role="tabpanel" aria-labelledby="tab_signal">
   <div class="tag">AKT 4 — DAS SIGNAL · EBENE 4 (ZEIT-CODE)</div>
   <div class="panel">
    <div class="l" id="sigfinal"></div>
@@ -215,7 +222,7 @@
  </section>
 
  <!-- ===== INFO ===== -->
- <section id="info">
+ <section id="info" role="tabpanel" aria-labelledby="tab_info">
   <div class="tag">ÜBER ∆1 // CODEX 2050</div>
   <div class="panel">
    <div class="l">Dieses eine HTML-File enthaelt das komplette ∆1-System — offline, ohne Server.</div>
@@ -238,7 +245,8 @@
 <script>
 // ---------- Navigation ----------
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
-  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('nav button').forEach(x=>{x.classList.remove('on');x.setAttribute('aria-selected','false');});
+  b.setAttribute('aria-selected','true');
   document.querySelectorAll('section').forEach(x=>x.classList.remove('on'));
   b.classList.add('on');document.getElementById(b.dataset.t).classList.add('on');
 });
@@ -475,46 +483,88 @@ function db_matrix(p,list){
       +'<td>'+(g.vola||'—')+'</td><td>'+(g.max||0)+'x</td></tr>';});
   document.getElementById('matrix').innerHTML=h;
 }
+// ---------- Monte-Carlo (nicht blockierend, reproduzierbar, mit Unsicherheitsangaben) ----------
+// Modell (vereinfacht, ehrlich): je Spin Treffer mit Wahrscheinlichkeit h (je Volatilitätsstufe angenommen);
+// Gewinnhöhe exponentialverteilt mit Mittel rtp/h·Einsatz => E[Auszahlung] = RTP·Einsatz.
+const MC={MAX_SPINS:100000,MAX_ARBEIT:150000000,MIN_RUNS:200,MAX_RUNS:20000,SLICE:2000000};
+let MC_TOKEN=0;
+// Wilson-Score-Intervall (95 %) für einen Anteil – robust auch nahe 0 und 1 (Wilson 1927).
+function wilson(x,n){if(n<=0)return[0,1];const z=1.959963984540054,p=x/n,z2=z*z,d=1+z2/n,
+  c=(p+z2/(2*n))/d,h=z*Math.sqrt(p*(1-p)/n+z2/(4*n*n))/d;return[Math.max(0,c-h),Math.min(1,c+h)];}
+function pctKI(x,n){const k=wilson(x,n);return (x/n*100).toFixed(1)+' %  (95%-KI '+(k[0]*100).toFixed(1)+'–'+(k[1]*100).toFixed(1)+' %)';}
 // Kombinierte Analyse: struktureller Verlust (Hausvorteil) + Monte-Carlo.
 function db_analyse(){
-  var g=db_current(); if(!g){document.getElementById('db_out').textContent='Bitte zuerst ein Spiel wählen.';return;}
-  var BR=num(einzVal('db_budget')), B=num(einzVal('db_einsatz'))||1, K=Math.max(1,Math.round(num(einzVal('db_spins'))||1));
-  var runs=Math.min(20000,Math.max(200,Math.round(num(einzVal('db_runs'))||3000)));
-  var rtp=g.rtp, he=1-rtp, h=HIT[g.vola]||.18, mean=rtp/h;
-  var ev=BR-K*B*he;
-  var finals=[],ruin=0,plus=0;
-  for(var r=0;r<runs;r++){var k=BR,dead=false;
-    for(var i=0;i<K;i++){ if(k<B){dead=true;break;} var pay=0; if(Math.random()<h) pay=B*(-mean*Math.log(1-Math.random())); k+=pay-B; }
-    if(dead||k<B)ruin++; k=Math.max(0,k); finals.push(k); if(k>BR)plus++;}
-  finals.sort((a,b)=>a-b);
-  var n=finals.length, perc=p=>finals[Math.min(n-1,Math.max(0,Math.floor(p*n)))];
-  var median=perc(.5),p05=perc(.05),p25=perc(.25),p75=perc(.75),p95=perc(.95);
-  var lose25=finals.filter(x=>x<BR*0.75).length/n, lose50=finals.filter(x=>x<BR*0.5).length/n;
-  var loseAll=finals.filter(x=>x<Math.max(B,BR*0.001)).length/n;
-  // Histogramm
-  var hi=Math.max(BR*2,p95*1.2)||1, bins=new Array(24).fill(0);
-  finals.forEach(x=>{bins[Math.min(23,Math.floor(x/hi*24))]++;});
-  var mx=Math.max.apply(null,bins)||1, bh=document.getElementById('db_hist');bh.innerHTML='';
-  bins.forEach((c,i)=>{var d=document.createElement('div');d.className='bar';d.style.height=Math.max(2,c/mx*100)+'%';
-    if(i*hi/24<=BR&&(i+1)*hi/24>BR)d.classList.add('now');bh.appendChild(d);});
-  document.getElementById('db_out').innerHTML=
-    '<span class="tag">SPIEL</span>\n'+esc(g.name)+' · '+esc(g.anbieter)+'\n\n'
-    +'<span class="tag">STRUKTURELL (Hausvorteil)</span>\n'
-    +'RTP '+(rtp*100).toFixed(2)+'% → Hausvorteil '+(he*100).toFixed(2)+'%\n'
-    +'Erwarteter Verlust = '+K+' Spins × '+B.toFixed(2)+' € × '+(he*100).toFixed(2)+'% = '+(K*B*he).toFixed(2)+' €\n'
-    +'Erwartetes Endkapital = '+ev.toFixed(2)+' €  (Start '+BR.toFixed(2)+' €)\n\n'
-    +'<span class="tag">MONTE-CARLO ('+runs+' Sessions, Vola '+(g.vola||'?')+')</span>\n'
-    +'Median-Endkapital:         '+median.toFixed(2)+' €\n'
-    +'Chance, im Plus zu enden:  '+(plus/runs*100).toFixed(1)+' %\n'
-    +'<span class="stop">Risk of Ruin (pleite):     '+(ruin/runs*100).toFixed(1)+' %</span>\n'
-    +'Chance, 25% zu verlieren:  '+(lose25*100).toFixed(1)+' %\n'
-    +'Chance, 50% zu verlieren:  '+(lose50*100).toFixed(1)+' %\n'
-    +'<span class="stop">Chance, alles zu verlieren: '+(loseAll*100).toFixed(1)+' %</span>\n'
-    +'Perzentile P5/P25/P75/P95: '+p05.toFixed(0)+' / '+p25.toFixed(0)+' / '+p75.toFixed(0)+' / '+p95.toFixed(0)+' €\n\n'
-    +'<span class="truth">Öffentliche Fakten → deine Risiko-Mathematik. Keine Spin-Vorhersage; der Erwartungswert bleibt negativ.</span>';
-  // Fürs MULTIPLIER-Tab merken (ohne manuelles Tippen).
-  if(!SPIELE.some(s=>s.name===g.name)){SPIELE.push({name:g.name,anb:g.anbieter,rtp:g.rtp,vola:g.vola,max:g.max,minb:g.minb,maxb:g.maxb,dist:''});
-    if(typeof ml_sources==='function')ml_sources();}
+  var out=document.getElementById('db_out'), btn=document.getElementById('db_go');
+  var g=db_current(); if(!g){out.textContent='Bitte zuerst ein Spiel wählen.';return;}
+  if(typeof g.rtp!=='number'){out.innerHTML='<span class="stop">Für „'+esc(g.name)+'" liefert die Quelle keinen RTP — keine seriöse Verlust-/Monte-Carlo-Rechnung möglich. Wähle ein Spiel mit veröffentlichtem RTP.</span>';return;}
+  var BR=num(einzVal('db_budget')), B=num(einzVal('db_einsatz'))||1;
+  var Kroh=Math.round(num(einzVal('db_spins'))||1), rroh=Math.round(num(einzVal('db_runs'))||3000);
+  if(!(BR>0)||!isFinite(BR)||!(B>0)||!isFinite(B)){out.innerHTML='<span class="stop">Budget und Einsatz müssen positive Zahlen sein.</span>';return;}
+  var hinweise=[];
+  var K=Math.min(MC.MAX_SPINS,Math.max(1,Kroh)); if(K!==Kroh)hinweise.push('Spins auf '+K+' begrenzt (Maximum '+MC.MAX_SPINS+').');
+  var runs=Math.min(MC.MAX_RUNS,Math.max(MC.MIN_RUNS,rroh)), cap=Math.floor(MC.MAX_ARBEIT/K);
+  if(runs>cap){runs=Math.max(MC.MIN_RUNS,cap);hinweise.push('Sessions auf '+runs+' reduziert (Rechenlimit bei vielen Spins).');}
+  var rtp=g.rtp, he=1-rtp, h=HIT[g.vola]||.18, mean=rtp/h, ev=BR-K*B*he;
+  var rng=mulberry32(xmur3([g.name,g.anbieter,rtp,g.vola,BR,B,K,runs].join('|')));   // gleiche Eingaben => gleiches Ergebnis
+  var token=++MC_TOKEN, r=0, ruin=0, plus=0, finals=new Float64Array(runs), played=new Float64Array(runs);
+  if(btn)btn.disabled=true;
+  function scheibe(){
+    if(token!==MC_TOKEN)return;                         // neuere Berechnung gestartet -> diese abbrechen
+    var arbeit=0;
+    while(r<runs&&arbeit<MC.SLICE){var k=BR,dead=false,i=0;
+      for(;i<K;i++){if(k<B){dead=true;break;} var pay=0; if(rng()<h)pay=B*(-mean*Math.log(1-rng())); k+=pay-B;}
+      arbeit+=i+1; if(dead||k<B)ruin++; finals[r]=Math.max(0,k); played[r]=i; if(k>BR)plus++; r++;}
+    if(r<runs){out.textContent='… simuliere '+Math.round(r/runs*100)+' % ('+r+' von '+runs+' Sessions)';setTimeout(scheibe,0);}
+    else fertig();
+  }
+  function fertig(){
+    if(btn)btn.disabled=false;
+    var sorted=Float64Array.from(finals).sort(), n=runs, perc=p=>sorted[Math.min(n-1,Math.max(0,Math.floor(p*n)))];
+    var median=perc(.5),p05=perc(.05),p25=perc(.25),p75=perc(.75),p95=perc(.95);
+    var lose25=0,lose50=0,loseAll=0,sum=0,sumsq=0,sumPlayed=0, thrAll=Math.max(B,BR*0.001);
+    for(var j=0;j<n;j++){var x=finals[j]; if(x<BR*0.75)lose25++; if(x<BR*0.5)lose50++; if(x<thrAll)loseAll++; sum+=x; sumPlayed+=played[j];}
+    var mw=sum/n, rs=0, rs2=0;
+    for(var j2=0;j2<n;j2++){var dx=finals[j2]-mw; sumsq+=dx*dx; var res=(finals[j2]-BR)+he*B*played[j2]; rs+=res; rs2+=res*res;}
+    var rMean=rs/n, rSe=Math.sqrt(Math.max(0,(rs2-n*rMean*rMean)/(n-1))/n);   // Residuum hat Erwartung 0 (Optional-Stopping)
+    var se=Math.sqrt(sumsq/(n-1)/n), mwLo=mw-1.959963984540054*se, mwHi=mw+1.959963984540054*se, mPlayed=sumPlayed/n;
+    var waldTheorie=B*he*mPlayed, waldSim=BR-mw;          // Optional-Stopping: E[Verlust] = Hausvorteil·Einsatz·E[gespielte Spins]
+    var waldOk=Math.abs(rMean)<=3*rSe+1e-9;                   // 3σ: Fehlalarm nur in ~0,3 % der Fälle
+    // Histogramm
+    var hi=Math.max(BR*2,p95*1.2)||1, bins=new Array(24).fill(0);
+    for(var q=0;q<n;q++)bins[Math.min(23,Math.floor(finals[q]/hi*24))]++;
+    var mx=Math.max.apply(null,bins)||1, bh=document.getElementById('db_hist');bh.innerHTML='';
+    bins.forEach((c,i)=>{var d=document.createElement('div');d.className='bar';d.style.height=Math.max(2,c/mx*100)+'%';
+      if(i*hi/24<=BR&&(i+1)*hi/24>BR)d.classList.add('now');bh.appendChild(d);});
+    out.innerHTML=
+      '<span class="tag">SPIEL</span>\n'+esc(g.name)+' · '+esc(g.anbieter)+'\n\n'
+      +(hinweise.length?'<span class="warn">'+hinweise.map(esc).join('\n')+'</span>\n\n':'')
+      +'<span class="tag">STRUKTURELL (Hausvorteil)</span>\n'
+      +'RTP '+(rtp*100).toFixed(2)+'% → Hausvorteil '+(he*100).toFixed(2)+'%\n'
+      +'Erwarteter Verlust = '+K+' Spins × '+B.toFixed(2)+' € × '+(he*100).toFixed(2)+'% = '+(K*B*he).toFixed(2)+' €\n'
+      +'Erwartetes Endkapital = '+ev.toFixed(2)+' €  (Start '+BR.toFixed(2)+' €; theoretisch, wenn alle '+K+' Spins gespielt werden)\n\n'
+      +'<span class="tag">MONTE-CARLO ('+runs+' Sessions, Vola '+esc(g.vola||'?')+')</span>\n'
+      +'Simuliertes Ø-Endkapital:  '+mw.toFixed(2)+' €  (95%-KI '+mwLo.toFixed(2)+'–'+mwHi.toFixed(2)+'; Ø '+mPlayed.toFixed(0)+' Spins gespielt – bei Pleite endet die Session früher)\n'
+      +'Median-Endkapital:         '+median.toFixed(2)+' €\n'
+      +'Chance, im Plus zu enden:  '+pctKI(plus,n)+'\n'
+      +'<span class="stop">Risk of Ruin (pleite):     '+pctKI(ruin,n)+'</span>\n'
+      +'Chance, 25% zu verlieren:  '+pctKI(lose25,n)+'\n'
+      +'Chance, 50% zu verlieren:  '+pctKI(lose50,n)+'\n'
+      +'<span class="stop">Chance, alles zu verlieren: '+pctKI(loseAll,n)+'</span>\n'
+      +'Perzentile P5/P25/P75/P95: '+p05.toFixed(0)+' / '+p25.toFixed(0)+' / '+p75.toFixed(0)+' / '+p95.toFixed(0)+' €\n\n'
+      +'<span class="tag">MODELL-CHECK</span>\n'
+      +'Ø Verlust simuliert '+waldSim.toFixed(2)+' € ≈ Hausvorteil × Einsatz × Ø Spins = '+waldTheorie.toFixed(2)+' €  '
+      +(waldOk?'<span class="truth">✓ stimmt überein</span>':'<span class="warn">⚠ Abweichung – Ergebnis mit Vorsicht lesen</span>')+'\n\n'
+      +'<span class="tag">ANNAHMEN &amp; GRENZEN</span>\n'
+      +'Vereinfachtes Modell: Trefferquote je Volatilitätsstufe angenommen (niedrig 32 % · mittel 18 % · hoch 9 %), Gewinnhöhe exponentialverteilt, kein Max-Win-Limit. '
+      +'Echte Spiele können stärker schwanken (seltene Riesengewinne); die Stufe ist eine Annahme, kein veröffentlichter Wert. '
+      +'Ergebnis reproduzierbar (Zufall aus den Eingaben abgeleitet). KI = Unsicherheit der Simulation, nicht des Modells.\n\n'
+      +'<span class="truth">Öffentliche Fakten → deine Risiko-Mathematik. Keine Spin-Vorhersage; der Erwartungswert bleibt negativ.</span>';
+    // Fürs MULTIPLIER-Tab merken (ohne manuelles Tippen).
+    if(!SPIELE.some(s=>s.name===g.name)){SPIELE.push({name:g.name,anb:g.anbieter,rtp:g.rtp,vola:g.vola,max:g.max,minb:g.minb,maxb:g.maxb,dist:''});
+      if(typeof ml_sources==='function')ml_sources();}
+  }
+  out.textContent='… simuliere 0 %';
+  setTimeout(scheibe,0);
 }
 db_load();
 

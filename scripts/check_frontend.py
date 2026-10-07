@@ -16,6 +16,10 @@ from pathlib import Path
 
 DOCS = Path(__file__).resolve().parents[1] / "docs"
 
+# Strenge Barrierefreiheits-Pruefung (Labels, Live-Regionen) fuer diese Seiten. sancho.html ist
+# bewusst NICHT enthalten: das Sancho-Modul bleibt auf Wunsch unveraendert.
+A11Y_STRENG = {"index.html", "akt4-decoder.html"}
+
 
 def pruefe_html(pfad: Path) -> list[str]:
     fehler: list[str] = []
@@ -26,6 +30,8 @@ def pruefe_html(pfad: Path) -> list[str]:
         fehler.append("fehlendes viewport-Meta")
     if not re.search(r"<title>[^<]+</title>", html):
         fehler.append("fehlender <title>")
+    if pfad.name in A11Y_STRENG:
+        fehler += pruefe_a11y(html)
     node = shutil.which("node")
     if not node:
         fehler.append("node nicht gefunden – JavaScript-Syntax nicht geprüft")
@@ -37,6 +43,29 @@ def pruefe_html(pfad: Path) -> list[str]:
         Path(f.name).unlink(missing_ok=True)
         if r.returncode != 0:
             fehler.append(f"Skript {i}: {r.stderr.strip().splitlines()[0] if r.stderr else 'Syntaxfehler'}")
+    return fehler
+
+
+def pruefe_a11y(html: str) -> list[str]:
+    """Jedes Formularfeld braucht ein <label for=...> (oder aria-label); Ergebnisse brauchen aria-live."""
+    fehler: list[str] = []
+    ohne_for = re.findall(r"<label(?![^>]*\bfor=)[^>]*>\s*([^<]{3,60})", html)
+    nackt = [m for m in ohne_for if not re.search(r"<label[^>]*>[^<]*" + re.escape(m[:10]) + r"[\s\S]{0,80}<input", html)]
+    for text in nackt:
+        fehler.append(f"label ohne for=: {text.strip()[:40]!r}")
+    for tag, attrs in re.findall(r"<(input|select|textarea)\b([^>]*)>", html):
+        m = re.search(r'\bid="([^"]+)"', attrs)
+        if re.search(r'type="(hidden|checkbox)"', attrs) and not m:
+            continue
+        if not m:
+            if "aria-label" not in attrs:
+                fehler.append(f"<{tag}> ohne id/aria-label")
+        elif f'for="{m.group(1)}"' not in html and "aria-label" not in attrs and 'onchange="Akt4' not in attrs:
+            fehler.append(f"<{tag} id={m.group(1)}> ohne zugehöriges label")
+    if "aria-live" not in html:
+        fehler.append("keine aria-live-Region für Ergebnisse")
+    if "Content-Security-Policy" not in html:
+        fehler.append("fehlende Content-Security-Policy (meta)")
     return fehler
 
 
