@@ -3,7 +3,6 @@
 import json
 import tempfile
 import unittest
-from datetime import datetime, timezone
 from pathlib import Path
 
 from datenbank import anbieter_details as d

@@ -1,0 +1,18 @@
+# Bewusst schmal: echte Fehler und Sicherheitsfallen, keine Stilfragen.
+target-version = "py311"
+line-length = 120
+
+[lint]
+select = ["E9", "F", "B", "S"]
+ignore = [
+  "S101",   # assert in Tests
+  "S311",   # random: Simulation, kein Kryptografie-Zweck
+  "B008",
+]
+
+[lint.per-file-ignores]
+"tests/**" = ["S"]
+"datenbank/sources.py" = ["S310"]   # feste, per Konfiguration gesetzte https-URLs
+"aktvier/signal.py" = ["S105"]      # "token" ist hier ein Morse-Zeichen, kein Passwort
+"scripts/**" = ["S603"]        # feste Befehlsliste (node --check), keine Nutzereingabe
+"rpc/server.py" = ["S104"]          # Host ist konfigurierbar, Standard ist 127.0.0.1

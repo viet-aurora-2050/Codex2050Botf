@@ -59,8 +59,10 @@ def _jetzt() -> datetime:
 
 def abrufen(url: str = WHITELIST_URL, timeout: int = 30) -> str:
     """Laedt die Whitelist-Seite (Redirects werden gefolgt). Wirft bei Fehlern."""
-    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "text/html"})
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
+    if not url.lower().startswith("https://"):
+        raise ValueError("nur https-URLs erlaubt")
+    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "text/html"})  # noqa: S310
+    with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310 - Schema oben geprueft
         ctype = (resp.headers.get("Content-Type") or "").lower()
         if "html" not in ctype:
             raise ValueError(f"unerwarteter Content-Type: {ctype or 'unbekannt'}")

@@ -345,11 +345,27 @@ erreichbar — direkt auf dem Handy.
 sie werden **nie** ins Repository geschrieben. Für reinen Polling-Bot einen Worker
 mit Startbefehl `python main.py` anlegen.
 
-## Tests
+### Sicherheit & Betrieb (Details: [`SECURITY.md`](SECURITY.md))
+
+- **`ALLOWED_USER_IDS` setzen**, sobald eine KI aktiv ist. Die Allowlist und das Rate-Limit
+  (`RATE_LIMIT_PER_MINUTE`, Standard 10) greifen über ein Gate vor allen Befehlen (`bot/zugriff.py`).
+  Leer = öffentlicher Bot; ein fehlerhafter Eintrag (z. B. `123;456`) stoppt den Start, statt den Bot zu öffnen.
+- **Webhook** (`/telegram/webhook`) nimmt Anfragen nur mit `TELEGRAM_WEBHOOK_SECRET` an – beim Registrieren
+  `secret_token` auf denselben Wert setzen, sonst antwortet der Server mit 403.
+- Das Dashboard setzt Sicherheits-Header (CSP, `nosniff`, `X-Frame-Options`, `Referrer-Policy`).
+- Abhängigkeiten sind gepinnt und per `pip-audit` geprüft; Dependabot meldet wöchentlich Updates.
+
+## Tests & CI
 
 ```bash
-python -m unittest discover -s tests -v
+python -m unittest discover -s tests -v      # Tests (Dashboard/Bot/RPC werden übersprungen, wenn Pakete fehlen)
+pip install ruff==0.15.8 && ruff check .      # Fehler + Sicherheitsfallen (ruff.toml)
+python scripts/check_frontend.py              # JS-Syntax, JSON, lang/viewport/title der Seiten in docs/
 ```
+
+`.github/workflows/ci.yml` führt das bei jedem Pull Request und Push auf `main` aus
+(inkl. `pip-audit`). Hinweis: Eine frühere Bereinigung ließ `web/dashboard.py` unbemerkt auf gelöschte
+Module zeigen – deshalb importieren die Tests Dashboard, Bot und RPC jetzt wirklich.
 
 ## Projektstruktur
 
@@ -361,8 +377,9 @@ datenbank/    Tägliche Erzeugung von docs/games.json (Basissatz + öffentliche 
 risiko/       Personal-Risiko-Analyse (Monte-Carlo: EV, Risk of Ruin) aus öffentlichen Fakten
 melde/        Melde-Assistent (Mathematik + Beschwerde/Anzeige an die GGL, für jeden Anbieter)
 gewinner/     Dokumentierte Advantage-Play-Fälle (mit Mathematik gewonnen, dann verbannt)
-bot/          Telegram-Bot (CasinoBonusBot)
+bot/          Telegram-Bot (CasinoBonusBot) + zugriff.py (Allowlist, Rate-Limit)
 ai/           DeepSeek-Client für die AGB-Analyse
 web/          FastAPI-Dashboard (Rechner + /sancho + /signal + VHS/Boot)
-tests/        Unit-Tests (Engine, Parser, Sancho, AKT 4 + Zeit-Code, Datenbank, Risiko, Melde, Quellen, Verteilung)
+scripts/      check_frontend.py (JS-/JSON-Prüfung für CI)
+tests/        Tests (Engine, Parser, Sancho, AKT 4 + Zeit-Code, Datenbank, Dashboard, Bot, Zugriff, Config, RPC, Risiko, Melde, Quellen, Verteilung)
 ```

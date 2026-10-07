@@ -126,6 +126,13 @@ class TestSchreiben(unittest.TestCase):
             self.assertTrue(w.schreibe(w.aktualisiere(alt, ohne_jp), pfad))
 
 
+class TestNurHttps(unittest.TestCase):
+    def test_andere_schemata_werden_abgelehnt(self):
+        for url in ("file:///etc/passwd", "http://example.org/", "ftp://example.org/x", "javascript:alert(1)"):
+            with self.assertRaises(ValueError, msg=url):
+                w.abrufen(url)
+
+
 class TestAusfall(unittest.TestCase):
     def test_zu_wenige_eintraege_lassen_datei_unveraendert(self):
         with tempfile.TemporaryDirectory() as tmp:

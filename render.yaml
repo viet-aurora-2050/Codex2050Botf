@@ -15,6 +15,12 @@ services:
       # Optional – nur setzen, wenn der Telegram-Webhook aktiv sein soll.
       - key: TELEGRAM_TOKEN
         sync: false
+      # Nur fuer Webhook-Betrieb: Geheimnis, das Telegram im Header mitsendet (ohne Wert: Webhook aus).
+      - key: TELEGRAM_WEBHOOK_SECRET
+        sync: false
+      # Empfohlen: erlaubte Telegram-User-IDs (kommagetrennt). Leer = oeffentlicher Bot.
+      - key: ALLOWED_USER_IDS
+        sync: false
       # Optional – aktiviert die KI-gestuetzte AGB-Analyse.
       - key: DEEPSEEK_API_KEY
         sync: false

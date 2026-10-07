@@ -1,0 +1,61 @@
+name: CI
+
+# Läuft bei jedem Pull Request und bei Pushes auf main: Linter, Tests, Frontend-Prüfung.
+# Bisher gab es keine CI für Tests – ein kaputter Import (web/dashboard.py) blieb unbemerkt.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read            # Least-Privilege: CI darf nur lesen
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    name: Python (Lint + Tests)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"          # wie runtime.txt
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - name: Abhängigkeiten
+        run: pip install -r requirements.txt ruff==0.15.8
+      - name: Ruff (Fehler + Sicherheitsfallen)
+        run: ruff check .
+      - name: Tests (Dashboard/Bot/RPC laufen mit echten Paketen)
+        run: python -m unittest discover -s tests -v
+
+  frontend:
+    name: Frontend (JS-Syntax + JSON)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: python scripts/check_frontend.py
+
+  audit:
+    name: Abhängigkeiten auf bekannte Schwachstellen prüfen
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true               # neue CVEs sollen informieren, nicht jeden PR blockieren
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install pip-audit && pip-audit -r requirements.txt
