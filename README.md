@@ -109,9 +109,15 @@ mehr Lore-Text, dieselbe Ehrlichkeit: die Selbst-Entlarvung bleibt Kern.
 > Spielbefehl.
 
 **Anbieter-Profile aus öffentlichen Quellen:** `docs/anbieter.json` enthält für Jackpotpirat
-(Betreiber DGGS, GGL-Whitelist-Eintrag, Erlaubnis vom 27.04.2022, Limits, Studios) belegte Fakten mit
-Quellen und Abrufdatum. Sanchos Seite zeigt sie samt Rechnung (Spins/h × Einsatz × Hausvorteil); RTPs
-werden nicht erfunden.
+(Betreiber DGGS, Erlaubnis vom 27.04.2022, Limits, Studios) belegte Fakten mit Quellen und Abrufdatum.
+Für **alle** Sancho-Anbieter (Tipico, Betano, N1, Stargames, Jackpotpirat) gleicht der tägliche Job
+`.github/workflows/update-anbieter.yml` (`python -m datenbank.anbieter_whitelist`) den Block `whitelist`
+mit der **offiziellen GGL-Whitelist** ab: Betreiber, Erlaubnisart, Domains, Daten – oder „kein Eintrag
+gefunden". Nur diese strukturierte Offizialquelle wird automatisch gelesen; Limits/Studios stammen
+(derzeit nur bei Jackpotpirat) aus der Betreiberseite und werden kuratiert. Fällt der Abruf aus oder
+ändert sich das Seitenformat, bleibt die Datei unverändert; die Seite zeigt das Alter der Daten und
+lädt sie bei Netz-Rückkehr neu. Nicht genutzt: Google-Suche (keine freie API), Review-Blogs
+(Affiliate, widersprüchlich). RTPs werden nicht erfunden.
 
 ```bash
 python -m sancho "tipico games" 2      # CLI
