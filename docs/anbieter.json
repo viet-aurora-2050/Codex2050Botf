@@ -26,23 +26,23 @@
         "min_sekunden_pro_spin_durchschnitt": 5
       },
       "studios": {
-        "Play'n GO": 192,
-        "Novomatic/Greentube": 165,
         "Merkur": 115,
+        "Novoline / Novomatic (Greentube)": 165,
         "Gamomat": 72,
+        "Play'n GO": 192,
         "Pragmatic Play": 56,
-        "Swintt": 50,
-        "Apparat Gaming": 48,
-        "Amatic": 47,
         "Hölle Games": 34,
+        "Apparat Gaming": 48,
         "Relax Gaming": 23,
-        "G.Games": 18,
-        "Tornado Games": 18,
+        "Peter & Sons": 1,
         "Indigo Magic": 13,
         "Bally Wulff": 10,
-        "Peter & Sons": 1
+        "G.Games": 18,
+        "Swintt": 50,
+        "Amatic": 47,
+        "Tornado Games": 18
       },
-      "titel_gesamt_angabe": "ca. 855 (Betreiberseite; die Studio-Zahlen summieren sich auf 862)",
+      "titel_gesamt_angabe": "855 Spielautomaten (Betreiberseite); die Studio-Zahlen summieren sich auf 862",
       "spiele_genannt": [
         "Book of Ra",
         "Book of Ra Deluxe",
@@ -53,7 +53,18 @@
         "Legacy of Dead",
         "Sweet Bonanza",
         "Ghost Slider",
-        "Tizona"
+        "Tizona",
+        "Ramses Book",
+        "Höllische Sieben",
+        "Book of Olympus",
+        "Money Train",
+        "Gnomes & Giants",
+        "Bad Bass Cash Haul",
+        "Magic Book",
+        "Age of Athena",
+        "Master of Books",
+        "Book of Aztec",
+        "Dragon's Book Next"
       ],
       "rtp_hinweis": "Die Betreiberseite nennt keine RTP-Prozente; der RTP muss laut Regeln waehrend des Spiels angezeigt werden. Studio-Standardwerte (docs/games.json) koennen je Betreiber/Version abweichen.",
       "quellen": [
@@ -97,6 +108,31 @@
           }
         ],
         "hinweis": "Eintrag in der GGL-Whitelist gefunden."
+      },
+      "studios_beliebtester_titel": {
+        "Merkur": "Eye of Horus",
+        "Novoline / Novomatic (Greentube)": "Book of Ra",
+        "Gamomat": "Ramses Book",
+        "Play'n GO": "Book of Dead",
+        "Pragmatic Play": "Big Bass Bonanza",
+        "Hölle Games": "Höllische Sieben",
+        "Apparat Gaming": "Book of Olympus",
+        "Relax Gaming": "Money Train",
+        "Peter & Sons": "Gnomes & Giants",
+        "Indigo Magic": "Bad Bass Cash Haul",
+        "Bally Wulff": "Magic Book",
+        "G.Games": "Age of Athena",
+        "Swintt": "Master of Books",
+        "Amatic": "Book of Aztec",
+        "Tornado Games": "Dragon's Book Next"
+      },
+      "betreiberseite": {
+        "abgerufen": "2026-10-07T06:36:00Z",
+        "url": "https://www.jackpotpiraten.de/",
+        "gelesen": [
+          "studios",
+          "limits"
+        ]
       }
     },
     "tipico": {
@@ -235,5 +271,40 @@
       }
     }
   },
-  "whitelist_quelle": "https://www.gluecksspiel-behoerde.de/de/whitelist"
+  "whitelist_quelle": "https://www.gluecksspiel-behoerde.de/de/whitelist",
+  "betreiberseiten_hinweis": {
+    "geprueft": "2026-10-07",
+    "tipico": "games.tipico.de lieferte eine „No Service\"-Seite (Geo-Sperre) – keine lesbaren Inhalte.",
+    "betano": "betano.de antwortete mit HTTP 403 (Schutzseite) – nicht lesbar.",
+    "n1": "n1casino.com antwortete mit HTTP 403 (Bot-Schutz) – nicht lesbar.",
+    "stargames": "stargames.de liefert nur eine JavaScript-Hülle ohne lesbare Inhalte; private Schnittstellen werden nicht erraten.",
+    "folge": "Limits/Studios aus der Betreiberseite für diese Anbieter nicht übernommen."
+  },
+  "regulatorischer_rahmen": {
+    "einsatz_regel_eur": 1,
+    "einsatz_stufe1_eur": 3,
+    "einsatz_stufe2_eur": 5,
+    "einsatz_erhoeht_ab_alter": 21,
+    "einsatz_erhoeht_seit": "1. Juli 2026",
+    "einzahlung_monat_eur": 1000,
+    "min_sekunden_pro_spiel": 5,
+    "cooldown_nach_min": 60,
+    "cooldown_pause_min": 5,
+    "autoplay_verboten": true,
+    "abgerufen": "2026-10-07T06:36:00Z",
+    "gilt_fuer": "Inhaber einer deutschen Erlaubnis für virtuelle Automatenspiele (GlüStV 2021, GGL) – gesetzlicher Rahmen, nicht anbieterspezifisch",
+    "fehlend": [],
+    "quellen": [
+      {
+        "titel": "GGL – Konkrete Spielerschutzmaßnahmen",
+        "url": "https://www.gluecksspiel-behoerde.de/de/fuer-spielende/die-spielerschutzmassnahmen-des-gluestv21-im-ueberblick/konkrete-spielerschutzmassnahmen-fuer-verschiedene-gluecksspielarten",
+        "art": "primaer"
+      },
+      {
+        "titel": "GGL – FAQ Einzahlungslimit und Höchsteinsatz",
+        "url": "https://www.gluecksspiel-behoerde.de/de/fuer-spielende/informationen-fuer-spielende-faqs/faq-einzahlungslimit-und-hoechsteinsatz",
+        "art": "primaer"
+      }
+    ]
+  }
 }
