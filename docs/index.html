@@ -20,7 +20,8 @@
  section{display:none}section.on{display:block;animation:fade .3s}
  @keyframes fade{from{opacity:0}to{opacity:1}}
  label{display:block;color:#7f9bcb;font-size:12px;margin:10px 0 3px}
- input,select{width:100%;background:#0a1738;color:#cfe3ff;border:1px solid #1e3d7a;border-radius:8px;padding:10px;font:inherit}
+ input,select,textarea{width:100%;background:#0a1738;color:#cfe3ff;border:1px solid #1e3d7a;border-radius:8px;padding:10px;font:inherit}
+ textarea{background:#0a1738;color:#cfe3ff;border:1px solid #1e3d7a;border-radius:8px;padding:10px;font:inherit;resize:vertical}
  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
  button.go{margin-top:14px;background:#123a7a;color:#dfeaff;border:1px solid #2a5bb5;border-radius:8px;padding:11px 18px;cursor:pointer;font:inherit;width:100%}
  button.go:hover{background:#1a4c9c}
@@ -74,6 +75,7 @@
  <button class="ruhigbtn" id="ruhigbtn" aria-pressed="false" onclick="ruhig()">Ruhiger Modus: aus</button>
  <nav role="tablist" aria-label="Bereiche">
    <button role="tab" id="tab_spiele" aria-controls="spiele" aria-selected="true" data-t="spiele" class="on">SPIELE</button>
+   <button role="tab" id="tab_agb" aria-controls="agb" aria-selected="false" data-t="agb">AGB-SCAN</button>
    <button role="tab" id="tab_mobile" aria-controls="mobile" aria-selected="false" data-t="mobile">MOBILE</button>
    <button role="tab" id="tab_multiplier" aria-controls="multiplier" aria-selected="false" data-t="multiplier">MULTIPLIER</button>
    <button role="tab" id="tab_quellen" aria-controls="quellen" aria-selected="false" data-t="quellen">QUELLEN</button>
@@ -81,6 +83,7 @@
    <button role="tab" id="tab_gewinner" aria-controls="gewinner" aria-selected="false" data-t="gewinner">GEWINNER</button>
    <button role="tab" id="tab_signal" aria-controls="signal" aria-selected="false" data-t="signal">AKT 4</button>
    <button role="tab" id="tab_profil" aria-controls="profil" aria-selected="false" data-t="profil">PROFIL</button>
+   <button role="tab" id="tab_hilfe" aria-controls="hilfe" aria-selected="false" data-t="hilfe">SO GEHT'S</button>
    <button role="tab" id="tab_info" aria-controls="info" aria-selected="false" data-t="info">INFO</button>
  </nav>
 
@@ -114,6 +117,24 @@
   <pre id="pf_out" role="status" aria-live="polite"></pre>
   <div class="foot">Faustregeln zur Selbstkontrolle, keine gemessenen Naturkonstanten. Risk of Ruin einer Sitzung
    (mit Konfidenzintervall): Tab SPIELE oder Bot-Befehl <b>/profil</b>.</div>
+ </section>
+
+ <!-- ===== AGB-SCAN (offline, ohne KI) ===== -->
+ <section id="agb" role="tabpanel" aria-labelledby="tab_agb">
+  <div class="tag">AGB-SCAN · BONUSBEDINGUNGEN EINFÜGEN · OFFLINE, OHNE KI</div>
+  <div class="disc">Füge die Bonusbedingungen ein. Gefunden wird nur, was im Text steht, jeweils mit Beleg.
+   Was fehlt (z. B. RTP), steht getrennt als <b>Annahme</b>. Bei Widersprüchen gilt der für dich ungünstigere Wert.
+   Der Text bleibt auf deinem Gerät. Ein Scanner kann Formulierungen missverstehen – Belege am Original prüfen.</div>
+  <label for="agb_text">Bonusbedingungen (max. 20.000 Zeichen)</label>
+  <textarea id="agb_text" rows="8" maxlength="20000" placeholder="z. B. Bonus 100 % bis 200 €. Mindesteinzahlung 20 €. Umsatz 35x (Bonus + Einzahlung) innerhalb von 30 Tagen. Max. Einsatz 5 €."></textarea>
+  <div class="grid">
+   <div><label for="agb_einz">Deine Einzahlung (€, optional)</label><input id="agb_einz" type="number" min="0" step="1" inputmode="decimal"></div>
+   <div><label for="agb_rtp">RTP des Spiels (%, optional)</label><input id="agb_rtp" type="number" min="50" max="100" step="0.1" inputmode="decimal"></div>
+   <div><label for="agb_eins">Einsatz pro Spin (€, optional)</label><input id="agb_eins" type="number" min="0.01" step="0.1" inputmode="decimal"></div>
+  </div>
+  <button class="go" onclick="agb_scan()">Bedingungen scannen und rechnen</button>
+  <pre id="agb_out" role="status" aria-live="polite"></pre>
+  <div class="foot">Gleiche Logik wie Bot-Befehl <b>/scan</b> und <code>python -m analyzer.scan</code>. Keine Spin-Vorhersage, keine Rechtsberatung.</div>
  </section>
 
  <!-- ===== MOBILE (Connection Analytics) ===== -->
@@ -262,6 +283,23 @@
  </section>
 
  <!-- ===== INFO ===== -->
+<!-- ===== SO GEHT'S ===== -->
+ <section id="hilfe" role="tabpanel" aria-labelledby="tab_hilfe">
+  <div class="tag">SO BENUTZT DU DIE SEITE</div>
+  <div class="panel">
+   <div class="l"><b>1 · SPIELE</b> – Anbieter und Spiel wählen, Budget, Einsatz und Anzahl Spins eintragen, „Spiel analysieren“ tippen. Du siehst erwarteten Verlust, Chance im Plus und Risiko, das Budget zu verlieren (mit Unsicherheitsbereich).</div>
+   <div class="l"><b>2 · AGB-SCAN</b> – Bonusbedingungen einfügen und scannen. Funde stehen mit Textbeleg da, Annahmen getrennt davon. Optional deine Einzahlung, den RTP und den Einsatz eintragen, dann rechnet die Seite genauer.</div>
+   <div class="l"><b>3 · PROFIL</b> – Budget, Einsatz und Spielzeit eintragen, die 6 Fragen beantworten. Du bekommst Verlust pro Stunde/Woche/Monat und Grenzen, die zu dir passen.</div>
+   <div class="l"><b>Ruhiger Modus</b> – der Knopf ganz oben schaltet Rauschen, Boot-Sequenz und Animationen ab. Die Mathematik bleibt gleich.</div>
+   <div class="l"><b>So liest du Ergebnisse</b> – <i>Gefunden</i> steht im Text. <i>Annahme</i> steht nicht im Text, prüfe sie selbst. <i>Risk of Ruin</i> ist die Chance, dass das Budget vor dem Ende aufgebraucht ist. RTP-Werte sind veröffentlichte Standardwerte und variieren je Betreiber und Version.</div>
+   <div class="l"><b>Bot und PC</b> – <code>/scan</code>, <code>/risiko</code>, <code>/profil</code>, <code>/bonus</code> im Telegram-Bot; <code>python -m analyzer.scan "&lt;Text&gt;"</code> am Rechner.</div>
+   <div class="truth" style="margin-top:8px">Der Erwartungswert bleibt negativ. Hier gibt es keine Spin-Vorhersage: Spins sind unabhängig.</div>
+   <div class="l" style="margin-top:12px"><b>Gespeicherte Eingaben</b> – Zahlen, Antworten und der zuletzt geöffnete Tab werden nur in diesem Browser gemerkt, nichts wird gesendet.</div>
+   <button class="go" onclick="eingaben_loeschen()">Gespeicherte Eingaben löschen</button>
+   <div id="hilfe_status" role="status" aria-live="polite" class="tag" style="margin-top:8px"></div>
+  </div>
+ </section>
+
  <section id="info" role="tabpanel" aria-labelledby="tab_info">
   <div class="tag">ÜBER ∆1 // CODEX 2050</div>
   <div class="panel">
@@ -273,6 +311,8 @@
    <div class="l"><b>ANZEIGE</b> — erzeugt aus der Mathematik eine sachliche Beschwerde/Anzeige an die GGL, fuer jeden Anbieter. Nur wahrheitsgemaesse Angaben; alles als Verdacht/Bitte um Pruefung. Keine Rechtsberatung.</div>
    <div class="l"><b>GEWINNER</b> — dokumentierte Faelle, die mit Mathematik legal gewannen (Thorp, MIT-Team, Garcia-Pelayo, Mandel, Selbee …) und Hausverbot bekamen. Mit Quelle und dem mathematischen Grund.</div>
    <div class="l"><b>SANCHOS SPIELPLATZ</b> — eigenständiges Live-Modul (<a href="sancho.html">→ öffnen</a>), losgelöst aus dem Haupt-Tab-Fluss. Zeigt den „Rhythmus" und entlarvt ihn sofort (RNG, Vorhersagewert 0).</div>
+   <div class="l"><b>AGB-SCAN</b> — Bonusbedingungen einfügen: Umsatzfaktor, Bonus, Frist, Limits mit Textbeleg, Annahmen getrennt, Rechnung mit Erwartungswert. Gleiche Logik wie Bot-Befehl /scan.</div>
+   <div class="l"><b>SO GEHT'S</b> — Kurzanleitung. Eingaben und der zuletzt geöffnete Tab werden nur in deinem Browser gemerkt (löschbar).</div>
    <div class="l"><b>PROFIL</b> — ruhiges Risikoprofil aus deinen eigenen Angaben: erwarteter Verlust pro Stunde/Woche/Monat, Puffer in Einsätzen, Faustregeln je nach Selbst-Check. <b>Ruhiger Modus</b> (Knopf oben) schaltet VHS-Rauschen, Boot-Sequenz und Animationen ab.</div>
    <div class="l"><b>AKT 4</b> — das Finale als echtes Rätsel (Morse/Base64/ROT13/Uhrzeiten).</div>
    <div class="truth" style="margin-top:8px">Rein wissenschaftlich, mathematisch, neutral. Nur öffentliche Fakten, keine Vorhersage, keine personalisierte Bewertung.</div>
@@ -289,7 +329,7 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('nav button').forEach(x=>{x.classList.remove('on');x.setAttribute('aria-selected','false');});
   b.setAttribute('aria-selected','true');
   document.querySelectorAll('section').forEach(x=>x.classList.remove('on'));
-  b.classList.add('on');document.getElementById(b.dataset.t).classList.add('on');
+  b.classList.add('on');document.getElementById(b.dataset.t).classList.add('on');tab_merken(b.dataset.t);
 });
 // ---------- Uhr / Lore-Zeitstempel ----------
 setInterval(()=>{if(document.body.classList.contains('ruhig'))return;const d=new Date();document.getElementById('clock').textContent=
@@ -863,6 +903,176 @@ function profil(){
   L.push('','Das ist deine Erwartungswert-Mathematik und eine Selbstbeobachtung – keine Spin-Vorhersage und keine Diagnose.','Der Erwartungswert bleibt negativ.');
   out.textContent=L.join('\n');
 }
+// ---------- AGB-SCAN (Port von analyzer/scan.py + analyzer/bonus.py; Gleichheit mit Python per Test geprüft) ----------
+// AGB-SCAN-BEGIN
+var AGB_MAX=20000,AGB_BELEG=150;
+var AGB_ABK=/\b(max|min|ca|inkl|bzw|ggf|etc|mind)\./gi;
+var AGB_SATZ=/(?<=[.!?;])\s+(?=[A-ZÄÖÜ0-9„"(])|\n+/;
+var AGB_GELD=/(?<![\d.,])(\d{1,3}(?:\.\d{3}){1,3}|\d{1,9})(?:[,.](\d{1,2})(?!\d))?\s*(?:€|eur(?:o)?\b)/i;
+var AGB_FAKTOR=/(?<![\d.,])(\d{1,9}(?:[.,]\d{1,3})?)\s*(?:x\b|[- ]?fach(?:e[rsmn]?)?\b|\s?mal\b)/i;
+var AGB_PROZENT=/(?<![\d.,])(\d{1,9}(?:[.,]\d{1,3})?)\s*(?:%|prozent\b)/i;
+var AGB_ZEIT=/(?<!\d)(\d{1,9})\s*(tage?n?|stunden?|std\b|wochen?)/i;
+var AGB_FS=/(?<!\d)(\d{1,9})\s*(?:gratis[- ]?)?freispiele?/i;
+function agbG(x){return String(parseFloat(Number(x).toPrecision(6)));}
+function agbRund(x,n){var f=Math.pow(10,n),s=x*f,r=Math.round(s);if(Math.abs(s-Math.trunc(s))===0.5&&r%2!==0)r-=1;return r/f;}
+function agbZahl(s){return parseFloat(s.replace(',','.'));}
+function agbGeld(m){var g=m[1].replace(/\./g,'');return m[2]?parseFloat(g+'.'+m[2]):parseFloat(g);}
+function agbSaetze(t){return t.replace(AGB_ABK,'$1').split(AGB_SATZ).map(function(s){return s.trim();}).filter(Boolean);}
+function agbBeleg(s){s=s.replace(/\s+/g,' ');return s.length<=AGB_BELEG?s:s.slice(0,AGB_BELEG-1)+'…';}
+function agbGeldNach(satz,stich){var k=new RegExp(stich,'i').exec(satz);if(!k)return null;
+  var re=new RegExp(AGB_GELD.source,'ig');re.lastIndex=k.index+k[0].length;var m=re.exec(satz);return m?agbGeld(m):null;}
+function agbTage(satz){var m=AGB_ZEIT.exec(satz);if(!m)return null;var n=parseInt(m[1],10),e=m[2].toLowerCase();
+  if(e.indexOf('stunde')===0||e.indexOf('std')===0)return agbRund(n/24,2);
+  if(e.indexOf('woche')===0)return n*7;return n;}
+function agbWaehle(k,kons,feld,hinw,einheit){
+  if(!k.length)return null;
+  var wahl=k[0];for(var i=1;i<k.length;i++){if(kons==='max'?k[i][0]>wahl[0]:k[i][0]<wahl[0])wahl=k[i];}
+  var w=Array.from(new Set(k.map(function(x){return x[0];}))).sort(function(a,b){return a-b;});
+  if(w.length>1)hinw.push(feld+': mehrere Werte im Text ('+w.map(function(x){return agbG(x)+einheit;}).join(', ')+') – '+
+    (kons==='max'?'höchster':'niedrigster')+' Wert ('+agbG(wahl[0])+einheit+') für die Rechnung gewählt. Original prüfen.');
+  return wahl;}
+function agbScan(text,opt){
+  opt=opt||{};
+  if(typeof text!=='string'||!text.trim())throw new Error('Kein Text übergeben.');
+  if(text.length>AGB_MAX)throw new Error('Text zu lang (max. '+AGB_MAX+' Zeichen).');
+  var sz={einzahlung:0,bonus_betrag:null,bonus_prozent:null,bonus_deckel:null,umsatzfaktor:30,basis:'bonus',
+    freispiel_gewinn:0,freispiel_faktor:null,rtp:0.96,max_gewinn:null,max_einsatz:null,zeitlimit:null,
+    einsatz:1,sph:500,std_tag:3};
+  var erg={sz:sz,funde:[],annahmen:[],hinweise:[],mineinz:null,fs_anzahl:null},hw=erg.hinweise;
+  var fk=[],fsk=[],zk=[],mek=[],ck=[],mk=[],dk=[],pk=[],rk=[],bfk=[],bh=[],ohneEinz=false;
+  agbSaetze(text).forEach(function(satz){
+    var low=satz.toLowerCase(),b=agbBeleg(satz),istFs=low.indexOf('freispiel')>=0,m;
+    if(istFs){m=AGB_FS.exec(satz);if(m&&erg.fs_anzahl===null)erg.fs_anzahl=parseInt(m[1],10);}
+    if(/ohne\s+einzahlung|no[- ]deposit|ohne\s+eigene\s+einzahlung/.test(low))ohneEinz=true;
+    if(/umsatz|umsetz|wager|durchspiel|umgesetzt|durchgespielt/.test(low)){
+      m=AGB_FAKTOR.exec(satz);if(m)(istFs?fsk:fk).push([agbZahl(m[1]),b]);
+      if(/(bonus[\wäöüß]{0,10}\W{0,4}(und|\+|&|plus)\W{0,4}einzahlung|einzahlung[\wäöüß]{0,10}\W{0,4}(und|\+|&|plus)\W{0,4}bonus)/.test(low))bh.push(['einzahlung_plus_bonus',b]);
+      else if(/(bonusbetrag|bonusgeld|bonus\s*(betrag|summe))/.test(low)&&low.indexOf('einzahlung')<0)bh.push(['bonus',b]);
+      else if(/einzahlungsbetrag|einzahlung\b/.test(low)&&low.indexOf('bonus')<0)bh.push(['einzahlung',b]);
+    }
+    if(/bonus/.test(low)&&!/zähl|zaehl|beitrag|gewichtung|rtp|auszahlungsquote/.test(low)){
+      m=AGB_PROZENT.exec(satz);
+      if(m){pk.push([agbZahl(m[1]),b]);
+        var m2=new RegExp('bis\\s+(?:zu\\s+)?(?:einem\\s+betrag\\s+von\\s+)?'+AGB_GELD.source,'i').exec(satz);
+        if(m2){var g2=AGB_GELD.exec(satz.slice(m2.index));dk.push([agbGeld(g2),b]);}}
+    }
+    m=new RegExp('(?:^|\\W)'+AGB_GELD.source+'\\s*(?:gratis[- ]?)?(?:bonus|startguthaben|bonusguthaben)','i').exec(satz);
+    if(m&&satz.indexOf('%')<0){var g3=AGB_GELD.exec(satz.slice(m.index));bfk.push([agbGeld(g3),b]);}
+    if(/einsatz|wetteinsatz|bet\b/.test(low)&&/max|höchst|hoechst|obergrenze|nicht\s+(mehr|über|ueber)/.test(low)){
+      var g=agbGeldNach(satz,'einsatz|bet\\b');if(g!==null)mek.push([g,b]);}
+    if(/gewinn|auszahlung/.test(low)&&/begrenz|limit|gedeckelt|höchstens|hoechstens|max|deckel/.test(low)&&low.indexOf('einsatz')<0){
+      var g4=agbGeldNach(satz,'gewinn[\\wäöüß]*|auszahlung[\\wäöüß]*');if(g4!==null)ck.push([g4,b]);}
+    if(/mindest[\wäöüß]*\s*einzahlung|einzahlung[\wäöüß]*\s*(ab|von\s+mindestens)|mindestens\s+[\d.,]+\s*(€|eur)\b[^.]{0,40}einzahl/.test(low)){
+      var g5=agbGeldNach(satz,'mindest[\\wäöüß]*\\s*einzahlung|einzahlung[\\wäöüß]*\\s*(?:ab|von\\s+mindestens)|mindestens');if(g5!==null)mk.push([g5,b]);}
+    if(/gültig|gueltig|innerhalb|verfäll|verfaell|frist|laufzeit|umsetz|umsatz|erfüll|erfuell|ablauf/.test(low)){
+      var t=agbTage(satz);if(t!==null&&t>0&&!/auszahlung[\wäöüß]*\s+(dauer|innerhalb)|bearbeit/.test(low))zk.push([t,b]);}
+    if(/\brtp\b|auszahlungsquote|return to player/.test(low)){m=AGB_PROZENT.exec(satz);if(m)rk.push([agbZahl(m[1]),b]);}
+    m=/([\wäöüß]+)\s+zählen?\s+(?:nur\s+)?(?:zu\s+)?(\d+)\s*%/i.exec(satz);
+    if(m&&parseInt(m[2],10)<100)hw.push('Umsatzbeitrag: „'+agbBeleg(satz)+'“ – diese Spiele bringen weniger Umsatz; die Rechnung nimmt 100 % Beitrag an (Slots).');
+  });
+  function setze(f,w,b){erg.funde.push({feld:f,wert:w,beleg:b});}
+  var w=agbWaehle(fk,'max','Umsatzfaktor',hw,'x');
+  if(w){sz.umsatzfaktor=w[0];setze('Umsatzfaktor',agbG(w[0])+'x',w[1]);}
+  else erg.annahmen.push('Umsatzfaktor nicht im Text gefunden – Annahme '+agbG(sz.umsatzfaktor)+'x (Engine-Standard).');
+  w=agbWaehle(fsk,'max','Umsatzfaktor Freispiele',hw,'x');if(w){sz.freispiel_faktor=w[0];setze('Umsatzfaktor Freispiele',agbG(w[0])+'x',w[1]);}
+  w=agbWaehle(pk,'min','Bonus-Prozentsatz',hw,' %');if(w){sz.bonus_prozent=w[0];setze('Bonus',agbG(w[0])+' %',w[1]);}
+  w=agbWaehle(dk,'min','Bonus-Deckel',hw,' €');if(w){sz.bonus_deckel=w[0];setze('Bonus-Deckel',agbG(w[0])+' €',w[1]);}
+  if(sz.bonus_prozent===null){w=agbWaehle(bfk,'min','Bonusbetrag',hw,' €');if(w){sz.bonus_betrag=w[0];setze('Bonusbetrag',agbG(w[0])+' €',w[1]);}}
+  w=agbWaehle(zk,'min','Zeitlimit',hw,' Tage');
+  if(w){sz.zeitlimit=w[0];setze('Zeitlimit',agbG(w[0])+' Tage',w[1]);}
+  else erg.annahmen.push('Kein Zeitlimit im Text gefunden – Machbarkeit wird nicht gegen eine Frist geprüft.');
+  w=agbWaehle(mek,'min','Maximaler Einsatz',hw,' €');if(w){sz.max_einsatz=w[0];setze('Maximaler Einsatz mit Bonus',agbG(w[0])+' €',w[1]);}
+  w=agbWaehle(ck,'min','Gewinn-Cap',hw,' €');if(w){sz.max_gewinn=w[0];setze('Maximaler Gewinn/Auszahlung',agbG(w[0])+' €',w[1]);}
+  w=agbWaehle(mk,'max','Mindesteinzahlung',hw,' €');if(w){erg.mineinz=w[0];setze('Mindesteinzahlung',agbG(w[0])+' €',w[1]);}
+  w=agbWaehle(rk,'min','RTP',hw,' %');if(w){sz.rtp=w[0]>1.5?w[0]/100:w[0];setze('RTP',agbG(w[0])+' %',w[1]);}
+  var arten=Array.from(new Set(bh.map(function(x){return x[0];})));
+  if(arten.length===1){sz.basis=bh[0][0];setze('Umsatzbasis',sz.basis,bh[0][1]);}
+  else if(arten.length>1){sz.basis='einzahlung_plus_bonus';hw.push('Umsatzbasis: widersprüchliche Angaben im Text – es wird die TEUERSTE Variante (Einzahlung + Bonus) gerechnet. Original prüfen.');}
+  else{sz.basis='einzahlung_plus_bonus';erg.annahmen.push('Umsatzbasis nicht erkennbar – es wird die TEUERSTE Variante (Einzahlung + Bonus) gerechnet.');}
+  if(sz.bonus_prozent===null&&sz.bonus_betrag===null)throw new Error('Weder Bonus-Prozentsatz noch fester Bonusbetrag im Text erkannt – ohne Bonus gibt es nichts zu berechnen.');
+  var ez=opt.einzahlung;
+  if(ez!=null){sz.einzahlung=ez;setze('Einzahlung',agbG(ez)+' €','von dir angegeben');}
+  else if(sz.bonus_prozent!==null){
+    if(erg.mineinz){sz.einzahlung=erg.mineinz;erg.annahmen.push('Einzahlung nicht angegeben – Annahme: die Mindesteinzahlung ('+agbG(sz.einzahlung)+' €). Trage oben eine Einzahlung ein, um genauer zu rechnen.');}
+    else throw new Error('Bonus in % erkannt, aber weder Einzahlung noch Mindesteinzahlung bekannt – bitte eine Einzahlung eintragen.');}
+  else if(ohneEinz){sz.einzahlung=0;erg.annahmen.push('Bonus „ohne Einzahlung“ erkannt – Einzahlung = 0 €.');}
+  else sz.einzahlung=erg.mineinz||0;
+  if(opt.rtp!=null){sz.rtp=opt.rtp>1.5?opt.rtp/100:opt.rtp;setze('RTP',agbG(sz.rtp*100)+' %','von dir angegeben');}
+  else if(!rk.length)erg.annahmen.push('RTP steht nie in AGB – Annahme '+agbG(sz.rtp*100)+' % (Engine-Standard); für das gespielte Slot-Spiel den veröffentlichten RTP eintragen.');
+  if(opt.einsatz!=null)sz.einsatz=opt.einsatz;
+  else if(sz.max_einsatz!==null&&sz.einsatz>sz.max_einsatz){sz.einsatz=sz.max_einsatz;erg.annahmen.push('Durchschnittseinsatz auf das Einsatzlimit '+agbG(sz.max_einsatz)+' € gesetzt (Standard 1 € wäre darüber).');}
+  else erg.annahmen.push('Durchschnittseinsatz '+agbG(sz.einsatz)+' € pro Spin angenommen (Einsatz oben ändert das).');
+  if(erg.fs_anzahl)erg.annahmen.push(erg.fs_anzahl+' Freispiele erkannt – ihr Gewinn ist unbekannt und wird mit 0 € angesetzt.');
+  var gesamt=text.toLowerCase();
+  if(/bonus[\wäöüß]*\s+(verfällt|verfaellt|wird\s+(gestrichen|entfernt|annulliert))/.test(gesamt)&&sz.max_einsatz)hw.push('Ein Verstoß gegen das Einsatzlimit kann den Bonus (und Gewinne) kosten – Limit strikt einhalten.');
+  if(sz.umsatzfaktor>=40&&fk.length)hw.push('Umsatzfaktor '+agbG(sz.umsatzfaktor)+'x ist hoch – bei Hausvorteil frisst der Umsatz den Bonus meist auf.');
+  return erg;
+}
+function agbRechne(s){
+  var f2=function(x){return Number(x).toFixed(2);},bonus,sch=[],warn=[];
+  if(s.bonus_betrag!==null)bonus=s.bonus_betrag;else if(s.bonus_prozent!==null)bonus=s.einzahlung*s.bonus_prozent/100;else bonus=0;
+  if(s.bonus_deckel!==null)bonus=Math.min(bonus,s.bonus_deckel);
+  bonus=agbRund(bonus,2);
+  var basis;
+  if(s.basis==='bonus')basis=bonus;else if(s.basis==='einzahlung_plus_bonus'){basis=s.einzahlung+bonus;
+    warn.push("Umsatz auf 'Einzahlung + Bonus' (D+B) verdoppelt faktisch die Durchspielsumme gegenüber 'nur Bonus'. Genau prüfen.");}
+  else basis=s.einzahlung;
+  var umsHaupt=basis*s.umsatzfaktor,fsF=s.freispiel_faktor!==null?s.freispiel_faktor:s.umsatzfaktor,umsFs=s.freispiel_gewinn*fsF,mind=umsHaupt+umsFs;
+  var hv=1-s.rtp,verlust=mind*hv,brutto=bonus+s.freispiel_gewinn,ev=brutto-verlust;
+  sch.push('Bonus = '+f2(bonus)+' €','Umsatzbasis = '+f2(basis)+' € ('+s.basis+')','Mindestumsatz = '+f2(basis)+' × '+agbG(s.umsatzfaktor)+' = '+f2(mind)+' €',
+    'Hausvorteil = 1 − RTP = '+(hv*100).toFixed(2)+' %','Erwarteter Verlust über den Umsatz = '+f2(mind)+' × '+(hv*100).toFixed(2)+' % = '+f2(verlust)+' €',
+    'Erwartungswert (EV) = Bonus − erwarteter Verlust = '+f2(brutto)+' − '+f2(verlust)+' = '+f2(ev)+' €');
+  if(s.max_gewinn!==null&&brutto>s.max_gewinn){var gek=s.max_gewinn-verlust;
+    warn.push('Maximalgewinn ist auf '+f2(s.max_gewinn)+' € gedeckelt – darüber hinausgehende Gewinne verfallen.');ev=Math.min(ev,gek);}
+  var spins=s.einsatz>0?mind/s.einsatz:Infinity,proTag=s.sph*s.std_tag,tage=proTag>0?spins/proTag:Infinity,machbar=null;
+  if(s.zeitlimit!==null){machbar=tage<=s.zeitlimit;
+    if(!machbar)warn.push('Der Umsatz erfordert ca. '+tage.toFixed(1)+' Tage reine Spielzeit, das Zeitlimit beträgt nur '+s.zeitlimit.toFixed(1)+' Tage.');}
+  if(s.max_einsatz!==null&&s.einsatz>s.max_einsatz)warn.push('Geplanter Einsatz '+f2(s.einsatz)+' € liegt über dem erlaubten Maximaleinsatz '+f2(s.max_einsatz)+' € – Verstoß kann zur Bonus-/Gewinnstreichung führen.');
+  if(s.rtp<0.94)warn.push('Niedriger RTP ('+(s.rtp*100).toFixed(1)+'%) – der Hausvorteil frisst den Bonus überdurchschnittlich schnell auf.');
+  var emp=machbar===false?'stornieren':ev<=0?'stornieren':(brutto>0&&ev<0.15*brutto)?'risiko':'spielen';
+  return {bonus:bonus,mindestumsatz:agbRund(mind,2),erwarteter_verlust:agbRund(verlust,2),erwartungswert:agbRund(ev,2),
+    spins:agbRund(spins,0),tage:agbRund(tage,1),machbar:machbar,empfehlung:emp,schritte:sch,warnungen:warn};
+}
+function agbBericht(e,r){
+  var L=['AGB-SCAN (offline, ohne KI)','','GEFUNDEN (mit Textbeleg):'];
+  if(e.funde.length)e.funde.forEach(function(f){L.push('  • '+f.feld+': '+f.wert);if(f.beleg&&f.beleg!=='von dir angegeben')L.push('      „'+f.beleg+'“');});
+  else L.push('  (nichts Verwertbares gefunden)');
+  if(e.annahmen.length){L.push('','ANNAHMEN (stehen NICHT im Text):');e.annahmen.forEach(function(a){L.push('  • '+a);});}
+  if(e.hinweise.length){L.push('','ACHTUNG:');e.hinweise.forEach(function(h){L.push('  ⚠ '+h);});}
+  L.push('','Rechenweg:');r.schritte.forEach(function(s,i){L.push('  '+(i+1)+'. '+s);});
+  L.push('','Kennzahlen:','  • Bonusbetrag:         '+r.bonus.toFixed(2)+' €','  • Mindestumsatz:       '+r.mindestumsatz.toFixed(2)+' €',
+    '  • Erwarteter Verlust:  '+r.erwarteter_verlust.toFixed(2)+' €','  • Erwartungswert (EV): '+(r.erwartungswert>=0?'+':'')+r.erwartungswert.toFixed(2)+' €',
+    '  • Benötigte Spins:     '+r.spins.toFixed(0),'  • Reine Spielzeit:     '+r.tage.toFixed(1)+' Tage');
+  if(r.machbar!==null)L.push('  • Zeitlimit machbar:   '+(r.machbar?'ja':'NEIN'));
+  if(r.warnungen.length){L.push('','Warnungen:');r.warnungen.forEach(function(w){L.push('  • '+w);});}
+  L.push('','EMPFEHLUNG: '+({spielen:'SPIELEN – Bedingungen realistisch erfüllbar',risiko:'RISIKO – grenzwertig, bewusst entscheiden',stornieren:'STORNIEREN – Bonus löschen, Echtgeld sichern'})[r.empfehlung],
+    '','Hinweis: Ein Text-Scanner kann Formulierungen missverstehen – prüfe die Belege am Original. Theoretische Langzeit-Erwartungswerte, keine Spin-Vorhersage, keine Rechtsberatung.');
+  return L.join('\n');
+}
+// AGB-SCAN-ENDE
+function agb_scan(){
+  var out=document.getElementById('agb_out'),v=function(id){var s=document.getElementById(id).value.trim();return s===''?null:num(s);};
+  var opt={einzahlung:v('agb_einz'),rtp:v('agb_rtp'),einsatz:v('agb_eins')};
+  try{var e=agbScan(document.getElementById('agb_text').value,opt);out.textContent=agbBericht(e,agbRechne(e.sz));}
+  catch(err){out.textContent='❌ '+err.message;}
+}
+
+// ---------- Eingaben merken (nur in diesem Browser; alles in try/catch, Seite funktioniert auch ohne) ----------
+var PERSIST_IDS=['db_budget','db_einsatz','db_spins','db_runs','pf_budget','pf_einsatz','pf_rtp','pf_sph','pf_std','pf_min',
+  'pf_q0','pf_q1','pf_q2','pf_q3','pf_q4','pf_q5','agb_text','agb_einz','agb_rtp','agb_eins'];
+function eingaben_speichern(){try{var o={};PERSIST_IDS.forEach(function(id){var e=document.getElementById(id);if(e)o[id]=e.value;});
+  localStorage.setItem('codex_eingaben',JSON.stringify(o));}catch(e){}}
+function eingaben_laden(){try{var o=JSON.parse(localStorage.getItem('codex_eingaben')||'{}');
+  PERSIST_IDS.forEach(function(id){var e=document.getElementById(id);if(e&&typeof o[id]==='string'){
+    if(e.tagName==='SELECT'&&![].some.call(e.options,function(x){return x.value===o[id];}))return;e.value=o[id];}});}catch(e){}
+  PERSIST_IDS.forEach(function(id){var e=document.getElementById(id);if(e){e.addEventListener('input',eingaben_speichern);e.addEventListener('change',eingaben_speichern);}});}
+function tab_merken(t){try{localStorage.setItem('codex_tab',t);}catch(e){}}
+function eingaben_loeschen(){try{localStorage.removeItem('codex_eingaben');localStorage.removeItem('codex_tab');}catch(e){}
+  PERSIST_IDS.forEach(function(id){var e=document.getElementById(id);if(e)e.value=e.defaultValue!==undefined&&e.tagName!=='SELECT'?e.defaultValue:(e.options?e.options[0].value:'');});
+  document.getElementById('hilfe_status').textContent='Gespeicherte Eingaben gelöscht.';}
+eingaben_laden();
+(function(){var t=null;try{t=localStorage.getItem('codex_tab');}catch(e){}
+  var b=t&&t!=='hilfe'?document.querySelector('nav button[data-t="'+t+'"]'):null;if(b)b.click();})();
 // ---------- Boot ----------
 (function(){var lines=["∆1 // SESSION INITIALISIERT","DATENBANK: oeffentliche Anbieter-Daten · taeglich aktualisiert",
  "MODULE: SPIELE · MULTIPLIER · ANZEIGE ... [OK]",
