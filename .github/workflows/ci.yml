@@ -33,6 +33,13 @@ jobs:
         run: ruff check .
       - name: Tests (Dashboard/Bot/RPC laufen mit echten Paketen)
         run: python -m unittest discover -s tests -v
+      - name: Mini-Repo-ZIP bauen (scripts/build_mini_repo.py)
+        run: python scripts/build_mini_repo.py dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: KI_Taktik_GitHub_Repo_v2
+          path: dist/KI_Taktik_GitHub_Repo_v2.zip
+          retention-days: 14
 
   frontend:
     name: Frontend (JS-Syntax + JSON)
