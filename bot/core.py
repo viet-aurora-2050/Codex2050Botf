@@ -15,6 +15,7 @@ from telegram.ext import (
 from ai.providers import AIManager
 from bot.zugriff import Zugriff
 from analyzer import SYSTEM_PROMPT, analysiere, formatiere, parse
+from analyzer.scan import analysiere_text, formatiere_scan, optionen_aus_text, sieht_nach_agb_aus
 from sancho import erzeuge as sancho_erzeuge
 from sancho import formatiere as sancho_formatiere
 from aktvier import erzeuge_signal
@@ -39,6 +40,7 @@ HELP_TEXT = (
     "ob sich ein Bonus lohnt – oder ob Stornieren dein Echtgeld schuetzt.\n\n"
     "*Befehle*\n"
     "`/bonus <parameter>` – Bonus berechnen\n"
+    "`/scan <AGB-Text>` – AGB offline lesen & durchrechnen (ohne KI, mit Textbeleg)\n"
     "`/analyse <AGB-Text>` – Bonus-AGB per KI auf Haken pruefen\n"
     "`/sancho <anbieter>` – ∆1-Spielplatz: Rhythmus-Mythos & Wahrheit\n"
     "`/signal` – AKT 4: Das Signal (Ebene-2-Rätsel) · `/signal loesung`\n"
@@ -95,6 +97,9 @@ class CasinoBonusBot:
     async def bonus_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         text = " ".join(context.args)
         await self._analysiere_und_antworte(update, text)
+
+    async def scan_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        await self._scan_und_antworte(update, " ".join(context.args))
 
     async def analyse_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         agb = " ".join(context.args)
@@ -222,8 +227,10 @@ class CasinoBonusBot:
     async def text_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Freitext: sieht wie Bonus-Parameter aus? Dann direkt rechnen."""
         text = update.message.text or ""
-        if "=" in text:
+        if "=" in text and not sieht_nach_agb_aus(text):
             await self._analysiere_und_antworte(update, text)
+        elif sieht_nach_agb_aus(text):
+            await self._scan_und_antworte(update, text)
         else:
             await update.message.reply_text(
                 "Sende `/help` oder Bonus-Parameter, z. B.:\n"
@@ -232,6 +239,20 @@ class CasinoBonusBot:
             )
 
     # ---- Helper -------------------------------------------------------
+    async def _scan_und_antworte(self, update: Update, text: str):
+        text, optionen = optionen_aus_text(text)
+        if not text.strip():
+            return await update.message.reply_text(
+                "Bitte den Bonus-/AGB-Text anhaengen (oder einfach hier einfuegen):\n"
+                "`/scan <Text> einzahlung=50 rtp=0.96 einsatz=1`",
+                parse_mode="Markdown",
+            )
+        try:
+            scan, ergebnis = analysiere_text(text, **optionen)
+        except ValueError as exc:
+            return await update.message.reply_text(f"❌ {exc}")
+        await update.message.reply_text(formatiere_scan(scan, ergebnis)[:4000])
+
     async def _analysiere_und_antworte(self, update: Update, text: str):
         if not text.strip():
             return await update.message.reply_text(
@@ -265,6 +286,7 @@ class CasinoBonusBot:
         app.add_handler(CommandHandler("help", self.help_command))
         app.add_handler(CommandHandler("status", self.status_command))
         app.add_handler(CommandHandler("bonus", self.bonus_command))
+        app.add_handler(CommandHandler("scan", self.scan_command))
         app.add_handler(CommandHandler("analyse", self.analyse_command))
         app.add_handler(CommandHandler("analyze", self.analyse_command))
         app.add_handler(CommandHandler("sancho", self.sancho_command))

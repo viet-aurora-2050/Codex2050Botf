@@ -76,10 +76,12 @@ Erwartungswert negativ – dann Bonus löschen und Echtgeld sichern.
 |--------|----------|
 | `/bonus <parameter>` | Bonus transparent durchrechnen |
 | `/analyse <AGB-Text>` | Bonus-AGB per KI auf versteckte Haken prüfen (DEEPSEEK_API_KEY nötig) |
+| `/scan <AGB-Text> [einzahlung=50 rtp=0.96 einsatz=1]` | AGB offline (ohne KI) einlesen und mit der Rechen-Engine durchrechnen |
 | `/frage <Text>` | freie Frage an den Analytiker |
 | `/status` · `/help` | Status / Hilfe |
 
-Freitext mit `=` (z. B. `bonus=100 faktor=30`) wird automatisch als Berechnung erkannt.
+Freitext mit `=` (z. B. `bonus=100 faktor=30`) wird automatisch als Berechnung erkannt; ein eingefügter
+Bonus-Text mit Umsatzbezug wird automatisch wie `/scan` behandelt.
 
 ## Web-API
 
@@ -88,6 +90,22 @@ curl -X POST localhost:8080/api/analyse \
   -H "Content-Type: application/json" \
   -d '{"input":"einzahlung=100 bonus=100% faktor=30 basis=db rtp=0.96 zeit=3 einsatz=1"}'
 ```
+
+### AGB-Scanner (`analyzer/scan.py`) – offline, ohne KI
+
+Liest eingefügte Bonusbedingungen satzweise ein (Umsatzfaktor, Bonus-%, Deckel, Frist, Max-Einsatz,
+Gewinn-Cap, Mindesteinzahlung, Umsatzbasis) und füttert damit die **unveränderte** Engine `analyzer/bonus.py`.
+
+```bash
+python -m analyzer.scan "Bonus 100 % bis 200 €. Umsatz 35x innerhalb von 30 Tagen." einzahlung=50
+curl -X POST localhost:8080/api/scan -H "Content-Type: application/json" \
+  -d '{"text":"Bonus 100 % bis 200 €. Umsatz 35x in 30 Tagen.","einzahlung":50}'
+```
+
+Ehrlichkeitsregeln: Jeder Fund trägt seinen **Textbeleg**; was nicht im Text steht (RTP, Einsatz, ggf.
+Einzahlung), wird als **Annahme** getrennt ausgewiesen, nie erfunden. Bei Widersprüchen gilt der für dich
+**ungünstigere** Wert plus Hinweis. Ohne erkennbaren Bonus wird nicht gerechnet. Ein Regex-Scanner kann
+Formulierungen missverstehen – die Belege am Original prüfen. Keine Spin-Vorhersage, keine Rechtsberatung.
 
 ## ∆1 // Sanchos Spielplatz (Lore-Modul, Dunkelblau 2050)
 
@@ -391,7 +409,7 @@ Module zeigen – deshalb importieren die Tests Dashboard, Bot und RPC jetzt wir
 ## Projektstruktur
 
 ```
-analyzer/     Rechen-Engine (bonus.py), Parser, System-Prompt, CLI
+analyzer/     Rechen-Engine (bonus.py), Parser, System-Prompt, CLI, AGB-Scanner (scan.py)
 sancho/       ∆1-Lore-Modul „Sanchos Spielplatz" (Rhythmus-Mythos + Wahrheit)
 aktvier/      ∆1-AKT 4 „Das Signal" – Finale + Ebene-2-Rätsel; zeit.py = stündlich rotierender ZEIT-CODE
 datenbank/    Tägliche Erzeugung von docs/games.json (Basissatz + öffentliche Feeds, validiert)
