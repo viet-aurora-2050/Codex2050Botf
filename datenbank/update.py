@@ -6,9 +6,11 @@ Aufruf:
     python -m datenbank --out pfad.json       # anderes Ziel
     python -m datenbank --alternativen "Name" # ähnliche Spiele (Metadaten)
 
-Der GitHub-Actions-Job ruft `python -m datenbank` täglich auf. Es wird nur
-geschrieben, wenn sich der KERN-Inhalt tatsächlich ändert (Zeitstempel und
-Source-Status allein lösen keinen Commit aus).
+Der GitHub-Actions-Job ruft `python -m datenbank` täglich auf. Der Snapshot wird nur
+bei einer KERN-Änderung neu geschrieben (Zeitstempel und Source-Status allein zählen
+nicht). `stand`/`generiert` bleiben beim Datum der letzten inhaltlichen Änderung;
+`geprueft` wird höchstens einmal pro Tag erneuert. So zeigt die App „Daten unverändert,
+aber heute geprüft“ statt fälschlich „veraltet“.
 """
 
 from __future__ import annotations
@@ -51,6 +53,7 @@ def baue(urls=None) -> Dict:
         "_hinweis": HINWEIS,
         "stand": jetzt.strftime("%Y-%m-%d"),
         "generiert": jetzt.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "geprueft": jetzt.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "quellen": sorted({g.get("quelle", BASIS_QUELLE) for g in spiele}),
         "source_status": states,
         "anzahl": len(spiele),
@@ -64,22 +67,26 @@ def _default_out() -> str:
 
 
 def _kern(d: Dict) -> str:
-    """Vergleichs-Kern OHNE volatile Felder (stand/generiert/source_status).
+    """Vergleichs-Kern OHNE volatile Felder (stand/generiert/geprueft/source_status).
 
-    So löst ein reiner Zeitstempel- oder Source-Health-Wechsel KEINEN Commit aus.
+    So löst ein reiner Zeitstempel- oder Source-Health-Wechsel KEINEN Inhalts-Update aus.
     """
     x = dict(d)
-    for k in ("stand", "generiert", "source_status"):
+    for k in ("stand", "generiert", "geprueft", "source_status"):
         x.pop(k, None)
     return json.dumps(x, ensure_ascii=False, sort_keys=True)
 
 
 def schreibe(data: Dict, pfad: str) -> bool:
-    """Atomar schreiben, aber nur bei echter Kern-Änderung. True = geschrieben."""
+    """Atomar schreiben bei echter Kern-Änderung (True). Sonst höchstens `geprueft` erneuern (False)."""
     p = Path(pfad)
     if p.exists():
         try:
-            if _kern(json.loads(p.read_text(encoding="utf-8"))) == _kern(data):
+            alt = json.loads(p.read_text(encoding="utf-8"))
+            if _kern(alt) == _kern(data):
+                if str(alt.get("geprueft", ""))[:10] != data["geprueft"][:10]:
+                    alt["geprueft"] = data["geprueft"]
+                    p.write_text(json.dumps(alt, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
                 return False
         except (OSError, json.JSONDecodeError):
             pass

@@ -12,13 +12,15 @@ from sancho import erzeuge, formatiere, normalisiere_anbieter
 
 class TestSancho(unittest.TestCase):
     def test_vorhersagewert_ist_immer_null(self):
-        for name in ["tipico games", "betano", "n1 casino", "stargames", "irgendwas"]:
+        for name in ["tipico games", "betano", "n1 casino", "stargames", "jackpotpirat", "irgendwas"]:
             e = erzeuge(anbieter=name)
             self.assertEqual(e.vorhersagewert, 0.0)
 
     def test_anbieter_normalisierung(self):
         self.assertEqual(normalisiere_anbieter("Tipico Games"), "tipico")
         self.assertEqual(normalisiere_anbieter("N1 Casino"), "n1")
+        self.assertEqual(normalisiere_anbieter("Jackpotpirat"), "jackpotpirat")
+        self.assertEqual(normalisiere_anbieter("Jackpot Pirat Casino"), "jackpotpirat")
         self.assertEqual(normalisiere_anbieter("Voellig unbekannt"), "generisch")
 
     def test_erwarteter_verlust_korrekt(self):

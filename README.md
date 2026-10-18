@@ -76,10 +76,13 @@ Erwartungswert negativ – dann Bonus löschen und Echtgeld sichern.
 |--------|----------|
 | `/bonus <parameter>` | Bonus transparent durchrechnen |
 | `/analyse <AGB-Text>` | Bonus-AGB per KI auf versteckte Haken prüfen (DEEPSEEK_API_KEY nötig) |
+| `/profil <werte>` | ruhiges Risikoprofil: Verlust/Stunde, Puffer, Faustregeln + Selbst-Check (`check=0,1,0,0,2,0`) |
+| `/scan <AGB-Text> [einzahlung=50 rtp=0.96 einsatz=1]` | AGB offline (ohne KI) einlesen und mit der Rechen-Engine durchrechnen |
 | `/frage <Text>` | freie Frage an den Analytiker |
 | `/status` · `/help` | Status / Hilfe |
 
-Freitext mit `=` (z. B. `bonus=100 faktor=30`) wird automatisch als Berechnung erkannt.
+Freitext mit `=` (z. B. `bonus=100 faktor=30`) wird automatisch als Berechnung erkannt; ein eingefügter
+Bonus-Text mit Umsatzbezug wird automatisch wie `/scan` behandelt.
 
 ## Web-API
 
@@ -89,12 +92,50 @@ curl -X POST localhost:8080/api/analyse \
   -d '{"input":"einzahlung=100 bonus=100% faktor=30 basis=db rtp=0.96 zeit=3 einsatz=1"}'
 ```
 
+### AGB-Scanner (`analyzer/scan.py`) – offline, ohne KI
+
+Liest eingefügte Bonusbedingungen satzweise ein (Umsatzfaktor, Bonus-%, Deckel, Frist, Max-Einsatz,
+Gewinn-Cap, Mindesteinzahlung, Umsatzbasis) und füttert damit die **unveränderte** Engine `analyzer/bonus.py`.
+
+```bash
+python -m analyzer.scan "Bonus 100 % bis 200 €. Umsatz 35x innerhalb von 30 Tagen." einzahlung=50
+curl -X POST localhost:8080/api/scan -H "Content-Type: application/json" \
+  -d '{"text":"Bonus 100 % bis 200 €. Umsatz 35x in 30 Tagen.","einzahlung":50}'
+```
+
+Ehrlichkeitsregeln: Jeder Fund trägt seinen **Textbeleg**; was nicht im Text steht (RTP, Einsatz, ggf.
+Einzahlung), wird als **Annahme** getrennt ausgewiesen, nie erfunden. Bei Widersprüchen gilt der für dich
+**ungünstigere** Wert plus Hinweis. Ohne erkennbaren Bonus wird nicht gerechnet. Ein Regex-Scanner kann
+Formulierungen missverstehen – die Belege am Original prüfen. Keine Spin-Vorhersage, keine Rechtsberatung.
+
+### Persönliches Risikoprofil (`risiko/profil.py`) + Ruhiger Modus
+
+Aus deinen eigenen Angaben (Budget, Einsatz, RTP, Spins/Stunde, Stunden/Woche, Sitzungslänge) rechnet das Profil
+den erwarteten Verlust pro Stunde/Woche/Monat, den Puffer in Einsätzen und – über die unveränderte Monte-Carlo-Engine –
+den Risk of Ruin einer Sitzung mit 95%-Konfidenzintervall. Ein **Selbst-Check** (6 Fragen, 0–3) beschreibt Muster wie
+Verlustjagd oder den Fehlschluss „Gewinn ist fällig“ und passt nur die **empfohlenen Grenzen** an (kleinerer
+Einsatzanteil, kürzere Sitzung). Die Wahrscheinlichkeiten des Spiels ändert er nie.
+
+```bash
+/profil budget=100 einsatz=2 rtp=96 vola=hoch minuten=90 check=1,2,1,2,0,0      # Bot
+curl 'localhost:8080/api/profil?q=budget=100%20einsatz=2%20check=1,2,1,2,0,0'   # Web-API
+```
+
+In der App gibt es dafür den Tab **PROFIL**. Der Knopf **Ruhiger Modus** schaltet VHS-Rauschen, Boot-Sequenz, Uhr-Ticker
+und Animationen ab (gleiche Mathematik, gleicher Inhalt; wird lokal gemerkt und folgt bei Bedarf `prefers-reduced-motion`).
+Grenzen: kein klinisches Screening, keine Diagnose, Grenzwerte sind Faustregeln zur Selbstkontrolle, keine Messwerte.
+
 ## ∆1 // Sanchos Spielplatz (Lore-Modul, Dunkelblau 2050)
 
 Ein ARG-Modul im Dunkelblau-2050-Modus. „Sancho" ist der Agent, der hier
 **sein wahres Ich zeigen muss** – und sein wahres Ich ist die Wahrheit:
-Aus Anbieter (Tipico/Betano/N1/Stargames) + aktuellem Datum/Uhrzeit erzeugt er
+Aus Anbieter (Tipico/Betano/N1/Stargames/Jackpotpirat) + aktuellem Datum/Uhrzeit erzeugt er
 ein atmosphärisches „∆1-Signal" (einen Rhythmus) und **entlarvt es sofort selbst**.
+
+**Eigenständiges Modul:** Sancho lebt nicht mehr als Untertab in der
+Haupt-App, sondern auf einer eigenen Seite — **`docs/sancho.html`**
+(verlinkt prominent oben in `index.html` und aus dem INFO-Tab). Mehr Raum,
+mehr Lore-Text, dieselbe Ehrlichkeit: die Selbst-Entlarvung bleibt Kern.
 
 > **Warum es keinen echten Predictor gibt:** Regulierte Online-Slots laufen auf
 > zertifizierten RNGs. Jeder Spin ist statistisch **unabhängig** – es gibt kein
@@ -103,9 +144,29 @@ ein atmosphärisches „∆1-Signal" (einen Rhythmus) und **entlarvt es sofort s
 > ist der erwartete Verlust über den Hausvorteil. Das Modul gibt **nie** einen
 > Spielbefehl.
 
+**Anbieter-Profile aus öffentlichen Quellen:** `docs/anbieter.json` enthält für Jackpotpirat
+(Betreiber DGGS, Erlaubnis vom 27.04.2022, Limits, Studios) belegte Fakten mit Quellen und Abrufdatum.
+Für **alle** Sancho-Anbieter (Tipico, Betano, N1, Stargames, Jackpotpirat) gleicht der tägliche Job
+`.github/workflows/update-anbieter.yml` (`python -m datenbank.anbieter_whitelist`) den Block `whitelist`
+mit der **offiziellen GGL-Whitelist** ab: Betreiber, Erlaubnisart, Domains, Daten – oder „kein Eintrag
+gefunden". Nur diese strukturierte Offizialquelle wird automatisch gelesen; Limits/Studios stammen
+(derzeit nur bei Jackpotpirat) aus der Betreiberseite und werden kuratiert. Fällt der Abruf aus oder
+ändert sich das Seitenformat, bleibt die Datei unverändert; die Seite zeigt das Alter der Daten und
+lädt sie bei Netz-Rückkehr neu. Nicht genutzt: Google-Suche (keine freie API), Review-Blogs
+(Affiliate, widersprüchlich). RTPs werden nicht erfunden.
+
+**Gesetzlicher Rahmen + Studios (automatisch, `python -m datenbank.anbieter_details`):** liest die
+amtlichen GGL-Seiten (Höchsteinsatz 1 € mit Stufen 3/5 € seit 1. Juli 2026, ab 21 Jahren; mind. 5 s pro
+Spiel; kein Autoplay; Pause nach 60 min; 1.000 €/Monat anbieterübergreifend) nach
+`regulatorischer_rahmen` und die Studio-Tabelle von jackpotpiraten.de. Der Rahmen gilt für **alle**
+Erlaubnisinhaber, ist also nicht anbieterspezifisch. Jede Zahl wird per Muster aus dem Originaltext gelesen;
+fehlt ein Muster, bleibt der alte Wert stehen. Die Betreiberseiten von Tipico (Geo-Sperre), Betano und N1
+(HTTP 403) sowie Stargames (reine JavaScript-Seite) sind nicht lesbar – das wird dokumentiert, nicht umgangen.
+
 ```bash
 python -m sancho "tipico games" 2      # CLI
-# Web:  /sancho   (Dunkelblau-Interface)   ·  JSON: /api/sancho?anbieter=betano
+# Statische App (GitHub Pages):  docs/sancho.html  (eigenständige Seite)
+# FastAPI-Dashboard:  /sancho  (Dunkelblau-Interface)  ·  JSON: /api/sancho?anbieter=betano
 # Bot:  /sancho betano
 ```
 
@@ -306,6 +367,26 @@ python -m melde anbieter="Name" lizenz=keine einzahlung=300 verlust=300 rtp=0.96
 > Bei fehlender Lizenz können Verträge nichtig sein (§ 134 BGB) und Einzahlungen
 > zurückforderbar (§ 812 BGB) – für den Einzelfall Verbraucherzentrale / Fachanwalt.
 
+### Wissenschaftlicher Anspruch & Grenzen
+
+Die Monte-Carlo-Zahlen (App-Tab SPIELE und Bot-Befehl `/risiko`) sind so gebaut, dass man ihnen
+nachrechnen kann:
+
+- **Unsicherheit wird gezeigt:** Wahrscheinlichkeiten mit 95-%-Wilson-Intervall, Mittelwert mit
+  Normalnäherungs-Intervall (`risiko/statistik.py`, Tests prüfen bekannte Werte und die ≈95-%-Überdeckung).
+- **Theorie vs. Simulation getrennt:** Das „erwartete Endkapital" gilt nur, wenn alle Spins gespielt werden;
+  bei Pleite endet die Session früher, deshalb zeigt die Ausgabe zusätzlich das simulierte Ø-Endkapital.
+- **Modell-Check eingebaut:** Nach dem Optional-Stopping-Satz muss *Ø Verlust = Hausvorteil × Einsatz ×
+  Ø gespielte Spins* gelten. Das prüfen Test **und** App (✓/⚠), unabhängig vom Zufall der Stichprobe.
+- **Zwei unabhängige Implementierungen** (JavaScript/mulberry32, Python/Mersenne-Twister) liefern für dasselbe
+  Szenario innerhalb ihrer Intervalle dasselbe (Wolf Gold, RTP 96,01 %, 20.000 Sessions: Pleite 19,5 % vs. 19,8 %).
+- **Reproduzierbar:** Zufall wird aus den Eingaben abgeleitet; gleiche Eingaben liefern gleiche Ergebnisse.
+- **Grenzen offen genannt:** Trefferquote je Volatilitätsstufe ist eine *Annahme*, Gewinnhöhen sind
+  exponentialverteilt, es gibt kein Max-Win-Limit. Echte Spiele können stärker schwanken. Das Intervall gibt die
+  Unsicherheit der *Simulation* an, nicht die des *Modells*.
+- **Rechenlimits:** höchstens 100.000 Spins und ein Gesamtbudget an simulierten Spins (die Oberfläche bleibt
+  bedienbar, der Bot rechnet im Thread).
+
 ## Personal-Risiko-Analyse (`risiko/`) – aus öffentlichen Fakten
 
 Beantwortet die legitime Frage: *Kann man aus öffentlich verfügbaren Infos
@@ -343,24 +424,48 @@ erreichbar — direkt auf dem Handy.
 sie werden **nie** ins Repository geschrieben. Für reinen Polling-Bot einen Worker
 mit Startbefehl `python main.py` anlegen.
 
-## Tests
+### Sicherheit & Betrieb (Details: [`SECURITY.md`](SECURITY.md))
+
+- **`ALLOWED_USER_IDS` setzen**, sobald eine KI aktiv ist. Die Allowlist und das Rate-Limit
+  (`RATE_LIMIT_PER_MINUTE`, Standard 10) greifen über ein Gate vor allen Befehlen (`bot/zugriff.py`).
+  Leer = öffentlicher Bot; ein fehlerhafter Eintrag (z. B. `123;456`) stoppt den Start, statt den Bot zu öffnen.
+- **Webhook** (`/telegram/webhook`) nimmt Anfragen nur mit `TELEGRAM_WEBHOOK_SECRET` an – beim Registrieren
+  `secret_token` auf denselben Wert setzen, sonst antwortet der Server mit 403.
+- Das Dashboard setzt Sicherheits-Header (CSP, `nosniff`, `X-Frame-Options`, `Referrer-Policy`).
+- Abhängigkeiten sind gepinnt und per `pip-audit` geprüft; Dependabot meldet wöchentlich Updates.
+
+## Tests & CI
 
 ```bash
-python -m unittest discover -s tests -v
+python -m unittest discover -s tests -v      # Tests (Dashboard/Bot/RPC werden übersprungen, wenn Pakete fehlen)
+pip install ruff==0.15.8 && ruff check .      # Fehler + Sicherheitsfallen (ruff.toml)
+python scripts/check_frontend.py              # JS-Syntax, JSON, lang/viewport/title, Labels, Live-Regionen
+NODE_PATH=$(npm root -g) node scripts/browser_check.js   # echte Seiten in Chromium (Playwright)
 ```
+
+`.github/workflows/ci.yml` führt das bei jedem Pull Request und Push auf `main` aus
+(inkl. Browser-Test und `pip-audit`). Hinweis: Eine frühere Bereinigung ließ `web/dashboard.py` unbemerkt auf gelöschte
+Module zeigen – deshalb importieren die Tests Dashboard, Bot und RPC jetzt wirklich.
+
+### Mini-Repo-ZIP
+
+`python scripts/build_mini_repo.py [ordner]` baut `KI_Taktik_GitHub_Repo_v2.zip` (Scanner, Risikoprofil, Tests, CI,
+abhängigkeitsfrei) direkt aus diesem Repo. Vorlagen liegen in `scripts/mini_repo/`. Die CI baut die ZIP bei jedem Lauf
+und hängt sie als Artefakt „KI_Taktik_GitHub_Repo_v2“ an (14 Tage).
 
 ## Projektstruktur
 
 ```
-analyzer/     Rechen-Engine (bonus.py), Parser, System-Prompt, CLI
+analyzer/     Rechen-Engine (bonus.py), Parser, System-Prompt, CLI, AGB-Scanner (scan.py)
 sancho/       ∆1-Lore-Modul „Sanchos Spielplatz" (Rhythmus-Mythos + Wahrheit)
 aktvier/      ∆1-AKT 4 „Das Signal" – Finale + Ebene-2-Rätsel; zeit.py = stündlich rotierender ZEIT-CODE
 datenbank/    Öffentlicher Spiele-Katalog v3: Adapter/Validation/Dedup/Source-Health + alternativen.py (siehe datenbank/README.md)
-risiko/       Personal-Risiko-Analyse (Monte-Carlo: EV, Risk of Ruin) aus öffentlichen Fakten
+risiko/       Personal-Risiko-Analyse (Monte-Carlo: EV, Risk of Ruin) + ruhiges Risikoprofil (profil.py)
 melde/        Melde-Assistent (Mathematik + Beschwerde/Anzeige an die GGL, für jeden Anbieter)
 gewinner/     Dokumentierte Advantage-Play-Fälle (mit Mathematik gewonnen, dann verbannt)
-bot/          Telegram-Bot (CasinoBonusBot)
+bot/          Telegram-Bot (CasinoBonusBot) + zugriff.py (Allowlist, Rate-Limit)
 ai/           DeepSeek-Client für die AGB-Analyse
 web/          FastAPI-Dashboard (Rechner + /sancho + /signal + VHS/Boot)
-tests/        Unit-Tests (Engine, Parser, Sancho, AKT 4 + Zeit-Code, Datenbank, Risiko, Melde, Quellen, Verteilung)
+scripts/      check_frontend.py (JS/JSON/Barrierefreiheit) · browser_check.js (Chromium-Test) – laufen in der CI
+tests/        Tests (Engine, Parser, Sancho, AKT 4 + Zeit-Code, Datenbank, Dashboard, Bot, Zugriff, Config, RPC, Risiko, Melde, Quellen, Verteilung)
 ```

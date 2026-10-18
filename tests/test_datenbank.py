@@ -130,7 +130,7 @@ class TestBauen(unittest.TestCase):
         d = baue(urls=[])
         self.assertEqual(d["schema_version"], "3.0")
         # Frontend-Pflichtfelder müssen erhalten bleiben.
-        for key in ("stand", "generiert", "quellen", "anzahl", "spiele"):
+        for key in ("stand", "generiert", "geprueft", "quellen", "anzahl", "spiele"):
             self.assertIn(key, d)
         self.assertEqual(d["anzahl"], len(d["spiele"]))
         self.assertIn("source_status", d)
@@ -159,6 +159,21 @@ class TestSchreiben(unittest.TestCase):
             d2 = baue(urls=[])
             d2["generiert"] = "2099-01-01T00:00:00Z"
             self.assertFalse(schreibe(d2, pfad))
+
+    def test_unveraenderte_daten_erneuern_nur_geprueft(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            pfad = os.path.join(tmp, "games.json")
+            d = baue(urls=[])
+            d.update(stand="2026-01-01", generiert="2026-01-01T00:00:00Z", geprueft="2026-01-01T00:00:00Z")
+            self.assertTrue(schreibe(d, pfad))
+            self.assertFalse(schreibe(baue(urls=[]), pfad))          # Kern gleich -> kein Inhalts-Update
+            with open(pfad, encoding="utf-8") as f:
+                j = json.load(f)
+            self.assertEqual(j["stand"], "2026-01-01")                # Datum der letzten Aenderung bleibt
+            self.assertNotEqual(j["geprueft"][:10], "2026-01-01")     # aber heute geprueft
+            vorher = open(pfad, encoding="utf-8").read()
+            schreibe(baue(urls=[]), pfad)
+            self.assertEqual(open(pfad, encoding="utf-8").read(), vorher)   # gleicher Tag -> keine Dateiaenderung
 
 
 if __name__ == "__main__":

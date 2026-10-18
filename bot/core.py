@@ -1,16 +1,21 @@
 """Telegram-Bot: Casino-Bonus- und Umsatz-Analytiker."""
 
+import asyncio
+
 from telegram import Update
 from telegram.ext import (
     Application,
     CommandHandler,
     ContextTypes,
     MessageHandler,
+    TypeHandler,
     filters,
 )
 
 from ai.providers import AIManager
+from bot.zugriff import Zugriff
 from analyzer import SYSTEM_PROMPT, analysiere, formatiere, parse
+from analyzer.scan import analysiere_text, formatiere_scan, optionen_aus_text, sieht_nach_agb_aus
 from sancho import erzeuge as sancho_erzeuge
 from sancho import formatiere as sancho_formatiere
 from aktvier import erzeuge_signal
@@ -18,6 +23,10 @@ from aktvier import formatiere as signal_formatiere
 from aktvier import formatiere_zyklus, zyklus_signal
 from risiko import RisikoSzenario, Volatilitaet
 from risiko import analysiere as risiko_analysiere
+from risiko import berechne as profil_berechne
+from risiko import eingabe_aus_text as profil_eingabe
+from risiko import formatiere_profil
+from risiko.profil import FRAGEN, SKALA
 from risiko import formatiere as risiko_formatiere
 from melde import Lizenz, MeldeSzenario
 from melde import erstelle as melde_erstelle
@@ -35,10 +44,12 @@ HELP_TEXT = (
     "ob sich ein Bonus lohnt – oder ob Stornieren dein Echtgeld schuetzt.\n\n"
     "*Befehle*\n"
     "`/bonus <parameter>` – Bonus berechnen\n"
+    "`/scan <AGB-Text>` – AGB offline lesen & durchrechnen (ohne KI, mit Textbeleg)\n"
     "`/analyse <AGB-Text>` – Bonus-AGB per KI auf Haken pruefen\n"
     "`/sancho <anbieter>` – ∆1-Spielplatz: Rhythmus-Mythos & Wahrheit\n"
     "`/signal` – AKT 4: Das Signal (Ebene-2-Rätsel) · `/signal loesung`\n"
     "`/risiko <werte>` – persönliche Risiko-Analyse (EV, Risk of Ruin)\n"
+    "`/profil <werte>` – ruhiges Risikoprofil mit Selbst-Check\n"
     "`/melde <werte>` – Beschwerde/Anzeige an die GGL (Mathematik + Recht)\n"
     "`/gewinner` – dokumentierte Fälle: mit Mathematik gewonnen, dann verbannt\n"
     "`/frage <Text>` – freie Frage an den Analytiker\n"
@@ -57,6 +68,7 @@ class CasinoBonusBot:
     def __init__(self, config):
         self.config = config
         self.ai_manager = AIManager(config)
+        self.zugriff = Zugriff.aus_config(config)
 
     # ---- Lifecycle ----------------------------------------------------
     async def _post_init(self, app: Application):
@@ -90,6 +102,9 @@ class CasinoBonusBot:
     async def bonus_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         text = " ".join(context.args)
         await self._analysiere_und_antworte(update, text)
+
+    async def scan_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        await self._scan_und_antworte(update, " ".join(context.args))
 
     async def analyse_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         agb = " ".join(context.args)
@@ -140,7 +155,7 @@ class CasinoBonusBot:
                     r = float(v.replace(",", ".")); s.rtp = r / 100 if r > 1.5 else r
                 elif k in ("vola", "volatilitaet"):
                     s.volatilitaet = vola.get(v.lower(), s.volatilitaet)
-            except ValueError:
+            except (ValueError, OverflowError):
                 pass
         if not gefunden:
             return await update.message.reply_text(
@@ -151,7 +166,27 @@ class CasinoBonusBot:
                 parse_mode="Markdown",
             )
         msg = await update.message.reply_text("📈 Simuliere ...")
-        await msg.edit_text(risiko_formatiere(risiko_analysiere(s, runs=8000), s))
+        try:
+            # Rechenintensiv: im Thread, damit der Event-Loop (alle anderen Nutzer) frei bleibt.
+            ergebnis = await asyncio.to_thread(risiko_analysiere, s, 8000)
+        except ValueError as exc:
+            return await msg.edit_text(f"❌ {exc}")
+        await msg.edit_text(risiko_formatiere(ergebnis, s))
+
+    async def profil_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        try:
+            e = profil_eingabe(" ".join(context.args))
+        except ValueError as exc:
+            fragen = "\n".join(f"{i}. {f}" for i, f in enumerate(FRAGEN, 1))
+            return await update.message.reply_text(
+                f"{exc}\n\nBeispiel:\n/profil budget=100 einsatz=1 rtp=96 vola=mittel minuten=60 "
+                f"check=0,1,0,0,2,0\n\nSelbst-Check, je 0-3 ({' / '.join(SKALA)}):\n{fragen}\n\n"
+                "Kein klinisches Screening, keine Diagnose.")
+        try:
+            p = await asyncio.to_thread(profil_berechne, e)
+        except ValueError as exc:
+            return await update.message.reply_text(f"❌ {exc}")
+        await update.message.reply_text(formatiere_profil(p, e)[:4000])
 
     async def melde_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         import re
@@ -212,8 +247,10 @@ class CasinoBonusBot:
     async def text_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Freitext: sieht wie Bonus-Parameter aus? Dann direkt rechnen."""
         text = update.message.text or ""
-        if "=" in text:
+        if "=" in text and not sieht_nach_agb_aus(text):
             await self._analysiere_und_antworte(update, text)
+        elif sieht_nach_agb_aus(text):
+            await self._scan_und_antworte(update, text)
         else:
             await update.message.reply_text(
                 "Sende `/help` oder Bonus-Parameter, z. B.:\n"
@@ -222,6 +259,20 @@ class CasinoBonusBot:
             )
 
     # ---- Helper -------------------------------------------------------
+    async def _scan_und_antworte(self, update: Update, text: str):
+        text, optionen = optionen_aus_text(text)
+        if not text.strip():
+            return await update.message.reply_text(
+                "Bitte den Bonus-/AGB-Text anhaengen (oder einfach hier einfuegen):\n"
+                "`/scan <Text> einzahlung=50 rtp=0.96 einsatz=1`",
+                parse_mode="Markdown",
+            )
+        try:
+            scan, ergebnis = analysiere_text(text, **optionen)
+        except ValueError as exc:
+            return await update.message.reply_text(f"❌ {exc}")
+        await update.message.reply_text(formatiere_scan(scan, ergebnis)[:4000])
+
     async def _analysiere_und_antworte(self, update: Update, text: str):
         if not text.strip():
             return await update.message.reply_text(
@@ -249,15 +300,19 @@ class CasinoBonusBot:
             .post_shutdown(self._post_shutdown)
             .build()
         )
+        # Gate vor allen Befehlen (Gruppe -1): Allowlist + Rate-Limit.
+        app.add_handler(TypeHandler(Update, self.zugriff.gate), group=-1)
         app.add_handler(CommandHandler("start", self.start_command))
         app.add_handler(CommandHandler("help", self.help_command))
         app.add_handler(CommandHandler("status", self.status_command))
         app.add_handler(CommandHandler("bonus", self.bonus_command))
+        app.add_handler(CommandHandler("scan", self.scan_command))
         app.add_handler(CommandHandler("analyse", self.analyse_command))
         app.add_handler(CommandHandler("analyze", self.analyse_command))
         app.add_handler(CommandHandler("sancho", self.sancho_command))
         app.add_handler(CommandHandler("signal", self.signal_command))
         app.add_handler(CommandHandler("risiko", self.risiko_command))
+        app.add_handler(CommandHandler("profil", self.profil_command))
         app.add_handler(CommandHandler("melde", self.melde_command))
         app.add_handler(CommandHandler("gewinner", self.gewinner_command))
         app.add_handler(CommandHandler("frage", self.frage_command))
@@ -266,5 +321,8 @@ class CasinoBonusBot:
 
     def run(self):
         app = self.build_application()
+        hinweis = self.zugriff.warnung(self.ai_manager.available)
+        if hinweis:
+            logger.warning(hinweis)
         logger.info("🤖 Bot startet Polling ...")
         app.run_polling(drop_pending_updates=True, allowed_updates=Update.ALL_TYPES)

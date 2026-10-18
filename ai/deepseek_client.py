@@ -1,3 +1,5 @@
+import asyncio
+
 import aiohttp
 from typing import Dict, List, Optional
 
@@ -16,7 +18,8 @@ class DeepSeekClient:
     async def connect(self):
         if not self.session:
             self.session = aiohttp.ClientSession(
-                headers={"Authorization": f"Bearer {self.config.DEEPSEEK_API_KEY}"}
+                headers={"Authorization": f"Bearer {self.config.DEEPSEEK_API_KEY}"},
+                timeout=aiohttp.ClientTimeout(total=60, connect=10),
             )
 
     async def close(self):
@@ -39,12 +42,13 @@ class DeepSeekClient:
             ) as resp:
                 if resp.status != 200:
                     text = await resp.text()
-                    logger.error("DeepSeek API %s: %s", resp.status, text)
-                    return {"error": text}
+                    logger.error("DeepSeek API %s: %s", resp.status, text[:500])
+                    # Rohantwort nicht an Telegram-Nutzer durchreichen (kann interne Details enthalten).
+                    return {"error": f"KI-Dienst nicht verfuegbar (HTTP {resp.status})."}
                 return await resp.json()
-        except aiohttp.ClientError as exc:
+        except (aiohttp.ClientError, asyncio.TimeoutError) as exc:
             logger.error("DeepSeek Verbindungsfehler: %s", exc)
-            return {"error": str(exc)}
+            return {"error": "KI-Dienst nicht erreichbar oder zu langsam."}
 
     async def ask(self, frage: str, system_prompt: Optional[str] = None) -> str:
         """Stellt eine Frage (optional mit System-Prompt) und liefert reinen Text."""
