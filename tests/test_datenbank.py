@@ -58,7 +58,7 @@ class TestSammeln(unittest.TestCase):
 class TestBauen(unittest.TestCase):
     def test_struktur(self):
         d = baue(urls=[])
-        for key in ("_hinweis", "stand", "generiert", "quellen", "anzahl", "spiele"):
+        for key in ("_hinweis", "stand", "generiert", "geprueft", "quellen", "anzahl", "spiele"):
             self.assertIn(key, d)
         self.assertEqual(d["anzahl"], len(d["spiele"]))
         self.assertRegex(d["stand"], r"^\d{4}-\d{2}-\d{2}$")
@@ -81,6 +81,21 @@ class TestSchreiben(unittest.TestCase):
             with open(pfad, encoding="utf-8") as f:
                 wieder = json.load(f)
             self.assertEqual(wieder["anzahl"], d["anzahl"])
+
+    def test_unveraenderte_daten_erneuern_nur_geprueft(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            pfad = os.path.join(tmp, "games.json")
+            d = baue(urls=[])
+            d.update(stand="2026-01-01", generiert="2026-01-01T00:00:00Z", geprueft="2026-01-01T00:00:00Z")
+            self.assertTrue(schreibe(d, pfad))
+            self.assertFalse(schreibe(baue(urls=[]), pfad))          # Kern gleich -> kein Inhalts-Update
+            with open(pfad, encoding="utf-8") as f:
+                j = json.load(f)
+            self.assertEqual(j["stand"], "2026-01-01")                # Datum der letzten Aenderung bleibt
+            self.assertNotEqual(j["geprueft"][:10], "2026-01-01")     # aber heute geprueft
+            vorher = open(pfad, encoding="utf-8").read()
+            schreibe(baue(urls=[]), pfad)
+            self.assertEqual(open(pfad, encoding="utf-8").read(), vorher)   # gleicher Tag -> keine Dateiaenderung
 
 
 if __name__ == "__main__":

@@ -56,11 +56,13 @@
  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
  .ruhigbtn{background:transparent;color:#9db8ea;border:1px solid #1e3d7a;border-radius:8px;padding:6px 10px;font:inherit;font-size:12px;cursor:pointer;margin:0 0 12px}
  .ruhigbtn[aria-pressed="true"]{background:#1a2438;color:#dfe6f5;border-color:#3b4a6b}
- body.ruhig{background:#0d111b;color:#c3cce0}
+ body.ruhig{background:#03071a;color:#bcd0f0}
  body.ruhig #d1-vhs,body.ruhig #boot,body.ruhig .livedot{display:none}
  body.ruhig *{animation:none!important;transition:none!important;text-shadow:none!important;box-shadow:none!important}
- body.ruhig h1{color:#cfd8ec}body.ruhig .tag{letter-spacing:.12em}
- body.ruhig nav{background:#0d111b}
+ body.ruhig h1{color:#cfe0ff}body.ruhig .tag{letter-spacing:.12em;color:#8aa4d6}
+ body.ruhig nav{background:#03071a}
+ body.ruhig .disc{background:#071230;border-color:#1e3d7a;color:#bcd0f0}
+ body.ruhig .stop{color:#ffc7d1}body.ruhig .warn{color:#f2d9a8}
  @media (prefers-reduced-motion:reduce){#boot{display:none}section.on{animation:none}.livedot{animation:none}.bar{transition:none}}
 </style></head><body>
 <noscript><div class="disc" style="margin:16px">Diese App rechnet im Browser und braucht JavaScript. Ohne JavaScript steht nichts zur Verfügung.</div></noscript>
@@ -401,8 +403,8 @@ function mobile(){
       return r.json().then(j=>({ok:r.ok,status:r.status,platLat:platLat,j:j})).catch(()=>({ok:r.ok,status:r.status,platLat:platLat,j:null}));
     }).then(res=>{
       const now=new Date().toLocaleTimeString('de-DE');
-      const alter=db_alterTage(DBGEN);
-      const alterTxt=(alter==null)?'':(alter<=1?' (heute)':' (vor '+alter+' Tagen)');
+      const alter=db_alterTage(DBPRUEF||DBGEN);
+      const alterTxt=(alter==null)?'':(alter<=1?' (heute geprüft)':' (geprüft vor '+alter+' Tagen)');
       // (3) daraus resultierende Spiele
       const gs=GAMESDB.slice().filter(g=>g.rtp);
       const guenstig=gs.slice().sort((a,b)=>b.rtp-a.rtp).slice(0,3);
@@ -421,7 +423,7 @@ function mobile(){
         'Kein SIM/APN/IMSI-Zugriff · kein fremder Traffic inspiziert','',
         '[2] ÖFFENTLICHE DATEN-PLATTFORM (first-party games.json)',
         'Abruf: '+(res.ok?'HTTP '+res.status+' OK':'HTTP '+res.status)+' · '+res.platLat+' ms',
-        'Stand: '+(DBSTAND||'—')+(DBGEN?' · generiert '+DBGEN+alterTxt:''),
+        'Daten-Stand: '+(DBSTAND||'—')+(DBGEN?' · zuletzt geändert '+DBGEN:'')+alterTxt,
         'Quellen: '+(DBQUELLEN.length?DBQUELLEN.join(', '):'—'),
         'Spiele geladen: '+GAMESDB.length+' · täglich automatisch aktualisiert',
         'Kein Anbieter-API-Zugriff · keine Casino-Server','',
@@ -453,7 +455,7 @@ function parseDist(s){const out=[];(s||'').split(/[,;\n]/).forEach(t=>{const m=t
 function esc(s){return (''+s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 // SPIELE = vom Nutzer analysierte Spiele (speist MULTIPLIER). Startet leer.
 let SPIELE=[];
-let GAMESDB=[], DBQUELLE='', DBSTAND='', DBGEN='', DBQUELLEN=[];
+let GAMESDB=[], DBQUELLE='', DBSTAND='', DBGEN='', DBPRUEF='', DBQUELLEN=[];
 function db_setStatus(t){var s=document.getElementById('db_status');if(s)s.innerHTML=t;}
 // Tage seit einem ISO-Datum (für Frische-Warnung).
 function db_alterTage(iso){if(!iso)return null;var d=new Date(iso);if(isNaN(d))return null;return Math.floor((Date.now()-d.getTime())/86400000);}
@@ -462,7 +464,7 @@ function db_load(){
   db_setStatus('… lade öffentliche Datenbank (games.json) …');
   fetch('games.json?_='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{
     GAMESDB=(j.spiele||[]).filter(g=>g.name&&g.anbieter);
-    DBSTAND=j.stand||''; DBGEN=j.generiert||'';
+    DBSTAND=j.stand||''; DBGEN=j.generiert||''; DBPRUEF=j.geprueft||'';
     DBQUELLEN=(j.quellen&&j.quellen.length)?j.quellen:['öffentlicher Basissatz'];
     DBQUELLE='games.json (first-party) · Quellen: '+DBQUELLEN.join(', ');
     db_initProviders();
@@ -472,17 +474,17 @@ function db_load(){
       {name:'Book of Dead',anbieter:"Play'n GO",rtp:0.9621,vola:'hoch',max:5000,quelle:'eingebetteter Fallback'},
       {name:'Starburst',anbieter:'NetEnt',rtp:0.9609,vola:'niedrig',max:500,quelle:'eingebetteter Fallback'}
     ];
-    DBQUELLE='eingebetteter Fallback (games.json nicht erreichbar)'; DBSTAND=''; DBGEN=''; DBQUELLEN=['eingebetteter Fallback'];
+    DBQUELLE='eingebetteter Fallback (games.json nicht erreichbar)'; DBSTAND=''; DBGEN=''; DBPRUEF=''; DBQUELLEN=['eingebetteter Fallback'];
     db_initProviders();
   });
 }
 function db_initProviders(){
-  var alter=db_alterTage(DBGEN);
+  var alter=db_alterTage(DBPRUEF||DBGEN);
   var frische='';
   if(DBSTAND){
-    frische=' · Stand '+DBSTAND;
-    if(alter!=null) frische+=(alter<=1?' (heute aktualisiert)':(alter<=3?' (vor '+alter+' Tagen)':
-      ' · <span class="stop">⚠ '+alter+' Tage alt – täglicher Job prüfen</span>'));
+    frische=' · Daten-Stand '+DBSTAND;
+    if(alter!=null) frische+=(alter<=1?' (heute geprüft)':(alter<=3?' (geprüft vor '+alter+' Tagen)':
+      ' · <span class="stop">⚠ zuletzt geprüft vor '+alter+' Tagen – täglicher Job prüfen</span>'));
   }
   db_setStatus('Quelle: '+DBQUELLE+frische+' · '+GAMESDB.length+' Spiele · täglich automatisch aktualisiert');
   var provs=[...new Set(GAMESDB.map(g=>g.anbieter))].sort();
