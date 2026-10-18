@@ -35,6 +35,8 @@ KORPUS = [
     ("Bonus 100 % auf alles. Umsatz 30x.", {}),
     ("Umsatzbedingung 35x, sonst nichts Relevantes.", {}),
     ("Bonus 25 € Bonus geschenkt. Umsatz 20x. Max. Gewinn 100 €. Zeitlimit: 5 Tage.", {}),
+    ("Detail Tabelle " + "Spalte Wert Zeile " * 14 + "Bonus 100 % bis 100 € Mindesteinzahlung 1 € Umsatz Bonus 40x Bonusbetrag "
+     "Laufzeit 30 Tage " + "Zeile Ende " * 12, {}),
     ("Bonus 100 % bis 200 €. Umsatz 35x. Max. Einsatz 0,50 €. Maximaler Gewinn aus dem Bonus: 50 €. Frist 1 Tag.",
      {"einzahlung": 100, "einsatz": 0.5}),
 ]

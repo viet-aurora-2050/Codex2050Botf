@@ -1,0 +1,54 @@
+name: AGB-Datenbank taeglich aktualisieren (oeffentliche Bonus-/AGB-Seiten)
+
+# Liest die in datenbank/agb_sammler.py konfigurierten oeffentlichen Seiten (robots.txt wird beachtet,
+# identifizierbarer User-Agent, 1 s Pause, nur https und der konfigurierte Host), wertet sie mit dem
+# Scanner aus und schreibt docs/agb.json. Gesperrte Seiten (403/Geo/JavaScript) werden als Status
+# dokumentiert, nicht umgangen. Faellt ein Abruf aus, bleibt der letzte Befund erhalten.
+# Committet nur bei echter inhaltlicher Aenderung oder einmal pro Tag fuer das Pruefdatum.
+
+on:
+  schedule:
+    - cron: "37 5 * * *"       # taeglich 05:37 UTC (nach Spiele- und Anbieter-Job)
+  workflow_dispatch: {}
+
+permissions:
+  contents: write              # Least-Privilege: nur Commit von docs/agb.json
+
+concurrency:
+  group: update-agb
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Tests
+        run: python -m unittest discover -s tests
+
+      - name: AGB-Datenbank aktualisieren
+        run: python -m datenbank.agb_sammler
+
+      - name: JSON validieren
+        run: python -c "import json; d=json.load(open('docs/agb.json')); assert d['anbieter'], 'leer'; print('agb.json valide:', sorted(d['anbieter']))"
+
+      - name: Bei Aenderung committen
+        run: |
+          if git diff --quiet -- docs/agb.json; then
+            echo "Keine Aenderung – nichts zu committen."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/agb.json
+          git commit -m "chore(data): AGB-Datenbank docs/agb.json"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push

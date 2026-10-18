@@ -70,9 +70,16 @@ def _saetze(text: str) -> List[str]:
     return [s.strip() for s in _SATZ.split(text) if s.strip()]
 
 
-def _beleg(satz: str) -> str:
+def _beleg(satz: str, pos: int = 0) -> str:
+    """Textbeleg (max. BELEG_LAENGE Zeichen). Bei langen Sätzen (z. B. Tabellen) ein Fenster um die Fundstelle `pos`."""
     satz = re.sub(r"\s+", " ", satz)
-    return satz if len(satz) <= BELEG_LAENGE else satz[: BELEG_LAENGE - 1] + "…"
+    if len(satz) <= BELEG_LAENGE:
+        return satz
+    pos = min(max(0, pos), len(satz) - 1)
+    start = max(0, pos - 60)
+    ende = min(len(satz), start + BELEG_LAENGE)
+    start = max(0, ende - BELEG_LAENGE)
+    return ("…" if start > 0 else "") + satz[start:ende].strip() + ("…" if ende < len(satz) else "")
 
 
 def _erstes_geld(satz: str) -> Optional[float]:
@@ -80,19 +87,33 @@ def _erstes_geld(satz: str) -> Optional[float]:
     return _geld(m) if m else None
 
 
-def _geld_nach(satz: str, stichwort: str) -> Optional[float]:
-    """Erster Geldbetrag NACH dem Stichwort (nicht der erste im Satz: „Bonus bis 100 €, Mindesteinzahlung 10 €“)."""
+def _geld_nach_pos(satz: str, stichwort: str) -> Optional[Tuple[float, int]]:
+    """Erster Geldbetrag NACH dem Stichwort (nicht der erste im Satz: „Bonus bis 100 €, Mindesteinzahlung 10 €“) + Position."""
     k = re.search(stichwort, satz, re.I)
     if not k:
         return None
     m = _GELD.search(satz, k.end())
-    return _geld(m) if m else None
+    return (_geld(m), m.start()) if m else None
+
+
+def _geld_nach(satz: str, stichwort: str) -> Optional[float]:
+    r = _geld_nach_pos(satz, stichwort)
+    return r[0] if r else None
 
 
 def _zeit_in_tagen(satz: str) -> Optional[float]:
+    r = _zeit_pos(satz)
+    return r[0] if r else None
+
+
+def _zeit_pos(satz: str) -> Optional[Tuple[float, int]]:
     m = _ZEIT.search(satz)
     if not m:
         return None
+    return _zeit_wert(m), m.start()
+
+
+def _zeit_wert(m: "re.Match[str]") -> float:
     n, einheit = int(m.group(1)), m.group(2).lower()
     if einheit.startswith(("stunde", "std")):
         return round(n / 24.0, 2)
@@ -116,8 +137,12 @@ def _waehle(kandidaten: List[Tuple[float, str]], konservativ: str, feld: str, hi
 
 
 def scanne(text: str, einzahlung: Optional[float] = None, rtp: Optional[float] = None,
-           einsatz: Optional[float] = None) -> ScanErgebnis:
-    """Liest `text` in ein BonusSzenario. Wirft ValueError, wenn keine Rechnung möglich ist."""
+           einsatz: Optional[float] = None, strikt: bool = True) -> ScanErgebnis:
+    """Liest `text` in ein BonusSzenario. Wirft ValueError, wenn keine Rechnung möglich ist.
+
+    `strikt=False`: Regeltexte ohne konkreten Bonus (allgemeine AGB) – es werden nur die Funde (Limits, Fristen,
+    Faktoren mit Beleg) geliefert; das Szenario ist dann unvollständig und darf nicht gerechnet werden.
+    """
     if not isinstance(text, str) or not text.strip():
         raise ValueError("Kein Text übergeben.")
     if len(text) > MAX_ZEICHEN:
@@ -143,7 +168,6 @@ def scanne(text: str, einzahlung: Optional[float] = None, rtp: Optional[float] =
 
     for satz in saetze:
         low = satz.lower()
-        b = _beleg(satz)
         ist_fs = "freispiel" in low
 
         if ist_fs:
@@ -157,59 +181,62 @@ def scanne(text: str, einzahlung: Optional[float] = None, rtp: Optional[float] =
         if re.search(r"umsatz|umsetz|wager|durchspiel|umgesetzt|durchgespielt", low):
             m = _FAKTOR.search(satz)
             if m:
-                (fs_faktor_k if ist_fs else faktor_k).append((_zahl(m.group(1)), b))
+                (fs_faktor_k if ist_fs else faktor_k).append((_zahl(m.group(1)), _beleg(satz, m.start())))
             # Umsatzbasis
-            if re.search(r"(bonus\w{0,10}\W{0,4}(und|\+|&|plus)\W{0,4}einzahlung"
-                         r"|einzahlung\w{0,10}\W{0,4}(und|\+|&|plus)\W{0,4}bonus)", low):
-                basis_hinweise.append((UmsatzBasis.EINZAHLUNG_PLUS_BONUS, b))
-            elif re.search(r"(bonusbetrag|bonusgeld|bonus\s*(betrag|summe))", low) and "einzahlung" not in low:
-                basis_hinweise.append((UmsatzBasis.BONUS, b))
-            elif re.search(r"einzahlungsbetrag|einzahlung\b", low) and "bonus" not in low:
-                basis_hinweise.append((UmsatzBasis.EINZAHLUNG, b))
+            mb = re.search(r"(bonus\w{0,10}\W{0,4}(und|\+|&|plus)\W{0,4}einzahlung"
+                           r"|einzahlung\w{0,10}\W{0,4}(und|\+|&|plus)\W{0,4}bonus)", low)
+            mb_bonus = re.search(r"(bonusbetrag|bonusgeld|bonus\s*(betrag|summe))", low)
+            mb_einz = re.search(r"einzahlungsbetrag|einzahlung\b", low)
+            if mb:
+                basis_hinweise.append((UmsatzBasis.EINZAHLUNG_PLUS_BONUS, _beleg(satz, mb.start())))
+            elif mb_bonus and "einzahlung" not in low:
+                basis_hinweise.append((UmsatzBasis.BONUS, _beleg(satz, mb_bonus.start())))
+            elif mb_einz and "bonus" not in low:
+                basis_hinweise.append((UmsatzBasis.EINZAHLUNG, _beleg(satz, mb_einz.start())))
 
         # Bonus-Prozent und Deckel
         if re.search(r"bonus", low) and not re.search(r"zähl|zaehl|beitrag|gewichtung|rtp|auszahlungsquote", low):
             m = _PROZENT.search(satz)
             if m:
-                prozent_k.append((_zahl(m.group(1)), b))
+                prozent_k.append((_zahl(m.group(1)), _beleg(satz, m.start())))
                 m2 = re.search(r"bis\s+(?:zu\s+)?(?:einem\s+betrag\s+von\s+)?" + _GELD.pattern, satz, re.I)
                 if m2:
-                    deckel_k.append((_geld(_GELD.search(satz[m2.start():])), b))
+                    deckel_k.append((_geld(_GELD.search(satz[m2.start():])), _beleg(satz, m2.start())))
         # Fester Bonusbetrag ("10 € Bonus", "Bonus: 25 €")
         m = re.search(r"(?:^|\W)" + _GELD.pattern + r"\s*(?:gratis[- ]?)?(?:bonus|startguthaben|bonusguthaben)", satz, re.I)
         if m and "%" not in satz:
-            bonus_fix_k.append((_geld(_GELD.search(satz[m.start():])), b))
+            bonus_fix_k.append((_geld(_GELD.search(satz[m.start():])), _beleg(satz, m.start())))
 
         # Höchsteinsatz
         if re.search(r"einsatz|wetteinsatz|bet\b", low) and re.search(r"max|höchst|hoechst|obergrenze|nicht\s+(mehr|über|ueber)", low):
-            g = _geld_nach(satz, r"einsatz|bet\b")
+            g = _geld_nach_pos(satz, r"einsatz|bet\b")
             if g is not None:
-                maxeins_k.append((g, b))
+                maxeins_k.append((g[0], _beleg(satz, g[1])))
         # Gewinn-/Auszahlungs-Cap
         if re.search(r"gewinn|auszahlung", low) and re.search(r"begrenz|limit|gedeckelt|höchstens|hoechstens|max|deckel", low) \
                 and not re.search(r"einsatz", low):
-            g = _geld_nach(satz, r"gewinn\w*|auszahlung\w*")
+            g = _geld_nach_pos(satz, r"gewinn\w*|auszahlung\w*")
             if g is not None:
-                cap_k.append((g, b))
+                cap_k.append((g[0], _beleg(satz, g[1])))
         # Mindesteinzahlung
         if re.search(r"mindest\w*\s*einzahlung|einzahlung\w*\s*(ab|von\s+mindestens)|mindestens\s+[\d.,]+\s*(€|eur)\b[^.]{0,40}einzahl", low):
-            g = _geld_nach(satz, r"mindest\w*\s*einzahlung|einzahlung\w*\s*(?:ab|von\s+mindestens)|mindestens")
+            g = _geld_nach_pos(satz, r"mindest\w*\s*einzahlung|einzahlung\w*\s*(?:ab|von\s+mindestens)|mindestens")
             if g is not None:
-                mineinz_k.append((g, b))
+                mineinz_k.append((g[0], _beleg(satz, g[1])))
         # Zeitlimit
         if re.search(r"gültig|gueltig|innerhalb|verfäll|verfaell|frist|laufzeit|umsetz|umsatz|erfüll|erfuell|ablauf", low):
-            t = _zeit_in_tagen(satz)
-            if t is not None and t > 0 and not re.search(r"auszahlung\w*\s+(dauer|innerhalb)|bearbeit", low):
-                zeit_k.append((t, b))
+            t = _zeit_pos(satz)
+            if t is not None and t[0] > 0 and not re.search(r"auszahlung\w*\s+(dauer|innerhalb)|bearbeit", low):
+                zeit_k.append((t[0], _beleg(satz, t[1])))
         # RTP, falls im Text genannt
         if re.search(r"\brtp\b|auszahlungsquote|return to player", low):
             m = _PROZENT.search(satz)
             if m:
-                rtp_k.append((_zahl(m.group(1)), b))
+                rtp_k.append((_zahl(m.group(1)), _beleg(satz, m.start())))
         # Zählweise (nur Hinweis)
         m = re.search(r"(\w+)\s+zählen?\s+(?:nur\s+)?(?:zu\s+)?(\d+)\s*%", satz, re.I)
         if m and int(m.group(2)) < 100:
-            hinweise.append(f"Umsatzbeitrag: „{_beleg(satz)}“ – diese Spiele bringen weniger Umsatz; die Rechnung "
+            hinweise.append(f"Umsatzbeitrag: „{_beleg(satz, m.start())}“ – diese Spiele bringen weniger Umsatz; die Rechnung "
                             f"nimmt 100 % Beitrag an (Slots).")
 
     # ---- Felder setzen ----------------------------------------------------------------
@@ -267,6 +294,8 @@ def scanne(text: str, einzahlung: Optional[float] = None, rtp: Optional[float] =
         erg.annahmen.append("Umsatzbasis nicht erkennbar – es wird die TEUERSTE Variante (Einzahlung + Bonus) gerechnet.")
 
     if s.bonus_prozent is None and s.bonus_betrag is None:
+        if not strikt:
+            return erg
         raise ValueError("Weder Bonus-Prozentsatz noch fester Bonusbetrag im Text erkannt – "
                          "ohne Bonus gibt es nichts zu berechnen.")
 
@@ -327,6 +356,23 @@ def optionen_aus_text(text: str) -> Tuple[str, Dict[str, float]]:
         except ValueError:
             pass
     return _OPT.sub(" ", text or "").strip(), opt
+
+
+_RELEVANT = re.compile(r"bonus|umsatz|umsetz|durchspiel|wager|einsatz|freispiel|gewinn|auszahlung|einzahlung|frist|laufzeit|"
+                       r"gültig|gueltig|verfäll|verfaell|rtp|limit", re.I)
+
+
+def relevante_saetze(text: str, max_zeichen: int = MAX_ZEICHEN) -> str:
+    """Nur Sätze mit Bonus-/Umsatz-/Limit-Bezug (für lange AGB-Seiten), gekürzt auf `max_zeichen`. Reihenfolge bleibt."""
+    out: List[str] = []
+    n = 0
+    for satz in _saetze(text or ""):
+        if _RELEVANT.search(satz):
+            if n + len(satz) + 1 > max_zeichen:
+                break
+            out.append(satz)
+            n += len(satz) + 1
+    return "\n".join(out)
 
 
 def sieht_nach_agb_aus(text: str) -> bool:

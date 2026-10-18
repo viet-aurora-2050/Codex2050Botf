@@ -54,6 +54,7 @@
  #boot small{color:#3f5c94}
  :focus-visible{outline:2px solid #8fdcff;outline-offset:2px}
  button:disabled{opacity:.55;cursor:progress}
+ [hidden]{display:none!important}
  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
  .ruhigbtn{background:transparent;color:#9db8ea;border:1px solid #1e3d7a;border-radius:8px;padding:6px 10px;font:inherit;font-size:12px;cursor:pointer;margin:0 0 12px}
  .ruhigbtn[aria-pressed="true"]{background:#1a2438;color:#dfe6f5;border-color:#3b4a6b}
@@ -125,6 +126,12 @@
   <div class="disc">Füge die Bonusbedingungen ein. Gefunden wird nur, was im Text steht, jeweils mit Beleg.
    Was fehlt (z. B. RTP), steht getrennt als <b>Annahme</b>. Bei Widersprüchen gilt der für dich ungünstigere Wert.
    Der Text bleibt auf deinem Gerät. Ein Scanner kann Formulierungen missverstehen – Belege am Original prüfen.</div>
+  <div class="tag" style="margin-top:14px">AGB-DATENBANK · ÖFFENTLICHE SEITEN · TÄGLICH AUTOMATISCH GEPRÜFT</div>
+  <div id="agbdb_status" role="status" aria-live="polite" class="tag" style="margin:6px 0"></div>
+  <label for="agbdb_anb">Anbieter</label><select id="agbdb_anb" onchange="agbdb_show()"></select>
+  <div class="panel" id="agbdb_card">… lade AGB-Datenbank …</div>
+  <button class="go" id="agbdb_rechnen" onclick="agbdb_rechne()" hidden>Willkommensbonus mit meinen Werten rechnen (Einzahlung, RTP, Einsatz unten)</button>
+  <div class="tag" style="margin-top:18px">ODER: EIGENEN TEXT EINFÜGEN</div>
   <label for="agb_text">Bonusbedingungen (max. 20.000 Zeichen)</label>
   <textarea id="agb_text" rows="8" maxlength="20000" placeholder="z. B. Bonus 100 % bis 200 €. Mindesteinzahlung 20 €. Umsatz 35x (Bonus + Einzahlung) innerhalb von 30 Tagen. Max. Einsatz 5 €."></textarea>
   <div class="grid">
@@ -132,7 +139,7 @@
    <div><label for="agb_rtp">RTP des Spiels (%, optional)</label><input id="agb_rtp" type="number" min="50" max="100" step="0.1" inputmode="decimal"></div>
    <div><label for="agb_eins">Einsatz pro Spin (€, optional)</label><input id="agb_eins" type="number" min="0.01" step="0.1" inputmode="decimal"></div>
   </div>
-  <button class="go" onclick="agb_scan()">Bedingungen scannen und rechnen</button>
+  <button class="go" id="agb_go" onclick="agb_scan()">Bedingungen scannen und rechnen</button>
   <pre id="agb_out" role="status" aria-live="polite"></pre>
   <div class="foot">Gleiche Logik wie Bot-Befehl <b>/scan</b> und <code>python -m analyzer.scan</code>. Keine Spin-Vorhersage, keine Rechtsberatung.</div>
  </section>
@@ -311,7 +318,7 @@
    <div class="l"><b>ANZEIGE</b> — erzeugt aus der Mathematik eine sachliche Beschwerde/Anzeige an die GGL, fuer jeden Anbieter. Nur wahrheitsgemaesse Angaben; alles als Verdacht/Bitte um Pruefung. Keine Rechtsberatung.</div>
    <div class="l"><b>GEWINNER</b> — dokumentierte Faelle, die mit Mathematik legal gewannen (Thorp, MIT-Team, Garcia-Pelayo, Mandel, Selbee …) und Hausverbot bekamen. Mit Quelle und dem mathematischen Grund.</div>
    <div class="l"><b>SANCHOS SPIELPLATZ</b> — eigenständiges Live-Modul (<a href="sancho.html">→ öffnen</a>), losgelöst aus dem Haupt-Tab-Fluss. Zeigt den „Rhythmus" und entlarvt ihn sofort (RNG, Vorhersagewert 0).</div>
-   <div class="l"><b>AGB-SCAN</b> — Bonusbedingungen einfügen: Umsatzfaktor, Bonus, Frist, Limits mit Textbeleg, Annahmen getrennt, Rechnung mit Erwartungswert. Gleiche Logik wie Bot-Befehl /scan.</div>
+   <div class="l"><b>AGB-SCAN</b> — Bonusbedingungen einfügen: Umsatzfaktor, Bonus, Frist, Limits mit Textbeleg, Annahmen getrennt, Rechnung mit Erwartungswert. Gleiche Logik wie Bot-Befehl /scan. Darüber die <b>AGB-Datenbank</b>: öffentliche Bonus-/AGB-Seiten, täglich automatisch gelesen (Quelle, Belege, Änderungsmonitor).</div>
    <div class="l"><b>SO GEHT'S</b> — Kurzanleitung. Eingaben und der zuletzt geöffnete Tab werden nur in deinem Browser gemerkt (löschbar).</div>
    <div class="l"><b>PROFIL</b> — ruhiges Risikoprofil aus deinen eigenen Angaben: erwarteter Verlust pro Stunde/Woche/Monat, Puffer in Einsätzen, Faustregeln je nach Selbst-Check. <b>Ruhiger Modus</b> (Knopf oben) schaltet VHS-Rauschen, Boot-Sequenz und Animationen ab.</div>
    <div class="l"><b>AKT 4</b> — das Finale als echtes Rätsel (Morse/Base64/ROT13/Uhrzeiten).</div>
@@ -918,12 +925,13 @@ function agbRund(x,n){var f=Math.pow(10,n),s=x*f,r=Math.round(s);if(Math.abs(s-M
 function agbZahl(s){return parseFloat(s.replace(',','.'));}
 function agbGeld(m){var g=m[1].replace(/\./g,'');return m[2]?parseFloat(g+'.'+m[2]):parseFloat(g);}
 function agbSaetze(t){return t.replace(AGB_ABK,'$1').split(AGB_SATZ).map(function(s){return s.trim();}).filter(Boolean);}
-function agbBeleg(s){s=s.replace(/\s+/g,' ');return s.length<=AGB_BELEG?s:s.slice(0,AGB_BELEG-1)+'…';}
+function agbBeleg(s,pos){s=s.replace(/\s+/g,' ');if(s.length<=AGB_BELEG)return s;
+  pos=Math.min(Math.max(0,pos||0),s.length-1);var a=Math.max(0,pos-60),e=Math.min(s.length,a+AGB_BELEG);a=Math.max(0,e-AGB_BELEG);
+  return (a>0?'…':'')+s.slice(a,e).trim()+(e<s.length?'…':'');}
 function agbGeldNach(satz,stich){var k=new RegExp(stich,'i').exec(satz);if(!k)return null;
-  var re=new RegExp(AGB_GELD.source,'ig');re.lastIndex=k.index+k[0].length;var m=re.exec(satz);return m?agbGeld(m):null;}
-function agbTage(satz){var m=AGB_ZEIT.exec(satz);if(!m)return null;var n=parseInt(m[1],10),e=m[2].toLowerCase();
-  if(e.indexOf('stunde')===0||e.indexOf('std')===0)return agbRund(n/24,2);
-  if(e.indexOf('woche')===0)return n*7;return n;}
+  var re=new RegExp(AGB_GELD.source,'ig');re.lastIndex=k.index+k[0].length;var m=re.exec(satz);return m?[agbGeld(m),m.index]:null;}
+function agbTage(satz){var m=AGB_ZEIT.exec(satz);if(!m)return null;var n=parseInt(m[1],10),e=m[2].toLowerCase(),t=n;
+  if(e.indexOf('stunde')===0||e.indexOf('std')===0)t=agbRund(n/24,2);else if(e.indexOf('woche')===0)t=n*7;return [t,m.index];}
 function agbWaehle(k,kons,feld,hinw,einheit){
   if(!k.length)return null;
   var wahl=k[0];for(var i=1;i<k.length;i++){if(kons==='max'?k[i][0]>wahl[0]:k[i][0]<wahl[0])wahl=k[i];}
@@ -941,34 +949,36 @@ function agbScan(text,opt){
   var erg={sz:sz,funde:[],annahmen:[],hinweise:[],mineinz:null,fs_anzahl:null},hw=erg.hinweise;
   var fk=[],fsk=[],zk=[],mek=[],ck=[],mk=[],dk=[],pk=[],rk=[],bfk=[],bh=[],ohneEinz=false;
   agbSaetze(text).forEach(function(satz){
-    var low=satz.toLowerCase(),b=agbBeleg(satz),istFs=low.indexOf('freispiel')>=0,m;
+    var low=satz.toLowerCase(),istFs=low.indexOf('freispiel')>=0,m;
     if(istFs){m=AGB_FS.exec(satz);if(m&&erg.fs_anzahl===null)erg.fs_anzahl=parseInt(m[1],10);}
     if(/ohne\s+einzahlung|no[- ]deposit|ohne\s+eigene\s+einzahlung/.test(low))ohneEinz=true;
     if(/umsatz|umsetz|wager|durchspiel|umgesetzt|durchgespielt/.test(low)){
-      m=AGB_FAKTOR.exec(satz);if(m)(istFs?fsk:fk).push([agbZahl(m[1]),b]);
-      if(/(bonus[\wäöüß]{0,10}\W{0,4}(und|\+|&|plus)\W{0,4}einzahlung|einzahlung[\wäöüß]{0,10}\W{0,4}(und|\+|&|plus)\W{0,4}bonus)/.test(low))bh.push(['einzahlung_plus_bonus',b]);
-      else if(/(bonusbetrag|bonusgeld|bonus\s*(betrag|summe))/.test(low)&&low.indexOf('einzahlung')<0)bh.push(['bonus',b]);
-      else if(/einzahlungsbetrag|einzahlung\b/.test(low)&&low.indexOf('bonus')<0)bh.push(['einzahlung',b]);
+      m=AGB_FAKTOR.exec(satz);if(m)(istFs?fsk:fk).push([agbZahl(m[1]),agbBeleg(satz,m.index)]);
+      var mb=/(bonus[\wäöüß]{0,10}\W{0,4}(und|\+|&|plus)\W{0,4}einzahlung|einzahlung[\wäöüß]{0,10}\W{0,4}(und|\+|&|plus)\W{0,4}bonus)/.exec(low),
+        mbb=/(bonusbetrag|bonusgeld|bonus\s*(betrag|summe))/.exec(low),mbe=/einzahlungsbetrag|einzahlung\b/.exec(low);
+      if(mb)bh.push(['einzahlung_plus_bonus',agbBeleg(satz,mb.index)]);
+      else if(mbb&&low.indexOf('einzahlung')<0)bh.push(['bonus',agbBeleg(satz,mbb.index)]);
+      else if(mbe&&low.indexOf('bonus')<0)bh.push(['einzahlung',agbBeleg(satz,mbe.index)]);
     }
     if(/bonus/.test(low)&&!/zähl|zaehl|beitrag|gewichtung|rtp|auszahlungsquote/.test(low)){
       m=AGB_PROZENT.exec(satz);
-      if(m){pk.push([agbZahl(m[1]),b]);
+      if(m){pk.push([agbZahl(m[1]),agbBeleg(satz,m.index)]);
         var m2=new RegExp('bis\\s+(?:zu\\s+)?(?:einem\\s+betrag\\s+von\\s+)?'+AGB_GELD.source,'i').exec(satz);
-        if(m2){var g2=AGB_GELD.exec(satz.slice(m2.index));dk.push([agbGeld(g2),b]);}}
+        if(m2){var g2=AGB_GELD.exec(satz.slice(m2.index));dk.push([agbGeld(g2),agbBeleg(satz,m2.index)]);}}
     }
     m=new RegExp('(?:^|\\W)'+AGB_GELD.source+'\\s*(?:gratis[- ]?)?(?:bonus|startguthaben|bonusguthaben)','i').exec(satz);
-    if(m&&satz.indexOf('%')<0){var g3=AGB_GELD.exec(satz.slice(m.index));bfk.push([agbGeld(g3),b]);}
+    if(m&&satz.indexOf('%')<0){var g3=AGB_GELD.exec(satz.slice(m.index));bfk.push([agbGeld(g3),agbBeleg(satz,m.index)]);}
     if(/einsatz|wetteinsatz|bet\b/.test(low)&&/max|höchst|hoechst|obergrenze|nicht\s+(mehr|über|ueber)/.test(low)){
-      var g=agbGeldNach(satz,'einsatz|bet\\b');if(g!==null)mek.push([g,b]);}
+      var g=agbGeldNach(satz,'einsatz|bet\\b');if(g!==null)mek.push([g[0],agbBeleg(satz,g[1])]);}
     if(/gewinn|auszahlung/.test(low)&&/begrenz|limit|gedeckelt|höchstens|hoechstens|max|deckel/.test(low)&&low.indexOf('einsatz')<0){
-      var g4=agbGeldNach(satz,'gewinn[\\wäöüß]*|auszahlung[\\wäöüß]*');if(g4!==null)ck.push([g4,b]);}
+      var g4=agbGeldNach(satz,'gewinn[\\wäöüß]*|auszahlung[\\wäöüß]*');if(g4!==null)ck.push([g4[0],agbBeleg(satz,g4[1])]);}
     if(/mindest[\wäöüß]*\s*einzahlung|einzahlung[\wäöüß]*\s*(ab|von\s+mindestens)|mindestens\s+[\d.,]+\s*(€|eur)\b[^.]{0,40}einzahl/.test(low)){
-      var g5=agbGeldNach(satz,'mindest[\\wäöüß]*\\s*einzahlung|einzahlung[\\wäöüß]*\\s*(?:ab|von\\s+mindestens)|mindestens');if(g5!==null)mk.push([g5,b]);}
+      var g5=agbGeldNach(satz,'mindest[\\wäöüß]*\\s*einzahlung|einzahlung[\\wäöüß]*\\s*(?:ab|von\\s+mindestens)|mindestens');if(g5!==null)mk.push([g5[0],agbBeleg(satz,g5[1])]);}
     if(/gültig|gueltig|innerhalb|verfäll|verfaell|frist|laufzeit|umsetz|umsatz|erfüll|erfuell|ablauf/.test(low)){
-      var t=agbTage(satz);if(t!==null&&t>0&&!/auszahlung[\wäöüß]*\s+(dauer|innerhalb)|bearbeit/.test(low))zk.push([t,b]);}
-    if(/\brtp\b|auszahlungsquote|return to player/.test(low)){m=AGB_PROZENT.exec(satz);if(m)rk.push([agbZahl(m[1]),b]);}
+      var t=agbTage(satz);if(t!==null&&t[0]>0&&!/auszahlung[\wäöüß]*\s+(dauer|innerhalb)|bearbeit/.test(low))zk.push([t[0],agbBeleg(satz,t[1])]);}
+    if(/\brtp\b|auszahlungsquote|return to player/.test(low)){m=AGB_PROZENT.exec(satz);if(m)rk.push([agbZahl(m[1]),agbBeleg(satz,m.index)]);}
     m=/([\wäöüß]+)\s+zählen?\s+(?:nur\s+)?(?:zu\s+)?(\d+)\s*%/i.exec(satz);
-    if(m&&parseInt(m[2],10)<100)hw.push('Umsatzbeitrag: „'+agbBeleg(satz)+'“ – diese Spiele bringen weniger Umsatz; die Rechnung nimmt 100 % Beitrag an (Slots).');
+    if(m&&parseInt(m[2],10)<100)hw.push('Umsatzbeitrag: „'+agbBeleg(satz,m.index)+'“ – diese Spiele bringen weniger Umsatz; die Rechnung nimmt 100 % Beitrag an (Slots).');
   });
   function setze(f,w,b){erg.funde.push({feld:f,wert:w,beleg:b});}
   var w=agbWaehle(fk,'max','Umsatzfaktor',hw,'x');
@@ -1056,6 +1066,54 @@ function agb_scan(){
   try{var e=agbScan(document.getElementById('agb_text').value,opt);out.textContent=agbBericht(e,agbRechne(e.sz));}
   catch(err){out.textContent='❌ '+err.message;}
 }
+
+// ---------- AGB-Datenbank (docs/agb.json, täglich von GitHub Actions aus öffentlichen Seiten erzeugt) ----------
+var AGBDB=null,AGBDB_TEXT={ok:'gelesen',nicht_lesbar:'nicht lesbar',robots_gesperrt:'robots.txt sperrt das Lesen'};
+function agbdb_load(){
+  var st=document.getElementById('agbdb_status');
+  fetch('agb.json?_='+Date.now(),{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){
+    AGBDB=j;var sel=document.getElementById('agbdb_anb');
+    sel.innerHTML=Object.keys(j.anbieter).map(function(k){return '<option value="'+esc(k)+'">'+esc(j.anbieter[k].name)+'</option>';}).join('');
+    var a=db_alterTage(j.geprueft);
+    st.innerHTML='Quelle: agb.json (first-party) · geprüft '+esc((j.geprueft||'').slice(0,10))+(a==null?'':(a<=1?' (heute)':a<=3?' (vor '+a+' Tagen)':' · <span class="stop">⚠ vor '+a+' Tagen – täglicher Job prüfen</span>'));
+    agbdb_show();
+  }).catch(function(){st.textContent='AGB-Datenbank nicht erreichbar – eigenen Text unten einfügen.';
+    document.getElementById('agbdb_card').textContent='Keine Daten geladen.';});
+}
+function agbdb_seite(s){
+  var h='<div class="l"><b>'+esc(s.titel)+'</b> · '+esc(AGBDB_TEXT[s.status]||s.status)+' · abgerufen '+esc(s.abgerufen)+(s.stand_text?' · Text-Stand '+esc(s.stand_text):'')+'</div>'
+   +'<div class="l"><a href="'+esc(s.url)+'" target="_blank" rel="noopener noreferrer">'+esc(s.url)+'</a></div>';
+  if(s.fehler)h+='<div class="l warn">'+esc(s.fehler)+' – wird nicht umgangen.</div>';
+  if(s.geaendert)h+='<div class="l stop">⚠ Relevanter Text hat sich am '+esc(s.geaendert)+' geändert – Original neu lesen.</div>';
+  var e=s.ergebnis||{};
+  (e.funde||[]).forEach(function(f){h+='<div class="l">• '+esc(f.feld)+': <b>'+esc(f.wert)+'</b><br><span class="tag" style="letter-spacing:0">„'+esc(f.beleg)+'“</span></div>';});
+  (e.fundstellen||[]).forEach(function(f){h+='<div class="l">• Fundstelle '+esc(f.feld)+': <b>'+esc(f.wert)+'</b><br><span class="tag" style="letter-spacing:0">„'+esc(f.beleg)+'“</span></div>';});
+  if(e.fundstellen)h+='<div class="tag" style="letter-spacing:0">Einzelne Fundstellen aus allgemeinen AGB – Zusammenhang im Original prüfen.</div>';
+  (e.annahmen||[]).forEach(function(x){h+='<div class="l warn">Annahme: '+esc(x)+'</div>';});
+  (e.hinweise||[]).forEach(function(x){h+='<div class="l warn">⚠ '+esc(x)+'</div>';});
+  if(e.fehler)h+='<div class="l warn">'+esc(e.fehler)+'</div>';
+  return h;
+}
+function agbdb_show(){
+  if(!AGBDB)return;var a=AGBDB.anbieter[document.getElementById('agbdb_anb').value];if(!a)return;
+  document.getElementById('agbdb_card').innerHTML=a.seiten.map(agbdb_seite).join('<hr style="border:0;border-top:1px solid #14264d">')
+    +'<div class="tag" style="letter-spacing:0;margin-top:8px">Automatisch aus öffentlichen Seiten gelesen (Regex-Scanner, kein Rechtstext). Original prüfen.</div>';
+  document.getElementById('agbdb_rechnen').hidden=!a.seiten.some(function(s){return s.ergebnis&&s.ergebnis.szenario;});
+}
+function agbdb_rechne(){
+  var out=document.getElementById('agb_out'),a=AGBDB&&AGBDB.anbieter[document.getElementById('agbdb_anb').value];
+  var s=a&&a.seiten.filter(function(x){return x.ergebnis&&x.ergebnis.szenario;})[0];
+  if(!s){out.textContent='❌ Für diesen Anbieter liegt kein berechenbarer Bonus vor.';return;}
+  var v=function(id){var t=document.getElementById(id).value.trim();return t===''?null:num(t);},sz=JSON.parse(JSON.stringify(s.ergebnis.szenario));
+  var ez=v('agb_einz'),rt=v('agb_rtp'),ei=v('agb_eins'),e=s.ergebnis,annahmen=e.annahmen.slice();
+  if(ez!==null){sz.einzahlung=ez;annahmen=annahmen.filter(function(x){return x.indexOf('Einzahlung nicht angegeben')!==0;});}
+  if(rt!==null){sz.rtp=rt>1.5?rt/100:rt;annahmen=annahmen.filter(function(x){return x.indexOf('RTP steht nie')!==0;});}
+  if(ei!==null){sz.einsatz=ei;annahmen=annahmen.filter(function(x){return x.indexOf('Durchschnittseinsatz')!==0;});}
+  var funde=e.funde.slice();if(ez!==null)funde.push({feld:'Einzahlung',wert:agbG(ez)+' €',beleg:'von dir angegeben'});
+  out.textContent='Quelle: '+s.url+' (abgerufen '+s.abgerufen+')\n\n'+agbBericht({funde:funde,annahmen:annahmen,hinweise:e.hinweise},agbRechne(sz));
+  out.scrollIntoView({block:'nearest'});
+}
+agbdb_load();
 
 // ---------- Eingaben merken (nur in diesem Browser; alles in try/catch, Seite funktioniert auch ohne) ----------
 var PERSIST_IDS=['db_budget','db_einsatz','db_spins','db_runs','pf_budget','pf_einsatz','pf_rtp','pf_sph','pf_std','pf_min',

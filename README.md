@@ -77,6 +77,7 @@ Erwartungswert negativ – dann Bonus löschen und Echtgeld sichern.
 | `/bonus <parameter>` | Bonus transparent durchrechnen |
 | `/analyse <AGB-Text>` | Bonus-AGB per KI auf versteckte Haken prüfen (DEEPSEEK_API_KEY nötig) |
 | `/profil <werte>` | ruhiges Risikoprofil: Verlust/Stunde, Puffer, Faustregeln + Selbst-Check (`check=0,1,0,0,2,0`) |
+| `/agb [anbieter] [einzahlung=50 rtp=95 einsatz=1]` | AGB-Datenbank: Befund je Anbieter aus öffentlichen Seiten, optional mit eigener Einzahlung durchgerechnet |
 | `/scan <AGB-Text> [einzahlung=50 rtp=0.96 einsatz=1]` | AGB offline (ohne KI) einlesen und mit der Rechen-Engine durchrechnen |
 | `/frage <Text>` | freie Frage an den Analytiker |
 | `/status` · `/help` | Status / Hilfe |
@@ -107,6 +108,20 @@ Ehrlichkeitsregeln: Jeder Fund trägt seinen **Textbeleg**; was nicht im Text st
 Einzahlung), wird als **Annahme** getrennt ausgewiesen, nie erfunden. Bei Widersprüchen gilt der für dich
 **ungünstigere** Wert plus Hinweis. Ohne erkennbaren Bonus wird nicht gerechnet. Ein Regex-Scanner kann
 Formulierungen missverstehen – die Belege am Original prüfen. Keine Spin-Vorhersage, keine Rechtsberatung.
+
+### AGB-Datenbank (`datenbank/agb_sammler.py` → `docs/agb.json`)
+
+Täglich (GitHub Actions, 05:37 UTC) liest der Sammler öffentlich erreichbare Bonus-/AGB-Seiten, wertet sie mit dem
+Scanner aus und speichert Kennzahlen, **kurze Belege**, Quelle, Abrufdatum und einen Hash (nicht den Volltext).
+Beim Willkommensbonus wird der Detail-Abschnitt gescannt und mit 10/50/100 € Einzahlung durchgerechnet; in allgemeinen
+AGB stehen einzelne **Fundstellen** (kein zusammengefasster Wert). Ändert sich der relevante Text, wird `geaendert`
+gesetzt (AGB-Änderungsmonitor). Zugriff: App-Tab **AGB-SCAN** (Anbieter wählen, mit eigener Einzahlung rechnen),
+Bot `/agb`, `GET /api/agb?anbieter=jackpotpirat&einzahlung=50`.
+
+Spielregeln des Sammlers: nur https und der konfigurierte Host, `robots.txt` wird beachtet, identifizierbarer User-Agent,
+Größen-/Zeitlimit, 1 s Pause. Seiten mit 403, Geo-Sperre oder JavaScript-Hülle werden als **nicht lesbar** ausgewiesen,
+nicht umgangen; bei Ausfall bleibt der letzte Befund erhalten. Neue Anbieter: Eintrag in `KONFIG` mit einer geprüften,
+öffentlichen URL (keine Adressen raten).
 
 ### Im Browser: AGB-SCAN, SO GEHT'S, gemerkte Eingaben
 
