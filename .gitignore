@@ -12,3 +12,4 @@ pip-wheel-metadata/
 .idea/
 .vscode/
 data/
+dist/

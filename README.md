@@ -424,6 +424,12 @@ NODE_PATH=$(npm root -g) node scripts/browser_check.js   # echte Seiten in Chrom
 (inkl. Browser-Test und `pip-audit`). Hinweis: Eine frühere Bereinigung ließ `web/dashboard.py` unbemerkt auf gelöschte
 Module zeigen – deshalb importieren die Tests Dashboard, Bot und RPC jetzt wirklich.
 
+### Mini-Repo-ZIP
+
+`python scripts/build_mini_repo.py [ordner]` baut `KI_Taktik_GitHub_Repo_v2.zip` (Scanner, Risikoprofil, Tests, CI,
+abhängigkeitsfrei) direkt aus diesem Repo. Vorlagen liegen in `scripts/mini_repo/`. Die CI baut die ZIP bei jedem Lauf
+und hängt sie als Artefakt „KI_Taktik_GitHub_Repo_v2“ an (14 Tage).
+
 ## Projektstruktur
 
 ```

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KI Taktik-Protokoll</title>
+<meta name="description" content="Kurze, sachliche Prompt-Vorlagen für Beruf, Finanzen und Kommunikation. Offline, ohne Tracking.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+<style>
+:root{--bg:#0d1117;--card:#161b22;--line:#30363d;--text:#c9d1d9;--head:#79b8ff;--ok:#56d364;--mut:#8b949e}
+@media (prefers-color-scheme:light){:root{--bg:#f6f8fa;--card:#fff;--line:#d0d7de;--text:#1f2328;--head:#0550ae;--ok:#116329;--mut:#57606a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 ui-monospace,Menlo,Consolas,monospace}
+header{background:var(--card);padding:20px 16px;border-bottom:1px solid var(--line);text-align:center}
+h1,h2{color:var(--head);margin:.2em 0}h2{font-size:1.05rem}
+main{max-width:800px;margin:24px auto;padding:0 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:16px;margin-bottom:16px}
+.command{background:transparent;border-left:3px solid var(--ok);padding:8px 12px;margin:10px 0;color:var(--ok);white-space:pre-wrap;word-break:break-word}
+button{background:transparent;color:var(--head);border:1px solid var(--line);border-radius:6px;padding:6px 12px;font:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible{outline:2px solid var(--head);outline-offset:2px}
+a{color:var(--head)}
+.mut{color:var(--mut);font-size:.9rem}
+</style>
+</head>
+<body>
+<header>
+  <h1>KI Taktik-Protokoll</h1>
+  <p class="mut">Die Maschine ist ein Werkzeug: klare Eingabe, sachliche Ausgabe. Offline, ohne Tracking.</p>
+</header>
+<main>
+  <section class="card" aria-labelledby="h1">
+    <h2 id="h1">1. Beruf &amp; Karriere</h2>
+    <div class="command" id="p1">Schreibe ein sachliches, professionelles Anschreiben ohne Floskeln, das exakt auf diese Anzeige passt:
+[Anzeige einfügen]</div>
+    <button data-copy="p1">Kopieren</button>
+  </section>
+  <section class="card" aria-labelledby="h2">
+    <h2 id="h2">2. Finanzen &amp; AGB (das Kleingedruckte)</h2>
+    <div class="command" id="p2">Fasse diese Bedingungen in 3 Sätzen zusammen. Nenne Mindesteinzahlung, Umsatzfaktor, Frist, Einsatz- und Gewinnlimits, jeweils mit Zitat aus dem Text. Was fehlt, benenne als „nicht angegeben“:
+[Bedingungen einfügen]</div>
+    <button data-copy="p2">Kopieren</button>
+    <p class="mut">Rechnen statt raten: <code>python -m analyzer.scan "&lt;AGB-Text&gt;" einzahlung=50</code> liest Bonusbedingungen offline ein und rechnet sie durch (Belege, Annahmen getrennt). Siehe README.</p>
+  </section>
+  <section class="card" aria-labelledby="h3">
+    <h2 id="h3">3. Kommunikation</h2>
+    <div class="command" id="p3">Schreibe eine ruhige, deeskalierende Antwort auf diese Nachricht, ohne dass ich mich rechtfertige:
+[Nachricht einfügen]</div>
+    <button data-copy="p3">Kopieren</button>
+  </section>
+  <section class="card" aria-labelledby="h4">
+    <h2 id="h4">4. Eigenes Risikoprofil</h2>
+    <p>Was kostet Spielen im Erwartungswert? Das Paket <code>risiko</code> rechnet es aus deinen Angaben, z. B. mit <code>eingabe_aus_text("budget=100 einsatz=1 rtp=96 check=0,1,0,0,2,0")</code> (Beispiel im README). Keine Vorhersage, keine Diagnose.</p>
+  </section>
+  <p class="mut" id="status" role="status" aria-live="polite"></p>
+</main>
+<script>
+document.querySelectorAll('button[data-copy]').forEach(function(b){
+  b.addEventListener('click',function(){
+    var t=document.getElementById(b.dataset.copy).textContent,s=document.getElementById('status');
+    function ok(){s.textContent='Kopiert.';}
+    function fb(){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();
+      try{document.execCommand('copy');ok();}catch(e){s.textContent='Bitte manuell markieren und kopieren.';}a.remove();}
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,fb);}else{fb();}
+  });
+});
+</script>
+</body>
+</html>
