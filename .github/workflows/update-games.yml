@@ -1,16 +1,17 @@
-name: Spiele-Datenbank taeglich aktualisieren
+name: Spiele-Katalog taeglich aktualisieren
 
 # Erzeugt docs/games.json aus dem oeffentlichen Basissatz + optionalen
 # oeffentlichen JSON-Feeds (Repo-Variable GAMES_SOURCES, kommagetrennte URLs).
-# Laeuft serverseitig -> keine CORS-Schranke. Committet nur bei echter Aenderung.
+# Laeuft serverseitig -> keine CORS-Schranke. Testet zuerst, committet nur bei
+# echter Datenaenderung (kein Fake-Commit wegen Zeitstempel).
 
 on:
+  workflow_dispatch: {}
   schedule:
     - cron: "17 4 * * *"      # taeglich 04:17 UTC
-  workflow_dispatch: {}        # manuell ausloesbar
 
 permissions:
-  contents: write
+  contents: write             # Least-Privilege: nur Commit von docs/games.json
 
 concurrency:
   group: update-games
@@ -19,29 +20,38 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Python einrichten
+      - name: Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: games.json neu erzeugen
+      - name: Tests
+        run: python -m unittest discover -s tests
+
+      - name: Katalog erzeugen
         env:
           GAMES_SOURCES: ${{ vars.GAMES_SOURCES }}
+          GAMES_TIMEOUT: "15"
+          GAMES_MAX_ITEMS: "10000"
         run: python -m datenbank
 
-      - name: Bei Aenderung committen
+      - name: JSON validieren
+        run: python -c "import json; d=json.load(open('docs/games.json')); assert d['schema_version'] and d['spiele'], 'ungueltig'; print('games.json valide:', d['anzahl'], 'Spiele')"
+
+      - name: Bei echter Aenderung committen
         run: |
-          if [ -n "$(git status --porcelain docs/games.json)" ]; then
-            git config user.name  "codex2050-bot"
-            git config user.email "actions@users.noreply.github.com"
-            git add docs/games.json
-            git commit -m "chore(data): taegliche Aktualisierung docs/games.json"
-            git push
-            echo "games.json aktualisiert und gepusht."
-          else
+          if git diff --quiet -- docs/games.json; then
             echo "Keine inhaltliche Aenderung – nichts zu committen."
+            exit 0
           fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/games.json
+          git commit -m "chore(data): taegliche Aktualisierung docs/games.json"
+          git push
+          echo "games.json aktualisiert und gepusht."
