@@ -108,6 +108,13 @@ Einzahlung), wird als **Annahme** getrennt ausgewiesen, nie erfunden. Bei Widers
 **ungünstigere** Wert plus Hinweis. Ohne erkennbaren Bonus wird nicht gerechnet. Ein Regex-Scanner kann
 Formulierungen missverstehen – die Belege am Original prüfen. Keine Spin-Vorhersage, keine Rechtsberatung.
 
+### Im Browser: AGB-SCAN, SO GEHT'S, gemerkte Eingaben
+
+`docs/index.html` enthält den AGB-Scanner auch als Tab **AGB-SCAN** (JavaScript-Port von `analyzer/scan.py` und der Engine,
+offline, Text bleibt auf dem Gerät). `tests/test_agb_js.py` lädt den Port mit Node und vergleicht Funde, Annahmen,
+Hinweise und Kennzahlen mit der Python-Version. Der Tab **SO GEHT'S** erklärt die Bedienung. Zahlen, Antworten, der Scan-Text
+und der zuletzt geöffnete Tab werden nur in `localStorage` des Browsers gemerkt (löschbar im Tab SO GEHT'S).
+
 ### Persönliches Risikoprofil (`risiko/profil.py`) + Ruhiger Modus
 
 Aus deinen eigenen Angaben (Budget, Einsatz, RTP, Spins/Stunde, Stunden/Woche, Sitzungslänge) rechnet das Profil

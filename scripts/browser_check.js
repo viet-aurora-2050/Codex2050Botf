@@ -50,7 +50,7 @@ const pruefe = (ok, text) => { console.log((ok ? 'OK     ' : 'FEHLER ') + text);
     const sichtbar = await p.$$eval('section.on', ss => ss.map(s => s.id));
     if (sel.length !== 1 || sel[0] !== t || sichtbar.length !== 1 || sichtbar[0] !== t) konsistent = false;
   }
-  pruefe(tabs.length === 9 && konsistent, `Tabs (${tabs.length}): genau einer aktiv, aria-selected passt`);
+  pruefe(tabs.length === 11 && konsistent, `Tabs (${tabs.length}): genau einer aktiv, aria-selected passt`);
   await p.click('nav button[data-t="spiele"]');
   pruefe(await p.evaluate(() => [...document.querySelectorAll('input,select,textarea')].every(i => i.labels && i.labels.length)), 'alle Formularfelder haben ein Label');
 
@@ -80,6 +80,28 @@ const pruefe = (ok, text) => { console.log((ok ? 'OK     ' : 'FEHLER ') + text);
   await p.reload({ waitUntil: 'networkidle' });
   pruefe(await p.evaluate(() => document.body.classList.contains('ruhig') && !document.getElementById('boot')), 'Ruhiger Modus bleibt nach Neuladen aktiv, ohne Boot-Sequenz');
   await p.click('#ruhigbtn');
+
+  // 2c) AGB-SCAN in der Seite, Anleitung, Eingaben bleiben nach Neuladen erhalten
+  await p.click('nav button[data-t="agb"]');
+  await p.fill('#agb_text', 'Bonus 100 % bis 200 €. Mindesteinzahlung 20 €. Umsatz 35x (Bonusbetrag + Einzahlung) innerhalb von 30 Tagen. Max. Einsatz 5 €. Maximaler Gewinn 500 €.');
+  await p.fill('#agb_einz', '50');
+  await p.click('#agb button.go');
+  const agb = await p.textContent('#agb_out');
+  pruefe(agb.includes('Umsatzfaktor: 35x') && agb.includes('„Bonus 100 % bis 200 €.“') && agb.includes('ANNAHMEN') && agb.includes('Mindestumsatz:       3500.00'), 'AGB-SCAN: Funde mit Beleg, Annahmen getrennt, Mindestumsatz (50 + 50) x 35 = 3500');
+  await p.fill('#agb_text', '9'.repeat(20000));
+  const t0 = Date.now(); await p.click('#agb button.go');
+  pruefe(Date.now() - t0 < 2000 && (await p.textContent('#agb_out')).startsWith('❌'), 'AGB-SCAN: 20.000 Ziffern blockieren nicht und werden sauber abgelehnt');
+  await p.fill('#agb_text', 'Das Wetter ist schön.'); await p.click('#agb button.go');
+  pruefe((await p.textContent('#agb_out')).startsWith('❌'), 'AGB-SCAN: ohne Bonus wird nicht gerechnet');
+  await p.click('nav button[data-t="hilfe"]');
+  pruefe((await p.textContent('#hilfe')).includes('Spin-Vorhersage'), 'SO GEHT\'S: Anleitung sichtbar');
+  await p.click('nav button[data-t="agb"]'); await p.fill('#agb_einz', '77');
+  await p.reload({ waitUntil: 'networkidle' });
+  pruefe(await p.evaluate(() => document.getElementById('agb_einz').value === '77' && document.getElementById('agb').classList.contains('on')), 'Eingaben und zuletzt geöffneter Tab bleiben nach Neuladen erhalten');
+  await p.click('nav button[data-t="hilfe"]'); await p.click('#hilfe button.go');
+  pruefe(await p.evaluate(() => document.getElementById('agb_einz').value === '' && !localStorage.getItem('codex_eingaben')), 'Gespeicherte Eingaben lassen sich löschen');
+  await p.click('nav button[data-t="spiele"]');
+  pruefe(p.probleme.length === 0, 'AGB-SCAN/Anleitung/Speicher: keine Fehler');
 
   // 3) Sancho bleibt funktionsfähig (unverändert, nur mitgetestet)
   const s = await seite(); await oeffne(s, 'sancho.html');
