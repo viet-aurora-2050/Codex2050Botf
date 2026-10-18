@@ -16,6 +16,7 @@ from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 
 from analyzer import analysiere, formatiere, parse
+from analyzer.scan import MAX_ZEICHEN, analysiere_text, formatiere_scan
 from sancho import erzeuge as sancho_erzeuge
 from aktvier import FINALE_ZITAT, SCHUTZ_ANKER, erzeuge_signal
 from web.effects import mit_effekten
@@ -340,6 +341,44 @@ async def api_analyse(request: Request):
             "empfehlung": ergebnis.empfehlung.value,
         },
         "hinweise": hinweise,
+    }
+
+
+@app.post("/api/scan")
+async def api_scan(request: Request):
+    """AGB-Text -> gefundene Felder (mit Beleg), Annahmen, Hinweise und Berechnung (Engine unveraendert)."""
+    try:
+        data = await request.json()
+    except ValueError:
+        return JSONResponse({"error": "Ungueltiges JSON."}, status_code=400)
+    text = data.get("text") if isinstance(data, dict) else None
+    if not isinstance(text, str):
+        return JSONResponse({"error": 'Erwartet {"text": "<AGB-Text>"}.'}, status_code=400)
+    if len(text) > MAX_ZEICHEN:
+        return JSONResponse({"error": f"Text zu lang (max. {MAX_ZEICHEN} Zeichen)."}, status_code=413)
+    opt = {}
+    for k in ("einzahlung", "rtp", "einsatz"):
+        v = data.get(k)
+        if v is not None:
+            if isinstance(v, bool) or not isinstance(v, (int, float)) or v != v or abs(v) == float("inf"):
+                return JSONResponse({"error": f"{k} muss eine Zahl sein."}, status_code=400)
+            opt[k] = float(v)
+    try:
+        scan, ergebnis = analysiere_text(text, **opt)
+    except ValueError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=422)
+    return {
+        "report": formatiere_scan(scan, ergebnis),
+        "funde": [{"feld": f.feld, "wert": f.wert, "beleg": f.beleg} for f in scan.funde],
+        "annahmen": scan.annahmen,
+        "hinweise": scan.hinweise,
+        "kennzahlen": {
+            "bonus": ergebnis.bonus,
+            "mindestumsatz": ergebnis.mindestumsatz,
+            "erwarteter_verlust": ergebnis.erwarteter_verlust,
+            "erwartungswert": ergebnis.erwartungswert,
+            "empfehlung": ergebnis.empfehlung.value,
+        },
     }
 
 
