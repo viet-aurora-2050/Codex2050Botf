@@ -23,6 +23,10 @@ from aktvier import formatiere as signal_formatiere
 from aktvier import formatiere_zyklus, zyklus_signal
 from risiko import RisikoSzenario, Volatilitaet
 from risiko import analysiere as risiko_analysiere
+from risiko import berechne as profil_berechne
+from risiko import eingabe_aus_text as profil_eingabe
+from risiko import formatiere_profil
+from risiko.profil import FRAGEN, SKALA
 from risiko import formatiere as risiko_formatiere
 from melde import Lizenz, MeldeSzenario
 from melde import erstelle as melde_erstelle
@@ -45,6 +49,7 @@ HELP_TEXT = (
     "`/sancho <anbieter>` – ∆1-Spielplatz: Rhythmus-Mythos & Wahrheit\n"
     "`/signal` – AKT 4: Das Signal (Ebene-2-Rätsel) · `/signal loesung`\n"
     "`/risiko <werte>` – persönliche Risiko-Analyse (EV, Risk of Ruin)\n"
+    "`/profil <werte>` – ruhiges Risikoprofil mit Selbst-Check\n"
     "`/melde <werte>` – Beschwerde/Anzeige an die GGL (Mathematik + Recht)\n"
     "`/gewinner` – dokumentierte Fälle: mit Mathematik gewonnen, dann verbannt\n"
     "`/frage <Text>` – freie Frage an den Analytiker\n"
@@ -167,6 +172,21 @@ class CasinoBonusBot:
         except ValueError as exc:
             return await msg.edit_text(f"❌ {exc}")
         await msg.edit_text(risiko_formatiere(ergebnis, s))
+
+    async def profil_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        try:
+            e = profil_eingabe(" ".join(context.args))
+        except ValueError as exc:
+            fragen = "\n".join(f"{i}. {f}" for i, f in enumerate(FRAGEN, 1))
+            return await update.message.reply_text(
+                f"{exc}\n\nBeispiel:\n/profil budget=100 einsatz=1 rtp=96 vola=mittel minuten=60 "
+                f"check=0,1,0,0,2,0\n\nSelbst-Check, je 0-3 ({' / '.join(SKALA)}):\n{fragen}\n\n"
+                "Kein klinisches Screening, keine Diagnose.")
+        try:
+            p = await asyncio.to_thread(profil_berechne, e)
+        except ValueError as exc:
+            return await update.message.reply_text(f"❌ {exc}")
+        await update.message.reply_text(formatiere_profil(p, e)[:4000])
 
     async def melde_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         import re
@@ -292,6 +312,7 @@ class CasinoBonusBot:
         app.add_handler(CommandHandler("sancho", self.sancho_command))
         app.add_handler(CommandHandler("signal", self.signal_command))
         app.add_handler(CommandHandler("risiko", self.risiko_command))
+        app.add_handler(CommandHandler("profil", self.profil_command))
         app.add_handler(CommandHandler("melde", self.melde_command))
         app.add_handler(CommandHandler("gewinner", self.gewinner_command))
         app.add_handler(CommandHandler("frage", self.frage_command))

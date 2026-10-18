@@ -8,6 +8,7 @@ Start:  uvicorn web.dashboard:app --host 0.0.0.0 --port $PORT
   Telegram sendet das Geheimnis im Header X-Telegram-Bot-Api-Secret-Token (setWebhook secret_token=...).
 """
 
+import asyncio
 import hmac
 import os
 from contextlib import asynccontextmanager
@@ -16,6 +17,9 @@ from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 
 from analyzer import analysiere, formatiere, parse
+from risiko import berechne as profil_berechne
+from risiko import eingabe_aus_text as profil_eingabe
+from risiko import formatiere_profil
 from analyzer.scan import MAX_ZEICHEN, analysiere_text, formatiere_scan
 from sancho import erzeuge as sancho_erzeuge
 from aktvier import FINALE_ZITAT, SCHUTZ_ANKER, erzeuge_signal
@@ -379,6 +383,28 @@ async def api_scan(request: Request):
             "erwartungswert": ergebnis.erwartungswert,
             "empfehlung": ergebnis.empfehlung.value,
         },
+    }
+
+
+@app.get("/api/profil")
+async def api_profil(q: str = Query("", max_length=400)):
+    """Ruhiges Risikoprofil: ?q=budget=100 einsatz=1 rtp=96 vola=mittel minuten=60 check=0,1,0,0,2,0"""
+    try:
+        e = profil_eingabe(q)
+        p = await asyncio.to_thread(profil_berechne, e)
+    except ValueError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=422)
+    return {
+        "report": formatiere_profil(p, e),
+        "stufe": p.stufe,
+        "score": p.score,
+        "verlust_pro_stunde": p.verlust_pro_stunde,
+        "verlust_pro_monat": p.verlust_pro_monat,
+        "puffer_einsaetze": p.puffer_einsaetze,
+        "risk_of_ruin_sitzung": p.sitzung.risk_of_ruin if p.sitzung else None,
+        "empf_max_einsatz": p.empf_max_einsatz,
+        "empf_sitzung_minuten": p.empf_sitzung_minuten,
+        "hinweise": p.hinweise,
     }
 
 
