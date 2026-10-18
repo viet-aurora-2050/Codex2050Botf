@@ -76,6 +76,7 @@ Erwartungswert negativ – dann Bonus löschen und Echtgeld sichern.
 |--------|----------|
 | `/bonus <parameter>` | Bonus transparent durchrechnen |
 | `/analyse <AGB-Text>` | Bonus-AGB per KI auf versteckte Haken prüfen (DEEPSEEK_API_KEY nötig) |
+| `/profil <werte>` | ruhiges Risikoprofil: Verlust/Stunde, Puffer, Faustregeln + Selbst-Check (`check=0,1,0,0,2,0`) |
 | `/scan <AGB-Text> [einzahlung=50 rtp=0.96 einsatz=1]` | AGB offline (ohne KI) einlesen und mit der Rechen-Engine durchrechnen |
 | `/frage <Text>` | freie Frage an den Analytiker |
 | `/status` · `/help` | Status / Hilfe |
@@ -106,6 +107,23 @@ Ehrlichkeitsregeln: Jeder Fund trägt seinen **Textbeleg**; was nicht im Text st
 Einzahlung), wird als **Annahme** getrennt ausgewiesen, nie erfunden. Bei Widersprüchen gilt der für dich
 **ungünstigere** Wert plus Hinweis. Ohne erkennbaren Bonus wird nicht gerechnet. Ein Regex-Scanner kann
 Formulierungen missverstehen – die Belege am Original prüfen. Keine Spin-Vorhersage, keine Rechtsberatung.
+
+### Persönliches Risikoprofil (`risiko/profil.py`) + Ruhiger Modus
+
+Aus deinen eigenen Angaben (Budget, Einsatz, RTP, Spins/Stunde, Stunden/Woche, Sitzungslänge) rechnet das Profil
+den erwarteten Verlust pro Stunde/Woche/Monat, den Puffer in Einsätzen und – über die unveränderte Monte-Carlo-Engine –
+den Risk of Ruin einer Sitzung mit 95%-Konfidenzintervall. Ein **Selbst-Check** (6 Fragen, 0–3) beschreibt Muster wie
+Verlustjagd oder den Fehlschluss „Gewinn ist fällig“ und passt nur die **empfohlenen Grenzen** an (kleinerer
+Einsatzanteil, kürzere Sitzung). Die Wahrscheinlichkeiten des Spiels ändert er nie.
+
+```bash
+/profil budget=100 einsatz=2 rtp=96 vola=hoch minuten=90 check=1,2,1,2,0,0      # Bot
+curl 'localhost:8080/api/profil?q=budget=100%20einsatz=2%20check=1,2,1,2,0,0'   # Web-API
+```
+
+In der App gibt es dafür den Tab **PROFIL**. Der Knopf **Ruhiger Modus** schaltet VHS-Rauschen, Boot-Sequenz, Uhr-Ticker
+und Animationen ab (gleiche Mathematik, gleicher Inhalt; wird lokal gemerkt und folgt bei Bedarf `prefers-reduced-motion`).
+Grenzen: kein klinisches Screening, keine Diagnose, Grenzwerte sind Faustregeln zur Selbstkontrolle, keine Messwerte.
 
 ## ∆1 // Sanchos Spielplatz (Lore-Modul, Dunkelblau 2050)
 
@@ -413,7 +431,7 @@ analyzer/     Rechen-Engine (bonus.py), Parser, System-Prompt, CLI, AGB-Scanner 
 sancho/       ∆1-Lore-Modul „Sanchos Spielplatz" (Rhythmus-Mythos + Wahrheit)
 aktvier/      ∆1-AKT 4 „Das Signal" – Finale + Ebene-2-Rätsel; zeit.py = stündlich rotierender ZEIT-CODE
 datenbank/    Tägliche Erzeugung von docs/games.json (Basissatz + öffentliche Feeds, validiert)
-risiko/       Personal-Risiko-Analyse (Monte-Carlo: EV, Risk of Ruin) aus öffentlichen Fakten
+risiko/       Personal-Risiko-Analyse (Monte-Carlo: EV, Risk of Ruin) + ruhiges Risikoprofil (profil.py)
 melde/        Melde-Assistent (Mathematik + Beschwerde/Anzeige an die GGL, für jeden Anbieter)
 gewinner/     Dokumentierte Advantage-Play-Fälle (mit Mathematik gewonnen, dann verbannt)
 bot/          Telegram-Bot (CasinoBonusBot) + zugriff.py (Allowlist, Rate-Limit)

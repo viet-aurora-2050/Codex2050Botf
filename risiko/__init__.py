@@ -11,6 +11,7 @@ from .analyse import (
     analysiere,
     formatiere,
 )
+from .profil import ProfilEingabe, berechne, eingabe_aus_text, formatiere_profil
 
 __all__ = [
     "RisikoErgebnis",
@@ -18,4 +19,8 @@ __all__ = [
     "Volatilitaet",
     "analysiere",
     "formatiere",
+    "ProfilEingabe",
+    "berechne",
+    "eingabe_aus_text",
+    "formatiere_profil",
 ]

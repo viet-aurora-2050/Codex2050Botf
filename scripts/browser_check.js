@@ -50,7 +50,7 @@ const pruefe = (ok, text) => { console.log((ok ? 'OK     ' : 'FEHLER ') + text);
     const sichtbar = await p.$$eval('section.on', ss => ss.map(s => s.id));
     if (sel.length !== 1 || sel[0] !== t || sichtbar.length !== 1 || sichtbar[0] !== t) konsistent = false;
   }
-  pruefe(tabs.length === 8 && konsistent, `Tabs (${tabs.length}): genau einer aktiv, aria-selected passt`);
+  pruefe(tabs.length === 9 && konsistent, `Tabs (${tabs.length}): genau einer aktiv, aria-selected passt`);
   await p.click('nav button[data-t="spiele"]');
   pruefe(await p.evaluate(() => [...document.querySelectorAll('input,select,textarea')].every(i => i.labels && i.labels.length)), 'alle Formularfelder haben ein Label');
 
@@ -68,6 +68,18 @@ const pruefe = (ok, text) => { console.log((ok ? 'OK     ' : 'FEHLER ') + text);
   pruefe(a === b, 'Simulation ist reproduzierbar (gleiche Eingaben, gleiches Ergebnis)');
   pruefe(/95%-KI/.test(a) && a.includes('ANNAHMEN') && a.includes('✓ stimmt überein'), 'Ausgabe: Konfidenzintervalle, Annahmen & Grenzen, Modell-Check bestanden');
   pruefe(p.probleme.length === 0, 'Haupt-App: keine Fehler während der Bedienung');
+
+  // 2b) PROFIL: rechnet, Selbst-Check beeinflusst nur die Faustregeln; ruhiger Modus schaltet Reize ab und bleibt gespeichert
+  await p.click('nav button[data-t="profil"]');
+  await p.evaluate(() => { pf_einsatz.value = '2'; pf_q1.value = '3'; pf_q3.value = '3'; });
+  await p.click('#profil button.go');
+  const pf = await p.textContent('#pf_out');
+  pruefe(pf.includes('40.00 EUR pro Stunde') && pf.includes('Stufe erhöht') && pf.includes('„Gewinn ist fällig“ gibt es nicht'), 'PROFIL: Erwartungsverlust, Stufe und Aufklärung stimmen');
+  await p.click('#ruhigbtn');
+  pruefe(await p.evaluate(() => document.body.classList.contains('ruhig') && getComputedStyle(document.getElementById('d1-vhs')).display === 'none'), 'Ruhiger Modus: VHS-Rauschen aus');
+  await p.reload({ waitUntil: 'networkidle' });
+  pruefe(await p.evaluate(() => document.body.classList.contains('ruhig') && !document.getElementById('boot')), 'Ruhiger Modus bleibt nach Neuladen aktiv, ohne Boot-Sequenz');
+  await p.click('#ruhigbtn');
 
   // 3) Sancho bleibt funktionsfähig (unverändert, nur mitgetestet)
   const s = await seite(); await oeffne(s, 'sancho.html');

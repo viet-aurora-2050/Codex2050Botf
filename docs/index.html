@@ -54,6 +54,13 @@
  :focus-visible{outline:2px solid #8fdcff;outline-offset:2px}
  button:disabled{opacity:.55;cursor:progress}
  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+ .ruhigbtn{background:transparent;color:#9db8ea;border:1px solid #1e3d7a;border-radius:8px;padding:6px 10px;font:inherit;font-size:12px;cursor:pointer;margin:0 0 12px}
+ .ruhigbtn[aria-pressed="true"]{background:#1a2438;color:#dfe6f5;border-color:#3b4a6b}
+ body.ruhig{background:#0d111b;color:#c3cce0}
+ body.ruhig #d1-vhs,body.ruhig #boot,body.ruhig .livedot{display:none}
+ body.ruhig *{animation:none!important;transition:none!important;text-shadow:none!important;box-shadow:none!important}
+ body.ruhig h1{color:#cfd8ec}body.ruhig .tag{letter-spacing:.12em}
+ body.ruhig nav{background:#0d111b}
  @media (prefers-reduced-motion:reduce){#boot{display:none}section.on{animation:none}.livedot{animation:none}.bar{transition:none}}
 </style></head><body>
 <noscript><div class="disc" style="margin:16px">Diese App rechnet im Browser und braucht JavaScript. Ohne JavaScript steht nichts zur Verfügung.</div></noscript>
@@ -62,6 +69,7 @@
 <div class="wrap">
  <div class="tag" id="clock">∆1 // SESSION INITIALISIERT</div>
  <h1>CODEX 2050 — ∆1</h1>
+ <button class="ruhigbtn" id="ruhigbtn" aria-pressed="false" onclick="ruhig()">Ruhiger Modus: aus</button>
  <nav role="tablist" aria-label="Bereiche">
    <button role="tab" id="tab_spiele" aria-controls="spiele" aria-selected="true" data-t="spiele" class="on">SPIELE</button>
    <button role="tab" id="tab_mobile" aria-controls="mobile" aria-selected="false" data-t="mobile">MOBILE</button>
@@ -70,11 +78,41 @@
    <button role="tab" id="tab_anzeige" aria-controls="anzeige" aria-selected="false" data-t="anzeige">ANZEIGE</button>
    <button role="tab" id="tab_gewinner" aria-controls="gewinner" aria-selected="false" data-t="gewinner">GEWINNER</button>
    <button role="tab" id="tab_signal" aria-controls="signal" aria-selected="false" data-t="signal">AKT 4</button>
+   <button role="tab" id="tab_profil" aria-controls="profil" aria-selected="false" data-t="profil">PROFIL</button>
    <button role="tab" id="tab_info" aria-controls="info" aria-selected="false" data-t="info">INFO</button>
  </nav>
 
  <a href="sancho.html" class="go" style="display:block;text-align:center;text-decoration:none;margin-bottom:18px">
   <span class="livedot" style="color:#dfeaff">●</span> SANCHOS SPIELPLATZ öffnen — eigenständiges Live-Modul →</a>
+
+ <!-- ===== PROFIL (ruhig, psychologisch + mathematisch) ===== -->
+ <section id="profil" role="tabpanel" aria-labelledby="tab_profil">
+  <div class="tag">PERSÖNLICHES RISIKOPROFIL · RUHIG · NUR DEINE ANGABEN</div>
+  <div class="disc">Rechnet aus deinen eigenen Angaben, was Spielen im Erwartungswert kostet, und passt die
+   <b>empfohlenen Grenzen</b> an deinen Selbst-Check an. Die Wahrscheinlichkeiten des Spiels ändert das nie.
+   Kein klinisches Screening, keine Diagnose, keine Vorhersage.</div>
+  <div class="grid">
+   <div><label for="pf_budget">Budget, dessen Verlust ich verkrafte (€)</label><input id="pf_budget" type="number" value="100" min="1" step="10"></div>
+   <div><label for="pf_einsatz">Einsatz pro Spin (€)</label><input id="pf_einsatz" type="number" value="1" min="0.01" step="0.1"></div>
+   <div><label for="pf_rtp">RTP (%)</label><input id="pf_rtp" type="number" value="96" min="50" max="100" step="0.1"></div>
+   <div><label for="pf_sph">Spins pro Stunde</label><input id="pf_sph" type="number" value="500" min="10" max="5000" step="10"></div>
+   <div><label for="pf_std">Stunden pro Woche</label><input id="pf_std" type="number" value="2" min="0" max="168" step="0.5"></div>
+   <div><label for="pf_min">Dauer einer Sitzung (Minuten)</label><input id="pf_min" type="number" value="60" min="1" max="600" step="5"></div>
+  </div>
+  <div class="tag" style="margin-top:16px">SELBST-CHECK (6 Fragen)</div>
+  <div class="grid">
+   <div><label for="pf_q0">1. Ich spiele länger oder mit mehr Geld, als ich mir vorgenommen hatte.</label><select id="pf_q0"><option value="0">nie</option><option value="1">selten</option><option value="2">oft</option><option value="3">fast immer</option></select></div>
+   <div><label for="pf_q1">2. Nach Verlusten erhöhe ich den Einsatz oder spiele weiter, um das Verlorene zurückzuholen.</label><select id="pf_q1"><option value="0">nie</option><option value="1">selten</option><option value="2">oft</option><option value="3">fast immer</option></select></div>
+   <div><label for="pf_q2">3. Ich spiele mit Geld, das ich eigentlich für anderes brauche.</label><select id="pf_q2"><option value="0">nie</option><option value="1">selten</option><option value="2">oft</option><option value="3">fast immer</option></select></div>
+   <div><label for="pf_q3">4. Ich glaube, nach vielen Verlusten in Folge ist ein Gewinn „fällig“.</label><select id="pf_q3"><option value="0">nie</option><option value="1">selten</option><option value="2">oft</option><option value="3">fast immer</option></select></div>
+   <div><label for="pf_q4">5. Ich spiele, um Stress, Langeweile oder schlechte Stimmung zu verdrängen.</label><select id="pf_q4"><option value="0">nie</option><option value="1">selten</option><option value="2">oft</option><option value="3">fast immer</option></select></div>
+   <div><label for="pf_q5">6. Ich verschweige anderen, wie viel oder wie oft ich spiele.</label><select id="pf_q5"><option value="0">nie</option><option value="1">selten</option><option value="2">oft</option><option value="3">fast immer</option></select></div>
+  </div>
+  <button class="go" onclick="profil()">Profil berechnen</button>
+  <pre id="pf_out" role="status" aria-live="polite"></pre>
+  <div class="foot">Faustregeln zur Selbstkontrolle, keine gemessenen Naturkonstanten. Risk of Ruin einer Sitzung
+   (mit Konfidenzintervall): Tab SPIELE oder Bot-Befehl <b>/profil</b>.</div>
+ </section>
 
  <!-- ===== MOBILE (Connection Analytics) ===== -->
  <section id="mobile" role="tabpanel" aria-labelledby="tab_mobile">
@@ -233,6 +271,7 @@
    <div class="l"><b>ANZEIGE</b> — erzeugt aus der Mathematik eine sachliche Beschwerde/Anzeige an die GGL, fuer jeden Anbieter. Nur wahrheitsgemaesse Angaben; alles als Verdacht/Bitte um Pruefung. Keine Rechtsberatung.</div>
    <div class="l"><b>GEWINNER</b> — dokumentierte Faelle, die mit Mathematik legal gewannen (Thorp, MIT-Team, Garcia-Pelayo, Mandel, Selbee …) und Hausverbot bekamen. Mit Quelle und dem mathematischen Grund.</div>
    <div class="l"><b>SANCHOS SPIELPLATZ</b> — eigenständiges Live-Modul (<a href="sancho.html">→ öffnen</a>), losgelöst aus dem Haupt-Tab-Fluss. Zeigt den „Rhythmus" und entlarvt ihn sofort (RNG, Vorhersagewert 0).</div>
+   <div class="l"><b>PROFIL</b> — ruhiges Risikoprofil aus deinen eigenen Angaben: erwarteter Verlust pro Stunde/Woche/Monat, Puffer in Einsätzen, Faustregeln je nach Selbst-Check. <b>Ruhiger Modus</b> (Knopf oben) schaltet VHS-Rauschen, Boot-Sequenz und Animationen ab.</div>
    <div class="l"><b>AKT 4</b> — das Finale als echtes Rätsel (Morse/Base64/ROT13/Uhrzeiten).</div>
    <div class="truth" style="margin-top:8px">Rein wissenschaftlich, mathematisch, neutral. Nur öffentliche Fakten, keine Vorhersage, keine personalisierte Bewertung.</div>
   </div>
@@ -251,7 +290,7 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
   b.classList.add('on');document.getElementById(b.dataset.t).classList.add('on');
 });
 // ---------- Uhr / Lore-Zeitstempel ----------
-setInterval(()=>{const d=new Date();document.getElementById('clock').textContent=
+setInterval(()=>{if(document.body.classList.contains('ruhig'))return;const d=new Date();document.getElementById('clock').textContent=
   '∆1 // '+d.toLocaleTimeString('de-DE')+" — 'Was erinnert wird, existiert weiter.'";},1000);
 
 // ---------- Helfer (global) · Zahlen-Parser + Volatilitaets-Trefferrate ----------
@@ -742,6 +781,45 @@ function decode(){
 sigRender();
 setInterval(sigRender,1000);  // Countdown + automatischer Zyklus-Wechsel
 
+// ---------- Ruhiger Modus (introvertiert: weniger Reize, gleiche Mathematik) ----------
+function ruhig(an){
+  var b=document.body;if(typeof an!=='boolean')an=!b.classList.contains('ruhig');
+  b.classList.toggle('ruhig',an);
+  var k=document.getElementById('ruhigbtn');k.setAttribute('aria-pressed',an?'true':'false');
+  k.textContent='Ruhiger Modus: '+(an?'an':'aus');
+  if(an)document.getElementById('clock').textContent='∆1 // ruhig';
+  try{localStorage.setItem('codex_ruhig',an?'1':'0');}catch(e){}
+}
+(function(){var v=null;try{v=localStorage.getItem('codex_ruhig');}catch(e){}
+  if(v==='1'||(v===null&&window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches))ruhig(true);})();
+// ---------- PROFIL ----------
+function profil(){
+  var g=function(id){return num(document.getElementById(id).value);};
+  var budget=g('pf_budget'),einsatz=g('pf_einsatz'),rtp=g('pf_rtp')/100,sph=g('pf_sph'),std=g('pf_std'),min=g('pf_min');
+  var out=document.getElementById('pf_out');
+  if(!(budget>0&&einsatz>0&&rtp>=0.5&&rtp<=1&&sph>=10&&sph<=5000&&std>=0&&std<=168&&min>=1&&min<=600)){
+    out.textContent='Bitte gültige Werte eingeben (Budget, Einsatz > 0; RTP 50–100 %; Spins/h 10–5000; Stunden 0–168; Minuten 1–600).';return;}
+  var a=[];for(var i=0;i<6;i++)a.push(parseInt(document.getElementById('pf_q'+i).value,10)||0);
+  var score=a.reduce(function(x,y){return x+y;},0);
+  var st=score<=3?['niedrig',0.010,60]:score<=8?['erhöht',0.005,30]:['hoch',0.0025,15];
+  var hv=1-rtp,proStd=einsatz*hv*sph,proWoche=proStd*std,proMonat=proWoche*52/12;
+  var leben=proStd>0?(budget/proStd).toFixed(1)+' Stunden':'unbegrenzt';
+  var puffer=budget/einsatz,empf=Math.round(budget*st[1]*100)/100;
+  var L=['Dein Risikoprofil','','Mathematik (Hausvorteil '+(hv*100).toFixed(2)+' %):',
+   '  Erwarteter Verlust: '+proStd.toFixed(2)+' EUR pro Stunde · '+proWoche.toFixed(2)+' pro Woche · '+proMonat.toFixed(2)+' pro Monat',
+   '  Puffer: '+puffer.toFixed(1).replace(/\.0$/,'')+' Einsätze · erwartete Budget-Lebensdauer: '+leben+' (Mittelwert, die Streuung ist groß)','',
+   'Selbst-Check: '+score+' von 18 Punkten · Stufe '+st[0],
+   'Faustregel für dich: Einsatz höchstens '+empf.toFixed(2)+' EUR · Sitzung höchstens '+st[2]+' min'];
+  if(puffer<100)L.push('  · Puffer: nur '+Math.round(puffer)+' Einsätze im Budget – kurze Pechsträhnen reichen dann schon für die Pleite.');
+  if(einsatz>empf)L.push('  · Dein Einsatz ('+einsatz.toFixed(2)+') liegt über der Faustregel für deine Stufe ('+empf.toFixed(2)+' = '+(st[1]*100).toFixed(2)+' % des Budgets).');
+  if(min>st[2])L.push('  · Deine Sitzung ('+Math.round(min)+' min) ist länger als die Faustregel ('+st[2]+' min). Geplante Pausen halten die Entscheidung bei dir statt beim Spielverlauf.');
+  if(a[3]>=2)L.push('  · „Gewinn ist fällig“ gibt es nicht: Jeder Spin ist unabhängig. Nach vielen Nieten ist die Chance beim nächsten Spin unverändert.');
+  if(a[1]>=2)L.push('  · Verlustjagd: Mehr Einsatz nach Verlusten erhöht den erwarteten Verlust pro Minute, nie die Chance. Regel vorher festlegen: Einsatz bleibt gleich, Verlustlimit gilt.');
+  if(a[2]>=2)L.push('  · Spiele nur mit Geld, dessen Verlust dein Leben nicht verändert.');
+  if(st[0]==='hoch')L.push('  · Dein Selbst-Check zeigt viele Warnzeichen. Das ist keine Diagnose, aber ein guter Anlass für Pause, Sperre (OASIS) oder ein anonymes Beratungsgespräch: check-dein-spiel.de');
+  L.push('','Das ist deine Erwartungswert-Mathematik und eine Selbstbeobachtung – keine Spin-Vorhersage und keine Diagnose.','Der Erwartungswert bleibt negativ.');
+  out.textContent=L.join('\n');
+}
 // ---------- Boot ----------
 (function(){var lines=["∆1 // SESSION INITIALISIERT","DATENBANK: oeffentliche Anbieter-Daten · taeglich aktualisiert",
  "MODULE: SPIELE · MULTIPLIER · ANZEIGE ... [OK]",
@@ -750,6 +828,7 @@ setInterval(sigRender,1000);  // Countdown + automatischer Zyklus-Wechsel
  "REGEL: verfuegbar != vorhersagbar · rein mathematisch, neutral ... [OK]",
  "Nur oeffentliche Fakten. Keine Vorhersage.",""];
  var boot=document.getElementById('boot'),t=document.getElementById('boott'),i=0,j=0;
+ if(document.body.classList.contains('ruhig')){boot.remove();return;}
  function done(){boot.style.opacity=0;setTimeout(()=>boot.remove(),650);
   document.removeEventListener('click',done);}
  document.addEventListener('click',done);
