@@ -5,9 +5,10 @@ Aufruf:
     python -m datenbank --dry-run       # nur Vorschau, nichts schreiben
     python -m datenbank --out pfad.json # anderes Ziel
 
-Der GitHub-Actions-Job ruft dies täglich auf. Bei unveränderten Daten (bis auf
-das Datum) wird trotzdem ein frisches `generiert`/`stand` gesetzt; der Workflow
-committet nur, wenn sich der Inhalt tatsächlich ändert.
+Der GitHub-Actions-Job ruft dies täglich auf. `stand`/`generiert` bleiben beim
+Datum der letzten inhaltlichen Änderung; `geprueft` wird bei jedem Lauf (höchstens
+einmal pro Tag) aktualisiert. So zeigt die App „Daten unverändert, aber heute geprüft“
+statt fälschlich „veraltet“.
 """
 
 from __future__ import annotations
@@ -36,6 +37,7 @@ def baue(urls=None) -> Dict:
         "_hinweis": HINWEIS,
         "stand": jetzt.strftime("%Y-%m-%d"),
         "generiert": jetzt.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "geprueft": jetzt.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "quellen": quellen,
         "anzahl": len(spiele),
         "spiele": spiele,
@@ -48,10 +50,11 @@ def _default_out() -> str:
 
 
 def schreibe(daten: Dict, pfad: str) -> bool:
-    """Schreibt nur, wenn sich die Spiele-Daten inhaltlich geaendert haben.
+    """Schreibt die Daten, wenn sich die Spiele inhaltlich geaendert haben.
 
-    Vergleich ignoriert die Zeitstempel (stand/generiert), damit reine
-    Datums-Updates keinen leeren Commit ausloesen. Rueckgabe: True = geschrieben.
+    Vergleich ignoriert die Zeitstempel. Bleibt der Kern gleich, behaelt die Datei
+    `stand`/`generiert`; nur `geprueft` wird (hoechstens einmal pro Tag) erneuert.
+    Rueckgabe: True = Inhalt geaendert und geschrieben.
     """
     neu_kern = json.dumps(daten["spiele"], ensure_ascii=False, sort_keys=True)
     if os.path.exists(pfad):
@@ -59,6 +62,11 @@ def schreibe(daten: Dict, pfad: str) -> bool:
             with open(pfad, encoding="utf-8") as f:
                 alt = json.load(f)
             if json.dumps(alt.get("spiele", []), ensure_ascii=False, sort_keys=True) == neu_kern:
+                if str(alt.get("geprueft", ""))[:10] != daten["geprueft"][:10]:
+                    alt["geprueft"] = daten["geprueft"]
+                    with open(pfad, "w", encoding="utf-8") as f:
+                        json.dump(alt, f, ensure_ascii=False, indent=2)
+                        f.write("\n")
                 return False
         except (json.JSONDecodeError, OSError):
             pass
