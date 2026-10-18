@@ -15,6 +15,7 @@ from telegram.ext import (
 from ai.providers import AIManager
 from bot.zugriff import Zugriff
 from analyzer import SYSTEM_PROMPT, analysiere, formatiere, parse
+from datenbank import agb_sammler
 from analyzer.scan import analysiere_text, formatiere_scan, optionen_aus_text, sieht_nach_agb_aus
 from sancho import erzeuge as sancho_erzeuge
 from sancho import formatiere as sancho_formatiere
@@ -50,6 +51,7 @@ HELP_TEXT = (
     "`/signal` – AKT 4: Das Signal (Ebene-2-Rätsel) · `/signal loesung`\n"
     "`/risiko <werte>` – persönliche Risiko-Analyse (EV, Risk of Ruin)\n"
     "`/profil <werte>` – ruhiges Risikoprofil mit Selbst-Check\n"
+    "`/agb [anbieter] [einzahlung=50]` – AGB-Datenbank (öffentliche Seiten, täglich geprüft)\n"
     "`/melde <werte>` – Beschwerde/Anzeige an die GGL (Mathematik + Recht)\n"
     "`/gewinner` – dokumentierte Fälle: mit Mathematik gewonnen, dann verbannt\n"
     "`/frage <Text>` – freie Frage an den Analytiker\n"
@@ -172,6 +174,23 @@ class CasinoBonusBot:
         except ValueError as exc:
             return await msg.edit_text(f"❌ {exc}")
         await msg.edit_text(risiko_formatiere(ergebnis, s))
+
+    async def agb_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        try:
+            daten = await asyncio.to_thread(agb_sammler.lade)
+        except (OSError, ValueError):
+            return await update.message.reply_text("❌ AGB-Datenbank nicht verfügbar.")
+        text, opt = optionen_aus_text(" ".join(context.args))
+        key = text.strip().lower()
+        if not key:
+            return await update.message.reply_text(agb_sammler.uebersicht(daten)[:4000])
+        try:
+            antwort = agb_sammler.bericht(daten, key, opt.get("einzahlung"), opt.get("rtp"), opt.get("einsatz"))
+        except KeyError:
+            return await update.message.reply_text(f"❌ Unbekannter Anbieter. Bekannt: {', '.join(daten['anbieter'])}")
+        except ValueError as exc:
+            return await update.message.reply_text(f"❌ {exc}")
+        await update.message.reply_text(antwort[:4000])
 
     async def profil_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
@@ -313,6 +332,7 @@ class CasinoBonusBot:
         app.add_handler(CommandHandler("signal", self.signal_command))
         app.add_handler(CommandHandler("risiko", self.risiko_command))
         app.add_handler(CommandHandler("profil", self.profil_command))
+        app.add_handler(CommandHandler("agb", self.agb_command))
         app.add_handler(CommandHandler("melde", self.melde_command))
         app.add_handler(CommandHandler("gewinner", self.gewinner_command))
         app.add_handler(CommandHandler("frage", self.frage_command))

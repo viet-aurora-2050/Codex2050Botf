@@ -17,6 +17,7 @@ from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 
 from analyzer import analysiere, formatiere, parse
+from datenbank import agb_sammler
 from risiko import berechne as profil_berechne
 from risiko import eingabe_aus_text as profil_eingabe
 from risiko import formatiere_profil
@@ -384,6 +385,27 @@ async def api_scan(request: Request):
             "empfehlung": ergebnis.empfehlung.value,
         },
     }
+
+
+@app.get("/api/agb")
+async def api_agb(anbieter: str = Query("", max_length=40), einzahlung: float | None = Query(None, ge=0, le=1e6),
+                  rtp: float | None = Query(None, gt=0, le=100), einsatz: float | None = Query(None, gt=0, le=1e5)):
+    """AGB-Datenbank: ohne `anbieter` die Uebersicht, sonst der Befund (optional mit eigener Einzahlung durchgerechnet)."""
+    try:
+        daten = await asyncio.to_thread(agb_sammler.lade)
+    except (OSError, ValueError):
+        return JSONResponse({"error": "AGB-Datenbank nicht verfuegbar."}, status_code=503)
+    key = anbieter.strip().lower()
+    if not key:
+        return {"report": agb_sammler.uebersicht(daten), "anbieter": {k: a["name"] for k, a in daten["anbieter"].items()},
+                "geprueft": daten.get("geprueft")}
+    try:
+        return {"report": agb_sammler.bericht(daten, key, einzahlung, rtp, einsatz), "daten": daten["anbieter"][key],
+                "geprueft": daten.get("geprueft")}
+    except KeyError:
+        return JSONResponse({"error": "Unbekannter Anbieter."}, status_code=404)
+    except ValueError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=422)
 
 
 @app.get("/api/profil")
