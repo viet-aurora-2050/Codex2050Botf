@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
   "_hinweis": "Aus oeffentlich lesbaren Bonus-/AGB-Seiten automatisch ausgelesen (Regex-Scanner, kein Rechtstext). Gespeichert werden Kennzahlen, kurze Belege, Quelle und Abrufdatum. Angebote und Bedingungen aendern sich - vor einer Entscheidung das Original lesen. Keine Anbieter-API, keine Vorhersage, keine Rechtsberatung.",
-  "abgerufen": "2026-10-23",
-  "geprueft": "2026-10-23T10:27:36Z",
+  "abgerufen": "2026-10-24",
+  "geprueft": "2026-10-24T09:45:21Z",
   "anbieter": {
     "jackpotpirat": {
       "name": "JackpotPiraten",
