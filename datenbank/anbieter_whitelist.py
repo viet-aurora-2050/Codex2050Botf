@@ -147,10 +147,17 @@ def _kern(d: Dict) -> str:
 
 
 def schreibe(daten: Dict, pfad: Path) -> bool:
-    """Atomar schreiben, nur bei inhaltlicher Aenderung. True = geschrieben."""
+    """Atomar schreiben bei inhaltlicher Aenderung (True).
+
+    Bleibt der Kern gleich, werden hoechstens die Abrufzeiten einmal pro Tag erneuert (False): sonst zeigt der Stand
+    in der App (Sanchos Spielplatz liest `abgerufen`) wochenlang ein altes Datum, obwohl der Job taeglich laeuft.
+    """
     if pfad.exists():
         try:
-            if _kern(json.loads(pfad.read_text(encoding="utf-8"))) == _kern(daten):
+            alt = json.loads(pfad.read_text(encoding="utf-8"))
+            if _kern(alt) == _kern(daten):
+                if str(alt.get("abgerufen", ""))[:10] != str(daten.get("abgerufen", ""))[:10]:
+                    pfad.write_text(json.dumps(daten, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
                 return False
         except (OSError, json.JSONDecodeError):
             pass
