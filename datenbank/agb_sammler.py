@@ -62,7 +62,9 @@ KONFIG: Dict[str, Dict] = {
         "host": "www.jackpotpiraten.de",
         "seiten": [
             {"id": "bonus", "titel": "Bonus-Übersicht (Willkommensbonus)", "url": f"{JP}/bonus", "rolle": "bonus",
-             "abschnitt": r"Willkommensbonus\s+\d{4}\s+im\s+Detail", "abschnitt_laenge": 2500},
+             # Anker der Reihe nach probieren: die Ueberschrift verschwand am 09.11.2026, die Detail-Tabelle blieb.
+             "abschnitt": [r"Willkommensbonus\s+\d{4}\s+im\s+Detail", r"Detail\s+\S+\s+Bonus\s+\d+\s*%\s+bis"],
+             "abschnitt_laenge": 2500},
             {"id": "promotionsbedingungen", "titel": "Promotionsbedingungen", "url": f"{JP}/info/promotions-bedingungen",
              "rolle": "bedingungen"},
             {"id": "agb", "titel": "Allgemeine Geschäftsbedingungen", "url": f"{JP}/info/allgemeine-geschaeftsbedingungen",
@@ -137,9 +139,13 @@ def seitentext(seite: str) -> str:
     return html.unescape(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", seite))).strip()
 
 
-def abschnitt(text: str, muster: str, laenge: int) -> Optional[str]:
-    m = re.search(muster, text, re.I)
-    return text[m.start(): m.start() + laenge] if m else None
+def abschnitt(text: str, muster, laenge: int) -> Optional[str]:
+    """Abschnitt ab dem ersten passenden Anker (`muster`: Regex oder Liste von Regexen, der Reihe nach probiert)."""
+    for mu in ([muster] if isinstance(muster, str) else muster):
+        m = re.search(mu, text, re.I)
+        if m:
+            return text[m.start(): m.start() + laenge]
+    return None
 
 
 def szenario_dict(s: BonusSzenario) -> Dict:

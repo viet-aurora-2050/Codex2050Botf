@@ -85,6 +85,18 @@ class TestAuswertung(unittest.TestCase):
         self.assertFalse(erg["abschnitt_gefunden"])
         self.assertIn("nicht gefunden", erg["hinweise"][0])
 
+    def test_anker_ersatz_wenn_ueberschrift_verschwindet(self):
+        seite = BONUS_SEITE.replace("Willkommensbonus 2026 im Detail Neue Spieler erhalten",
+                                    "Detail TestCasino Bonus 100 % bis 100 € Neue Spieler erhalten")
+        seiten = dict(SEITEN)
+        seiten["https://www.beispiel.test/bonus"] = seite
+        konfig = json.loads(json.dumps(KONFIG))
+        konfig["test"]["seiten"][0]["abschnitt"] = [r"Willkommensbonus\s+\d{4}\s+im\s+Detail",
+                                                    r"Detail\s+\S+\s+Bonus\s+\d+\s*%\s+bis"]
+        erg = baue(seiten=seiten, konfig=konfig)["anbieter"]["test"]["seiten"][0]["ergebnis"]
+        self.assertTrue(erg["abschnitt_gefunden"])
+        self.assertNotIn("99x", json.dumps(erg))
+
     def test_speichert_keinen_volltext(self):
         text = json.dumps(baue())
         self.assertNotIn("Allgemeine Regeln des Hauses", text)

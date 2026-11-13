@@ -116,6 +116,7 @@ class TestSchreiben(unittest.TestCase):
             t2 = datetime(2026, 10, 8, 4, 0, tzinfo=timezone.utc)
             self.assertTrue(w.schreibe(w.aktualisiere({}, e, t1), pfad))
             self.assertFalse(w.schreibe(w.aktualisiere(json.loads(pfad.read_text(encoding="utf-8")), e, t2), pfad))
+            self.assertEqual(json.loads(pfad.read_text(encoding="utf-8"))["abgerufen"], t2.strftime("%Y-%m-%d"))  # Abrufdatum erneuert
 
     def test_inhaltliche_aenderung_schreibt(self):
         with tempfile.TemporaryDirectory() as tmp:

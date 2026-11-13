@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
   "_hinweis": "Aus oeffentlich lesbaren Bonus-/AGB-Seiten automatisch ausgelesen (Regex-Scanner, kein Rechtstext). Gespeichert werden Kennzahlen, kurze Belege, Quelle und Abrufdatum. Angebote und Bedingungen aendern sich - vor einer Entscheidung das Original lesen. Keine Anbieter-API, keine Vorhersage, keine Rechtsberatung.",
-  "abgerufen": "2026-11-12",
-  "geprueft": "2026-11-12T13:57:09Z",
+  "abgerufen": "2026-11-13",
+  "geprueft": "2026-11-13T02:00:00Z",
   "anbieter": {
     "jackpotpirat": {
       "name": "JackpotPiraten",
@@ -13,7 +13,7 @@
           "titel": "Bonus-Übersicht (Willkommensbonus)",
           "url": "https://www.jackpotpiraten.de/bonus",
           "rolle": "bonus",
-          "abgerufen": "2026-11-10",
+          "abgerufen": "2026-11-13",
           "status": "ok",
           "http": 200,
           "sha256": "41dfbd5a636d74b5b74cf02a3a0c36fdb927d7736e77197eab061a2821b59996",
@@ -21,7 +21,7 @@
           "erstmals_erfasst": "2026-10-18",
           "geaendert": "2026-11-09",
           "ergebnis": {
-            "abschnitt_gefunden": false,
+            "abschnitt_gefunden": true,
             "funde": [
               {
                 "feld": "Umsatzfaktor",
@@ -36,12 +36,12 @@
               {
                 "feld": "Bonus",
                 "wert": "100 %",
-                "beleg": "Spielothek Bonus: 100% bis 100€ + 125 Freispiele ab 1€ Registrieren Anmelden 100% legal Spielothek Bonus: Willkommensbonus & Freispiele Willkommenspak…"
+                "beleg": "Detail JackpotPiraten Bonus 100 % bis 100 € Freispiele 125 Freispiele-Slot Book of Ra Deluxe Mindesteinzahlung 1 € Bonus Code nicht erforderlich Umsat…"
               },
               {
                 "feld": "Bonus-Deckel",
                 "wert": "100 €",
-                "beleg": "Spielothek Bonus: 100% bis 100€ + 125 Freispiele ab 1€ Registrieren Anmelden 100% legal Spielothek Bonus: Willkommensbonus & Freispiele Willkommenspak…"
+                "beleg": "Detail JackpotPiraten Bonus 100 % bis 100 € Freispiele 125 Freispiele-Slot Book of Ra Deluxe Mindesteinzahlung 1 € Bonus Code nicht erforderlich Umsat…"
               },
               {
                 "feld": "Zeitlimit",
@@ -66,8 +66,6 @@
               "125 Freispiele erkannt – ihr Gewinn ist unbekannt und wird mit 0 € angesetzt (fs_gewinn=… in der Engine, falls bekannt)."
             ],
             "hinweise": [
-              "Abschnitt „Willkommensbonus“ nicht gefunden (Seitenaufbau geändert?) – ganze Seite gelesen, Werte können mehrere Angebote mischen.",
-              "Umsatzfaktor Freispiele: mehrere Werte im Text (30x, 40x) – höchster Wert (40x) für die Rechnung gewählt. Original prüfen.",
               "Umsatzfaktor 40x ist hoch – bei Hausvorteil frisst der Umsatz den Bonus meist auf."
             ],
             "szenario": {
@@ -125,7 +123,7 @@
           "titel": "Promotionsbedingungen",
           "url": "https://www.jackpotpiraten.de/info/promotions-bedingungen",
           "rolle": "bedingungen",
-          "abgerufen": "2026-11-10",
+          "abgerufen": "2026-11-13",
           "status": "ok",
           "http": 200,
           "sha256": "3f3797f08ac8114ed597249aff5dbd74d398f97eeaaf6a4466d56bae492a54e9",
@@ -163,7 +161,7 @@
           "titel": "Allgemeine Geschäftsbedingungen",
           "url": "https://www.jackpotpiraten.de/info/allgemeine-geschaeftsbedingungen",
           "rolle": "agb",
-          "abgerufen": "2026-11-10",
+          "abgerufen": "2026-11-13",
           "status": "ok",
           "http": 200,
           "sha256": "cbb7f1462c4069c165c3aece5a5392a54e0a3741502804e75e7413af6f47cda2",
@@ -206,7 +204,7 @@
           "titel": "Startseite",
           "url": "https://games.tipico.de/",
           "rolle": "start",
-          "abgerufen": "2026-11-10",
+          "abgerufen": "2026-11-13",
           "status": "nicht_lesbar",
           "http": 200,
           "fehler": "kaum lesbarer Inhalt (442 Zeichen) – Sperrseite oder JavaScript-Hülle",
@@ -223,7 +221,7 @@
           "titel": "Startseite",
           "url": "https://www.betano.de/",
           "rolle": "start",
-          "abgerufen": "2026-11-10",
+          "abgerufen": "2026-11-13",
           "status": "nicht_lesbar",
           "http": 403,
           "fehler": "HTTP 403",
@@ -240,7 +238,7 @@
           "titel": "Startseite",
           "url": "https://n1casino.com/",
           "rolle": "start",
-          "abgerufen": "2026-11-10",
+          "abgerufen": "2026-11-13",
           "status": "nicht_lesbar",
           "http": 403,
           "fehler": "HTTP 403",
@@ -257,7 +255,7 @@
           "titel": "Startseite",
           "url": "https://www.stargames.de/",
           "rolle": "start",
-          "abgerufen": "2026-11-10",
+          "abgerufen": "2026-11-13",
           "status": "nicht_lesbar",
           "http": 200,
           "fehler": "kaum lesbarer Inhalt (67 Zeichen) – Sperrseite oder JavaScript-Hülle",
